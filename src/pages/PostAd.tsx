@@ -1,0 +1,179 @@
+import { useState } from "react";
+import { Layout } from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { categories, conditions } from "@/lib/mockData";
+import { Camera, X, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const PostAd = () => {
+  const { toast } = useToast();
+  const [images, setImages] = useState<string[]>([]);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    category: "",
+    condition: "Used" as string,
+    location: "",
+  });
+
+  const handleImageAdd = () => {
+    if (images.length >= 12) return;
+    // Mock: add placeholder image
+    const placeholders = [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
+      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400",
+    ];
+    setImages([...images, placeholders[images.length % placeholders.length]]);
+  };
+
+  const removeImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({ title: "Ad Posted!", description: "Your ad is now live on monast.io" });
+  };
+
+  return (
+    <Layout>
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-foreground mb-2">Post Free Ad</h1>
+        <p className="text-muted-foreground mb-8">Reach millions of buyers worldwide. It's free!</p>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Photos */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Photos ({images.length}/12)
+            </label>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              {images.map((img, i) => (
+                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border">
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center"
+                  >
+                    <X className="w-3 h-3 text-destructive-foreground" />
+                  </button>
+                </div>
+              ))}
+              {images.length < 12 && (
+                <button
+                  type="button"
+                  onClick={handleImageAdd}
+                  className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center gap-1 transition-colors"
+                >
+                  <Camera className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground">Add</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Title</label>
+            <Input
+              placeholder="e.g. iPhone 15 Pro Max 256GB"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Category</label>
+            <select
+              value={form.category}
+              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              required
+              className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="">Select category</option>
+              {categories.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.icon} {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Condition */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Condition</label>
+            <div className="flex gap-2">
+              {conditions.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setForm({ ...form, condition: c })}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                    form.condition === c
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary text-foreground border-border hover:border-primary/50"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Price (USDC)</label>
+            <div className="relative">
+              <Input
+                type="number"
+                placeholder="0.00"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                required
+                className="pl-16"
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-primary">USDC</span>
+            </div>
+          </div>
+
+          {/* Location */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
+            <Input
+              placeholder="e.g. New York, USA or Worldwide"
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+            <Textarea
+              placeholder="Describe your item in detail..."
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              rows={5}
+              required
+            />
+          </div>
+
+          <Button type="submit" size="lg" className="w-full font-bold text-base py-6 gap-2">
+            <Upload className="w-5 h-5" />
+            Post Ad for Free
+          </Button>
+        </form>
+      </div>
+    </Layout>
+  );
+};
+
+export default PostAd;
