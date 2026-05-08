@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { categories } from "@/lib/mockData";
+import { categories } from "@/lib/types";
 
 export const CategoryGrid = () => {
   return (
@@ -11,11 +11,8 @@ export const CategoryGrid = () => {
           className="flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-accent transition-all group"
         >
           <span className="text-3xl">{cat.icon}</span>
-          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+          <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors text-center">
             {cat.name}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {cat.count.toLocaleString()} ads
           </span>
         </Link>
       ))}

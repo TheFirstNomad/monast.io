@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { categories, conditions } from "@/lib/mockData";
+import { categories, conditions } from "@/lib/types";
 import { Camera, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const PostAd = () => {
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -19,34 +26,73 @@ const PostAd = () => {
     location: "",
   });
 
-  const handleImageAdd = () => {
-    if (images.length >= 12) return;
-    // Mock: add placeholder image
-    const placeholders = [
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400",
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-      "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=400",
-    ];
-    setImages([...images, placeholders[images.length % placeholders.length]]);
+  useEffect(() => {
+    if (!loading && !user) navigate("/auth", { replace: true });
+  }, [user, loading, navigate]);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !user) return;
+    setUploading(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files.slice(0, 12 - images.length)) {
+        const ext = file.name.split(".").pop();
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from("ad-photos").upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from("ad-photos").getPublicUrl(path);
+        uploaded.push(data.publicUrl);
+      }
+      setImages([...images, ...uploaded]);
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
 
-  const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-  };
+  const removeImage = (index: number) => setImages(images.filter((_, i) => i !== index));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "Ad Posted!", description: "Your ad is now live on monast.io" });
+    if (!user) return;
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from("ads")
+        .insert({
+          seller_id: user.id,
+          title: form.title,
+          description: form.description,
+          price_usdc: Number(form.price),
+          category: form.category,
+          condition: form.condition,
+          location: form.location,
+          images,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      toast({ title: "Ad posted!", description: "Your ad is now live on monast.io" });
+      navigate(`/ad/${data.id}`);
+    } catch (err: any) {
+      toast({ title: "Failed to post", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (!user) return null;
 
   return (
     <Layout>
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">Post Free Ad</h1>
-        <p className="text-muted-foreground mb-8">Reach millions of buyers worldwide. It's free!</p>
+        <p className="text-muted-foreground mb-8">Reach buyers worldwide. It's free!</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Photos */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-2">
               Photos ({images.length}/12)
@@ -65,19 +111,22 @@ const PostAd = () => {
                 </div>
               ))}
               {images.length < 12 && (
-                <button
-                  type="button"
-                  onClick={handleImageAdd}
-                  className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center gap-1 transition-colors"
-                >
+                <label className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer">
                   <Camera className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-[10px] text-muted-foreground">Add</span>
-                </button>
+                  <span className="text-[10px] text-muted-foreground">{uploading ? "..." : "Add"}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileSelect}
+                    disabled={uploading}
+                  />
+                </label>
               )}
             </div>
           </div>
 
-          {/* Title */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Title</label>
             <Input
@@ -88,7 +137,6 @@ const PostAd = () => {
             />
           </div>
 
-          {/* Category */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Category</label>
             <select
@@ -106,7 +154,6 @@ const PostAd = () => {
             </select>
           </div>
 
-          {/* Condition */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Condition</label>
             <div className="flex gap-2">
@@ -127,12 +174,12 @@ const PostAd = () => {
             </div>
           </div>
 
-          {/* Price */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Price (USDC)</label>
             <div className="relative">
               <Input
                 type="number"
+                step="0.01"
                 placeholder="0.00"
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
@@ -143,7 +190,6 @@ const PostAd = () => {
             </div>
           </div>
 
-          {/* Location */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
             <Input
@@ -154,7 +200,6 @@ const PostAd = () => {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
             <Textarea
@@ -166,9 +211,14 @@ const PostAd = () => {
             />
           </div>
 
-          <Button type="submit" size="lg" className="w-full font-bold text-base py-6 gap-2">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full font-bold text-base py-6 gap-2"
+            disabled={submitting || uploading}
+          >
             <Upload className="w-5 h-5" />
-            Post Ad for Free
+            {submitting ? "Posting..." : "Post Ad for Free"}
           </Button>
         </form>
       </div>
