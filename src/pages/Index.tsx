@@ -1,18 +1,31 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { AdCard } from "@/components/AdCard";
-import { mockAds } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { DbAd } from "@/lib/types";
 import { Plus, Shield, Zap, Globe } from "lucide-react";
 
 const Index = () => {
-  const featuredAds = mockAds.filter((a) => a.featured);
-  const recentAds = mockAds.slice(0, 8);
+  const [ads, setAds] = useState<DbAd[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("ads")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(12)
+      .then(({ data }) => setAds((data as DbAd[]) || []));
+  }, []);
+
+  const featuredAds = ads.filter((a) => a.featured);
+  const recentAds = ads.slice(0, 8);
 
   return (
     <Layout>
-      {/* Hero */}
       <section className="hero-gradient py-16 md:py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-4 tracking-tight leading-tight">
@@ -30,14 +43,18 @@ const Index = () => {
                 Post Free Ad
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-base px-8 py-6 font-semibold border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 bg-transparent">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-base px-8 py-6 font-semibold border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 bg-transparent"
+            >
               <Link to="/browse">Browse Ads</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Trust badges */}
       <section className="py-8 px-4 border-b border-border">
         <div className="max-w-5xl mx-auto grid grid-cols-3 gap-4 text-center">
           {[
@@ -53,7 +70,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Categories */}
       <section className="py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xl font-bold text-foreground mb-6">Browse Categories</h2>
@@ -61,7 +77,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Ads */}
       {featuredAds.length > 0 && (
         <section className="py-10 px-4">
           <div className="max-w-6xl mx-auto">
@@ -80,7 +95,6 @@ const Index = () => {
         </section>
       )}
 
-      {/* Recent Ads */}
       <section className="py-10 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -89,11 +103,23 @@ const Index = () => {
               View all →
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {recentAds.map((ad) => (
-              <AdCard key={ad.id} ad={ad} />
-            ))}
-          </div>
+          {recentAds.length === 0 ? (
+            <div className="text-center py-16 bg-card border border-border rounded-xl">
+              <p className="text-muted-foreground mb-4">No ads yet — be the first to post!</p>
+              <Button asChild>
+                <Link to="/post-ad">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Post Free Ad
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {recentAds.map((ad) => (
+                <AdCard key={ad.id} ad={ad} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </Layout>

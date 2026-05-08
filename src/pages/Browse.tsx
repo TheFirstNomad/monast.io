@@ -1,25 +1,27 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
-import { mockAds, categories, conditions } from "@/lib/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { DbAd, categories, conditions } from "@/lib/types";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Browse = () => {
   const [searchParams] = useSearchParams();
-  const initialCategory = searchParams.get("category") || "";
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState(initialCategory);
+  const [category, setCategory] = useState(searchParams.get("category") || "");
   const [condition, setCondition] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [ads, setAds] = useState<DbAd[]>([]);
 
-  const filtered = mockAds.filter((ad) => {
-    if (search && !ad.title.toLowerCase().includes(search.toLowerCase())) return false;
-    if (category && ad.category !== category) return false;
-    if (condition && ad.condition !== condition) return false;
-    return true;
-  });
+  useEffect(() => {
+    let q = supabase.from("ads").select("*").eq("status", "active").order("created_at", { ascending: false });
+    if (category) q = q.eq("category", category);
+    if (condition) q = q.eq("condition", condition);
+    if (search) q = q.ilike("title", `%${search}%`);
+    q.limit(60).then(({ data }) => setAds((data as DbAd[]) || []));
+  }, [search, category, condition]);
 
   return (
     <Layout>
@@ -35,12 +37,7 @@ const Browse = () => {
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="gap-2 shrink-0"
-          >
+          <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-2 shrink-0">
             <SlidersHorizontal className="w-4 h-4" />
             Filters
           </Button>
@@ -99,38 +96,31 @@ const Browse = () => {
           </div>
         )}
 
-        {/* Active filters */}
         {(category || condition) && (
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xs text-muted-foreground">Filters:</span>
             {category && (
-              <button
-                onClick={() => setCategory("")}
-                className="flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary text-xs"
-              >
+              <button onClick={() => setCategory("")} className="flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary text-xs">
                 {category} <X className="w-3 h-3" />
               </button>
             )}
             {condition && (
-              <button
-                onClick={() => setCondition("")}
-                className="flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary text-xs"
-              >
+              <button onClick={() => setCondition("")} className="flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary text-xs">
                 {condition} <X className="w-3 h-3" />
               </button>
             )}
           </div>
         )}
 
-        <div className="text-sm text-muted-foreground mb-4">{filtered.length} ads found</div>
+        <div className="text-sm text-muted-foreground mb-4">{ads.length} ads found</div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((ad) => (
+          {ads.map((ad) => (
             <AdCard key={ad.id} ad={ad} />
           ))}
         </div>
 
-        {filtered.length === 0 && (
+        {ads.length === 0 && (
           <div className="text-center py-20">
             <p className="text-muted-foreground mb-4">No ads found matching your criteria</p>
             <Button variant="outline" onClick={() => { setSearch(""); setCategory(""); setCondition(""); }}>
