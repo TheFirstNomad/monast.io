@@ -5,12 +5,16 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { DbAd } from "@/lib/types";
 import { MapPin, MessageCircle, DollarSign, Shield, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChatDialog } from "@/components/ChatDialog";
+import { OfferDialog } from "@/components/OfferDialog";
 
 const AdDetail = () => {
   const { id } = useParams();
   const [ad, setAd] = useState<DbAd | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
