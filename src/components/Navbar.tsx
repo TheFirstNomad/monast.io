@@ -1,18 +1,22 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Menu, X, Wallet, User } from "lucide-react";
+import { Search, Plus, Menu, X, Wallet, User, MessageCircle } from "lucide-react";
 import { useState } from "react";
+import { useWallet } from "@/hooks/useWallet";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const { address, connect, connecting } = useWallet();
+  const { user } = useAuth();
+
+  const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
 
   return (
     <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-14">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">M</span>
@@ -20,7 +24,6 @@ export const Navbar = () => {
             <span className="text-lg font-bold text-foreground hidden sm:block">monast.io</span>
           </Link>
 
-          {/* Search - desktop */}
           <div className="hidden md:flex flex-1 max-w-xl mx-6">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -32,20 +35,26 @@ export const Navbar = () => {
             </div>
           </div>
 
-          {/* Right actions */}
           <div className="hidden md:flex items-center gap-2">
-            {connected ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-1.5 rounded-lg bg-secondary">
+            {address ? (
+              <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary">
                 <Wallet className="w-4 h-4 text-primary" />
-                <span className="font-medium text-foreground">1,250.00 USDC</span>
+                <span className="font-medium text-foreground">{short}</span>
               </div>
             ) : (
-              <Button variant="outline" size="sm" onClick={() => setConnected(true)} className="gap-2">
+              <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="gap-2">
                 <Wallet className="w-4 h-4" />
-                Connect Wallet
+                {connecting ? "Connecting..." : "Connect Wallet"}
               </Button>
             )}
-            <Link to="/dashboard">
+            {user && (
+              <Link to="/messages">
+                <Button variant="ghost" size="icon" className="rounded-lg">
+                  <MessageCircle className="w-5 h-5" />
+                </Button>
+              </Link>
+            )}
+            <Link to={user ? "/dashboard" : "/auth"}>
               <Button variant="ghost" size="icon" className="rounded-lg">
                 <User className="w-5 h-5" />
               </Button>
@@ -58,7 +67,6 @@ export const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile toggle */}
           <div className="flex md:hidden items-center gap-2">
             <Link to="/post-ad">
               <Button size="sm" className="gap-1 text-xs">
@@ -73,7 +81,6 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-card px-4 py-4 space-y-3">
           <div className="relative">
@@ -88,7 +95,8 @@ export const Navbar = () => {
             {[
               { to: "/", label: "Home" },
               { to: "/browse", label: "Browse" },
-              { to: "/dashboard", label: "Dashboard" },
+              { to: "/messages", label: "Messages" },
+              { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
             ].map((link) => (
               <Link
                 key={link.to}
@@ -102,14 +110,9 @@ export const Navbar = () => {
               </Link>
             ))}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setConnected(!connected)}
-            className="w-full gap-2"
-          >
+          <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
             <Wallet className="w-4 h-4" />
-            {connected ? "1,250.00 USDC" : "Connect Wallet"}
+            {address ? short : connecting ? "Connecting..." : "Connect Wallet"}
           </Button>
         </div>
       )}
