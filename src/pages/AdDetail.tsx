@@ -131,11 +131,11 @@ const AdDetail = () => {
                 <DollarSign className="w-4 h-4" />
                 Pay with USDC
               </Button>
-              <Button variant="outline" className="w-full gap-2 py-5">
+              <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
                 <MessageCircle className="w-4 h-4" />
                 Chat with Seller
               </Button>
-              <Button variant="secondary" className="w-full gap-2 py-5">
+              <Button variant="secondary" className="w-full gap-2 py-5" onClick={() => setOfferOpen(true)}>
                 <Shield className="w-4 h-4" />
                 Make Offer with Escrow
               </Button>
@@ -169,6 +169,8 @@ const AdDetail = () => {
           </div>
         </div>
       </div>
+      <ChatDialog open={chatOpen} onOpenChange={setChatOpen} adId={ad.id} sellerId={ad.seller_id} adTitle={ad.title} />
+      <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} adId={ad.id} listPrice={Number(ad.price_usdc)} />
     </Layout>
   );
 };
