@@ -7,6 +7,7 @@ import { DbAd } from "@/lib/types";
 import { MapPin, MessageCircle, DollarSign, Shield, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
+import { PayButton } from "@/components/PayButton";
 
 const AdDetail = () => {
   const { id } = useParams();
@@ -127,10 +128,7 @@ const AdDetail = () => {
             </div>
 
             <div className="bg-card rounded-xl border border-border p-5 space-y-3">
-              <Button className="w-full gap-2 font-semibold py-5">
-                <DollarSign className="w-4 h-4" />
-                Pay with USDC
-              </Button>
+              <PayButton adId={ad.id} sellerId={ad.seller_id} amount={Number(ad.price_usdc)} />
               <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
                 <MessageCircle className="w-4 h-4" />
                 Chat with Seller
