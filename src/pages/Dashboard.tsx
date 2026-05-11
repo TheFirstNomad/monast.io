@@ -6,6 +6,7 @@ import { Plus, Package, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DbAd } from "@/lib/types";
+import { OffersInbox } from "@/components/OffersInbox";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -71,6 +72,8 @@ const Dashboard = () => {
             <div className="text-lg font-bold text-foreground">{myAds.length}</div>
           </div>
         </div>
+
+        <OffersInbox />
 
         <h2 className="text-lg font-bold text-foreground mb-4">My Ads</h2>
         {myAds.length === 0 ? (
