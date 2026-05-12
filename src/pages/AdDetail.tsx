@@ -165,6 +165,8 @@ const AdDetail = () => {
                 </div>
               </div>
             )}
+
+            <ReviewSection adId={ad.id} sellerId={ad.seller_id} adSold={ad.status === "sold"} />
           </div>
         </div>
       </div>
