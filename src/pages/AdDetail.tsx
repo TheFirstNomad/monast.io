@@ -8,6 +8,7 @@ import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star } from "
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
 import { PayButton } from "@/components/PayButton";
+import { ReviewSection } from "@/components/ReviewSection";
 
 const AdDetail = () => {
   const { id } = useParams();
@@ -164,6 +165,8 @@ const AdDetail = () => {
                 </div>
               </div>
             )}
+
+            <ReviewSection adId={ad.id} sellerId={ad.seller_id} adSold={ad.status === "sold"} />
           </div>
         </div>
       </div>

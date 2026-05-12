@@ -203,6 +203,36 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          ad_id: string
+          buyer_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          seller_id: string
+        }
+        Insert: {
+          ad_id: string
+          buyer_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          seller_id: string
+        }
+        Update: {
+          ad_id?: string
+          buyer_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          seller_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
