@@ -1,0 +1,1 @@
+revoke execute on function public.update_seller_rating() from public, anon, authenticated;
