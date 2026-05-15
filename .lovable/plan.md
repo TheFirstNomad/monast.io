@@ -1,60 +1,44 @@
+# Plan — Finish monast.io build
 
-# monast.io — Global P2P Classifieds Marketplace
+Remaining work to complete the marketplace, picking up from the last session.
 
-Rebuild the app as a worldwide buy/sell classifieds platform (like Jiji.ug) with USDC payments on Arc blockchain.
+## Scope this session (≈5 credits budget)
 
-## Tech Stack
-- **React 18 + Vite + TypeScript + Tailwind + shadcn/ui** (Lovable's stack — Next.js is not supported)
-- **Lovable Cloud** for auth, database, file storage, and realtime chat
-- **wagmi + viem + RainbowKit** for wallet connection and USDC on Arc
+### 1. Complete Sale flow
+- Add a "Mark as Sold" button on `AdDetail.tsx` visible only to the seller when `status === "active"`.
+- Add a `sold_at` timestamp via migration on `ads` (nullable).
+- Update `status` to `sold` and stamp `sold_at` when seller confirms (also auto-stamped on successful PayButton transfer).
+- Show a "Sold" badge on `AdCard` and `AdDetail` when applicable.
 
-## Phase 1 — Core UI (this session)
+### 2. Transaction history
+- New page `src/pages/Transactions.tsx` accessible from Dashboard and Navbar user menu.
+- Two tabs: **Purchases** (offers I made that were accepted, or ads I paid for) and **Sales** (my ads marked sold).
+- Persist on-chain payment receipts: new `payments` table (ad_id, buyer_id, seller_id, amount_usdc, tx_hash, chain_id) — recorded by `PayButton` after a successful tx so receipts survive.
+- Migration + RLS (buyer or seller can read their rows; only buyer can insert their own).
 
-### 1. Design System
-- Dark mode default with clean, modern aesthetic
-- Mobile-first responsive layout
-- Accent color for CTAs (e.g. green/blue for trust)
+### 3. Seller profile page
+- New route `/seller/:id` → `src/pages/SellerProfile.tsx`.
+- Shows avatar, display name, member-since, rating (avg from `reviews`), total ads, active listings grid, and recent reviews.
+- Link the seller card on `AdDetail.tsx` to this new page.
 
-### 2. Homepage
-- Hero banner: "Buy & Sell Anything Worldwide with USDC on Arc"
-- Prominent "Post Free Ad" CTA
-- Category grid: Vehicles, Property, Electronics, Fashion, Phones & Tablets, Home & Garden, Services, Jobs, Agriculture, Others
-- Featured/recent listings grid
-- Search bar with filters (category, price range, location, condition)
+### 4. Wire-up
+- Add Navbar link to Transactions when authenticated.
+- Add link to Seller Profile from `AdCard` author area (if shown) and from `AdDetail` seller card.
 
-### 3. Post Ad Flow
-- Form: title, description, price (USDC), category, condition (New/Used/Refurbished), location (country/city or Worldwide), up to 12 photos
-- Category selector from the 10 categories
-- Photo upload UI (drag & drop, preview)
+## Technical notes
 
-### 4. Ad Detail Page
-- Photo gallery/carousel
-- Title, price, description, condition, location
-- Seller info card
-- Action buttons: "Chat with Seller", "Make Offer", "Pay with USDC"
+- Migration: `alter table ads add column sold_at timestamptz;` and create `payments` table with RLS.
+- Reuse existing `useAuth`, `useWallet`, `supabase` client patterns.
+- Keep all UI in semantic tokens (no raw colors).
+- No new dependencies.
 
-### 5. Navbar & Layout
-- Logo, search bar, category dropdown
-- Wallet connect button (RainbowKit) with USDC balance display
-- "Post Free Ad" button
-- User menu (dashboard, messages, profile)
+## Out of scope (later sessions)
+- Saved/favorited ads
+- Search filters polish, pagination
+- Admin moderation, reporting
+- Email notifications
+- Escrow smart contract (currently direct USDC transfer)
 
-### 6. Wallet Integration
-- RainbowKit setup with Arc mainnet pre-selected
-- USDC balance display in header
+## Credit estimate for full remaining build
 
-## Phase 2 — Backend & Realtime (next session)
-- Enable Lovable Cloud
-- Database tables: ads, users/profiles, messages, reviews, offers
-- Auth (email + Google)
-- File storage for ad photos
-- Realtime chat between buyer and seller
-- User dashboard: My Ads, My Purchases, Messages, Profile
-- Seller ratings and reviews
-- Optional escrow for safe payments
-- Search & filter with database queries
-
-## Notes
-- All mock data in Phase 1; real data after Cloud is enabled
-- Mobile experience prioritized throughout
-- Dark mode default
+Lovable build mode is usage-based — I can't give an exact number. Realistically, finishing everything above plus the "out of scope" polish typically lands in the **15–30 credits** range depending on iteration and bug-fix cycles. This session targets ~5 credits to deliver sections 1–4.
