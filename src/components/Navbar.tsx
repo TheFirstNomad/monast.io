@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Menu, X, Wallet, User, MessageCircle } from "lucide-react";
+import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt } from "lucide-react";
 import { useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
@@ -48,11 +48,18 @@ export const Navbar = () => {
               </Button>
             )}
             {user && (
-              <Link to="/messages">
-                <Button variant="ghost" size="icon" className="rounded-lg">
-                  <MessageCircle className="w-5 h-5" />
-                </Button>
-              </Link>
+              <>
+                <Link to="/messages">
+                  <Button variant="ghost" size="icon" className="rounded-lg">
+                    <MessageCircle className="w-5 h-5" />
+                  </Button>
+                </Link>
+                <Link to="/transactions">
+                  <Button variant="ghost" size="icon" className="rounded-lg">
+                    <Receipt className="w-5 h-5" />
+                  </Button>
+                </Link>
+              </>
             )}
             <Link to={user ? "/dashboard" : "/auth"}>
               <Button variant="ghost" size="icon" className="rounded-lg">
@@ -96,6 +103,7 @@ export const Navbar = () => {
               { to: "/", label: "Home" },
               { to: "/browse", label: "Browse" },
               { to: "/messages", label: "Messages" },
+              { to: "/transactions", label: "Transactions" },
               { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
             ].map((link) => (
               <Link
