@@ -3,12 +3,14 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { DbAd } from "@/lib/types";
-import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
 import { PayButton } from "@/components/PayButton";
 import { ReviewSection } from "@/components/ReviewSection";
+import { toast } from "sonner";
 
 const AdDetail = () => {
   const { id } = useParams();
