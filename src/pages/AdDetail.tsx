@@ -14,11 +14,28 @@ import { toast } from "sonner";
 
 const AdDetail = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [ad, setAd] = useState<DbAd | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
+  const [marking, setMarking] = useState(false);
+
+  const markSold = async () => {
+    if (!ad) return;
+    setMarking(true);
+    const { error } = await supabase
+      .from("ads")
+      .update({ status: "sold", sold_at: new Date().toISOString() })
+      .eq("id", ad.id);
+    setMarking(false);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Marked as sold");
+      setAd({ ...ad, status: "sold" });
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
