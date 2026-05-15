@@ -148,19 +148,36 @@ const AdDetail = () => {
             </div>
 
             <div className="bg-card rounded-xl border border-border p-5 space-y-3">
-              <PayButton adId={ad.id} sellerId={ad.seller_id} amount={Number(ad.price_usdc)} />
-              <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
-                <MessageCircle className="w-4 h-4" />
-                Chat with Seller
-              </Button>
-              <Button variant="secondary" className="w-full gap-2 py-5" onClick={() => setOfferOpen(true)}>
-                <Shield className="w-4 h-4" />
-                Make Offer with Escrow
-              </Button>
+              {ad.status === "sold" ? (
+                <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-foreground">
+                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                  This item has been sold
+                </div>
+              ) : user && user.id === ad.seller_id ? (
+                <Button onClick={markSold} disabled={marking} className="w-full gap-2 font-semibold py-5">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {marking ? "Marking..." : "Mark as Sold"}
+                </Button>
+              ) : (
+                <>
+                  <PayButton adId={ad.id} sellerId={ad.seller_id} amount={Number(ad.price_usdc)} />
+                  <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
+                    <MessageCircle className="w-4 h-4" />
+                    Chat with Seller
+                  </Button>
+                  <Button variant="secondary" className="w-full gap-2 py-5" onClick={() => setOfferOpen(true)}>
+                    <Shield className="w-4 h-4" />
+                    Make Offer with Escrow
+                  </Button>
+                </>
+              )}
             </div>
 
             {ad.seller && (
-              <div className="bg-card rounded-xl border border-border p-5">
+              <Link
+                to={`/seller/${ad.seller_id}`}
+                className="block bg-card rounded-xl border border-border p-5 hover:border-primary/50 transition-colors"
+              >
                 <h3 className="text-sm font-semibold text-foreground mb-3">Seller</h3>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -182,7 +199,7 @@ const AdDetail = () => {
                   Member since{" "}
                   {new Date(ad.seller.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                 </div>
-              </div>
+              </Link>
             )}
 
             <ReviewSection adId={ad.id} sellerId={ad.seller_id} adSold={ad.status === "sold"} />
