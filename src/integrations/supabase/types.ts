@@ -26,6 +26,7 @@ export type Database = {
           location: string
           price_usdc: number
           seller_id: string
+          sold_at: string | null
           status: string
           title: string
           updated_at: string
@@ -41,6 +42,7 @@ export type Database = {
           location: string
           price_usdc: number
           seller_id: string
+          sold_at?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -56,6 +58,7 @@ export type Database = {
           location?: string
           price_usdc?: number
           seller_id?: string
+          sold_at?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -166,6 +169,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payments: {
+        Row: {
+          ad_id: string
+          amount_usdc: number
+          buyer_id: string
+          chain_id: number
+          created_at: string
+          id: string
+          seller_id: string
+          tx_hash: string
+        }
+        Insert: {
+          ad_id: string
+          amount_usdc: number
+          buyer_id: string
+          chain_id: number
+          created_at?: string
+          id?: string
+          seller_id: string
+          tx_hash: string
+        }
+        Update: {
+          ad_id?: string
+          amount_usdc?: number
+          buyer_id?: string
+          chain_id?: number
+          created_at?: string
+          id?: string
+          seller_id?: string
+          tx_hash?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
