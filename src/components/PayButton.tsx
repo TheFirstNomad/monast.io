@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Loader2 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { encodeTransfer, toUsdcUnits, USDC_ADDRESS, ARC_CHAIN_ID } from "@/lib/usdc";
 import { toast } from "sonner";
@@ -14,10 +15,12 @@ interface Props {
 
 export const PayButton = ({ adId, sellerId, amount }: Props) => {
   const { address, connect } = useWallet();
+  const { user } = useAuth();
   const [paying, setPaying] = useState(false);
 
   const pay = async () => {
     try {
+      if (!user) { toast.error("Sign in to pay"); return; }
       if (!address) { await connect(); return; }
       if (!window.ethereum) { toast.error("Wallet not detected"); return; }
 
@@ -40,13 +43,25 @@ export const PayButton = ({ adId, sellerId, amount }: Props) => {
       }
 
       const data = encodeTransfer(to, toUsdcUnits(amount));
-      const txHash = await window.ethereum.request({
+      const txHash: string = await window.ethereum.request({
         method: "eth_sendTransaction",
         params: [{ from: address, to: USDC_ADDRESS, data }],
       });
 
       toast.success("Payment sent: " + txHash.slice(0, 10) + "...");
-      await supabase.from("ads").update({ status: "sold" }).eq("id", adId);
+
+      await supabase.from("payments").insert({
+        ad_id: adId,
+        buyer_id: user.id,
+        seller_id: sellerId,
+        amount_usdc: amount,
+        tx_hash: txHash,
+        chain_id: ARC_CHAIN_ID,
+      });
+      await supabase
+        .from("ads")
+        .update({ status: "sold", sold_at: new Date().toISOString() })
+        .eq("id", adId);
     } catch (e: any) {
       toast.error(e.message || "Payment failed");
     } finally {

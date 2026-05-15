@@ -22,6 +22,13 @@ export const AdCard = ({ ad }: { ad: DbAd }) => {
           <span className="absolute top-2 right-2 bg-card/90 backdrop-blur text-xs font-medium px-2 py-0.5 rounded text-foreground">
             {ad.condition}
           </span>
+          {ad.status === "sold" && (
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+              <span className="bg-destructive text-destructive-foreground text-xs font-bold px-3 py-1 rounded uppercase tracking-wide">
+                Sold
+              </span>
+            </div>
+          )}
         </div>
         <div className="p-3">
           <div className="text-lg font-bold text-primary mb-1">

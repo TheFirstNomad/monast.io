@@ -12,6 +12,8 @@ import Browse from "./pages/Browse";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Messages from "./pages/Messages";
+import Transactions from "./pages/Transactions";
+import SellerProfile from "./pages/SellerProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,8 @@ const App = () => (
               <Route path="/browse" element={<Browse />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/messages" element={<Messages />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/seller/:id" element={<SellerProfile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </WalletProvider>
