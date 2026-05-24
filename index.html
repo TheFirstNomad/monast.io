@@ -1,28 +1,50 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>monast.io — Buy & Sell Anything with USDC on Arc</title>
-    <meta name="description" content="Global peer-to-peer marketplace. Post free ads and trade anything worldwide using USDC on Arc blockchain.">
+
+    <!-- Security hardening: small XSS blast radius without breaking React/Vite, Reown/WalletConnect, Supabase, or Circle Arc -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'none';
+        object-src 'none';
+        upgrade-insecure-requests;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com;
+        img-src 'self' data: blob: https:;
+        media-src 'self' data: blob: https:;
+        worker-src 'self' blob:;
+        frame-src 'self' https: blob:;
+        connect-src 'self' https: wss: data: blob:;
+        manifest-src 'self';
+      "
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <title>monast.io — Buy & Sell Anything with USDC</title>
+    <meta name="description" content="Global peer-to-peer marketplace. Post free ads and trade anything worldwide using USDC on Base, Arc, and Tempo.">
     <meta name="author" content="monast.io" />
 
-    
-    
     <meta property="og:type" content="website" />
+    <meta property="og:title" content="monast.io — Secure Escrow Marketplace" />
+    <meta property="og:description" content="Trustless escrow marketplace on Base, Arc, and Tempo." />
+    <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f804698d-d956-4514-9cfa-e59eaed3c3f1/id-preview-8f305737--d2d1dc1a-7348-4a69-a3a0-4d98cd4e30c4.lovable.app-1775524347666.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f804698d-d956-4514-9cfa-e59eaed3c3f1/id-preview-8f305737--d2d1dc1a-7348-4a69-a3a0-4d98cd4e30c4.lovable.app-1775524347666.png">
-    <meta property="og:title" content="monast.io — Secure Escrow Marketplace &amp; DEX">
-  <meta name="twitter:title" content="monast.io — Secure Escrow Marketplace &amp; DEX">
-  <meta property="og:description" content="Trustless escrow marketplace and decentralized exchange on Base and Arc.">
-  <meta name="twitter:description" content="Trustless escrow marketplace and decentralized exchange on Base and Arc.">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <meta property="og:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f804698d-d956-4514-9cfa-e59eaed3c3f1/id-preview-8f305737--d2d1dc1a-7348-4a69-a3a0-4d98cd4e30c4.lovable.app-1775524347666.png">
-</head>
+    <meta name="twitter:title" content="monast.io — Secure Escrow Marketplace" />
+    <meta name="twitter:description" content="Trustless escrow marketplace on Base, Arc, and Tempo." />
+    <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f804698d-d956-4514-9cfa-e59eaed3c3f1/id-preview-8f305737--d2d1dc1a-7348-4a69-a3a0-4d98cd4e30c4.lovable.app-1775524347666.png" />
 
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="theme-color" content="#0a0a1a" />
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
