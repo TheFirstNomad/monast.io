@@ -1,44 +1,95 @@
-# Plan — Finish monast.io build
+## Goal
 
-Remaining work to complete the marketplace, picking up from the last session.
+Port the proven Web3 / admin-auth / security infrastructure from the `usdc.directory` project (Directory Builder) into monast.io, **without** carrying over directory-specific schema or pages. Then propose a fresh marketplace schema designed for real-world goods (houses, cars, etc.) paid in USDC.
 
-## Scope this session (≈5 credits budget)
+This is a large port. I'd recommend approving it in two phases so we can verify each phase works before the next.
 
-### 1. Complete Sale flow
-- Add a "Mark as Sold" button on `AdDetail.tsx` visible only to the seller when `status === "active"`.
-- Add a `sold_at` timestamp via migration on `ads` (nullable).
-- Update `status` to `sold` and stamp `sold_at` when seller confirms (also auto-stamped on successful PayButton transfer).
-- Show a "Sold" badge on `AdCard` and `AdDetail` when applicable.
+---
 
-### 2. Transaction history
-- New page `src/pages/Transactions.tsx` accessible from Dashboard and Navbar user menu.
-- Two tabs: **Purchases** (offers I made that were accepted, or ads I paid for) and **Sales** (my ads marked sold).
-- Persist on-chain payment receipts: new `payments` table (ad_id, buyer_id, seller_id, amount_usdc, tx_hash, chain_id) — recorded by `PayButton` after a successful tx so receipts survive.
-- Migration + RLS (buyer or seller can read their rows; only buyer can insert their own).
+## Phase 1 — Infrastructure port (copy from Directory Builder)
 
-### 3. Seller profile page
-- New route `/seller/:id` → `src/pages/SellerProfile.tsx`.
-- Shows avatar, display name, member-since, rating (avg from `reviews`), total ads, active listings grid, and recent reviews.
-- Link the seller card on `AdDetail.tsx` to this new page.
+### 1a. Web3 layer
+- Copy `src/polyfills.ts` and add the `import "./polyfills"` line at top of `src/main.tsx`.
+- Create `src/components/Web3Provider.tsx` based on source project's version, with same minimal Reown AppKit config (`email/socials/swaps/send/receive/onramp/history: false`), dark theme, brand accent updated to monast.io tokens.
+- Wrap `<App />` in `<Web3Provider>` inside `src/main.tsx`.
+- Add deps: `@reown/appkit`, `@reown/appkit-adapter-wagmi`, `wagmi`, `viem`, `@wagmi/core`, `@wagmi/connectors`, `@tanstack/react-query` (already present), `ox`, `buffer`.
+- Reuse the existing `VITE_WALLET_CONNECT_PROJECT_ID` fallback id from source.
 
-### 4. Wire-up
-- Add Navbar link to Transactions when authenticated.
-- Add link to Seller Profile from `AdCard` author area (if shown) and from `AdDetail` seller card.
+### 1b. Networks — `src/lib/chains.ts`
+Rewrite chain registry with these 5 networks (replacing the existing simplified `src/lib/usdc.ts` later):
 
-## Technical notes
+| Key | Name | chainId | RPC | Native | USDC | Enabled |
+|---|---|---|---|---|---|---|
+| `base` | Base Mainnet | 8453 | mainnet.base.org | ETH | `0x8335…2913` | ✅ |
+| `arc-testnet` | Arc Testnet | 5042002 | rpc.testnet.arc.network | USDC (18-dec) | `0x75fa…AA4d` | ✅ |
+| `sepolia` | Ethereum Sepolia | 11155111 | publicnode | ETH | `0x1c7D…7238` | ✅ |
+| `tempo-mainnet` | Tempo Mainnet | 4217 | https://rpc.tempo.xyz | USDC placeholder (18-dec) | TBD `0x000…` | ✅ |
+| `tempo-moderato` | Tempo Moderato Testnet | 42431 | https://rpc.moderato.tempo.xyz | USDC placeholder | TBD `0x000…` | ✅ |
 
-- Migration: `alter table ads add column sold_at timestamptz;` and create `payments` table with RLS.
-- Reuse existing `useAuth`, `useWallet`, `supabase` client patterns.
-- Keep all UI in semantic tokens (no raw colors).
-- No new dependencies.
+Explorer URLs for Tempo: I'll use `https://explorer.tempo.xyz` and `https://explorer.moderato.tempo.xyz` as best-guess placeholders (Tempo docs not in my context); flag both as `TODO: confirm` in code.
 
-## Out of scope (later sessions)
-- Saved/favorited ads
-- Search filters polish, pagination
-- Admin moderation, reporting
-- Email notifications
-- Escrow smart contract (currently direct USDC transfer)
+All five chains registered as custom Wagmi/AppKit chains in `Web3Provider.tsx` (Base + Sepolia from `@reown/appkit/networks`, the other three defined inline like Arc currently is).
 
-## Credit estimate for full remaining build
+### 1c. Circle Arc App Kit + swap libs
+- Copy `src/lib/arcAppKit.ts` verbatim.
+- Copy `src/lib/swap/{chains,contracts,tokens,useQuote,useSwap}.ts` verbatim.
+- Copy edge function `supabase/functions/circle-proxy/` verbatim (will auto-deploy).
 
-Lovable build mode is usage-based — I can't give an exact number. Realistically, finishing everything above plus the "out of scope" polish typically lands in the **15–30 credits** range depending on iteration and bug-fix cycles. This session targets ~5 credits to deliver sections 1–4.
+### 1d. Admin auth system
+- Copy `src/lib/adminAuth.ts` verbatim (treasury wallet stays `0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c`).
+- Copy `supabase/functions/_shared/admin-auth.ts` verbatim.
+- Migration: create `admin_sig_nonces` table + scheduled cleanup function (port the source migration that defines them).
+
+### 1e. Security baseline
+- **CSP**: replace `index.html` `<head>` with strict CSP meta tag matching source's.
+- **Rate limiting**: port the `rate_limits` table + helper SQL functions used by admin/agent functions.
+- **RLS deny-all + public view pattern**: I'll apply this to monast.io's sensitive tables in Phase 2 (after the new schema lands), not retrofit to current `ads`/`profiles` yet.
+- **SSRF allowlist helper**: extract the allowlist pattern from `check-deployment` into a small shared helper module used by future outbound-fetching edge functions (no function copied since `check-deployment` is directory-specific).
+
+### 1f. NOT copied (explicit)
+Pages (Index, AIAgents, MerchantDetail, Submit, etc.), `data/`, `partners.ts`, `basePayment.ts`, `multichainPayments.ts`, `builderCode.ts`, `web3.ts`, directory-specific edge functions (`admin-agents`, `admin-featured`, `admin-listings`, `admin-payments`, `agents-api`, `boost-listing`, `check-deployment`, `mcp`, `og-agent`, `sitemap`, `submit-*`, `upload-logo`), and any `partners`/`merchants` migrations.
+
+### 1g. Reconcile with existing monast.io code
+- `src/lib/usdc.ts` → kept temporarily for `PayButton.tsx`, but I'll refactor `PayButton` and `useWallet` to use Wagmi + `chains.ts` instead of `window.ethereum` directly. Remove `useWallet` custom hook (replaced by `useAccount` / `useConnect` from wagmi / AppKit modal).
+
+---
+
+## Phase 2 — Fresh marketplace schema + pages (proposal only, build in next plan)
+
+After Phase 1 lands, propose a new schema along these lines (NOT building yet — for discussion):
+
+```text
+listings
+  id, seller_id, title, description, category (house|car|electronics|other),
+  price_usdc, currency_chain, location, images[], status (draft|active|in_escrow|sold|cancelled),
+  spec (jsonb: bedrooms, mileage, year, etc.),
+  created_at, updated_at
+
+offers
+  id, listing_id, buyer_id, amount_usdc, message, status (pending|accepted|rejected|expired),
+  expires_at
+
+escrows
+  id, listing_id, buyer_id, seller_id, amount_usdc, chain_id, usdc_address,
+  escrow_contract_address, deposit_tx, release_tx, refund_tx,
+  state (created|funded|delivered|released|disputed|refunded), arbiter (admin wallet),
+  created_at, funded_at, released_at
+
+wallet_links
+  user_id, wallet_address, chain_id, verified_at, signature
+
+disputes
+  id, escrow_id, opened_by, reason, evidence[], resolution, resolved_by, resolved_at
+```
+
+Pages: `/`, `/browse`, `/listing/:id`, `/sell`, `/dashboard` (seller), `/purchases` (buyer), `/escrow/:id`, `/admin`. The existing `ads/offers/payments/messages/reviews` tables will be migrated into the new `listings/offers/escrows/...` shape or kept side-by-side then deprecated — to be decided in the Phase 2 plan.
+
+---
+
+## What I need from you before building
+
+1. **Approve Phase 1 as scoped above**, or trim it (e.g. "skip swap libs for now").
+2. **Tempo confirmations**: confirm chainIds 4217 / 42431 and that I should use placeholder zero-address USDC contracts (like Arc mainnet) until official addresses ship. Also confirm explorer URLs or tell me to leave them as `TODO`.
+3. **Existing data**: the current `ads` / `payments` / `reviews` tables — keep, migrate, or drop in Phase 2? (Default: keep, deprecate gradually.)
+
+Reply "go phase 1" (with any tweaks) and I'll switch to build mode and execute. Phase 2 schema will come as a separate plan once Phase 1 is verified.
