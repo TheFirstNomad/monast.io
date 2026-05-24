@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sig_nonces: {
+        Row: {
+          admin_address: string
+          signature: string
+          used_at: string
+        }
+        Insert: {
+          admin_address: string
+          signature: string
+          used_at?: string
+        }
+        Update: {
+          admin_address?: string
+          signature?: string
+          used_at?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           category: string
@@ -72,6 +90,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_rate_limits: {
+        Row: {
+          bucket_key: string
+          created_at: string
+          endpoint: string
+          id: string
+        }
+        Insert: {
+          bucket_key: string
+          created_at?: string
+          endpoint: string
+          id?: string
+        }
+        Update: {
+          bucket_key?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -274,7 +313,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_admin_sig_nonces: { Args: never; Returns: undefined }
+      cleanup_agent_rate_limits: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
