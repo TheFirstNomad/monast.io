@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt } from "lucide-react";
 import { useState } from "react";
@@ -7,11 +7,20 @@ import { useAuth } from "@/hooks/useAuth";
 
 export const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const { address, connect, connecting } = useWallet();
   const { user } = useAuth();
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/browse?q=${encodeURIComponent(q)}` : "/browse");
+    setMobileOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
@@ -24,16 +33,18 @@ export const Navbar = () => {
             <span className="text-lg font-bold text-foreground hidden sm:block">monast.io</span>
           </Link>
 
-          <div className="hidden md:flex flex-1 max-w-xl mx-6">
+          <form onSubmit={submitSearch} className="hidden md:flex flex-1 max-w-xl mx-6">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for anything..."
                 className="w-full h-10 pl-10 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-          </div>
+          </form>
 
           <div className="hidden md:flex items-center gap-2">
             {address ? (
@@ -90,14 +101,16 @@ export const Navbar = () => {
 
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-card px-4 py-4 space-y-3">
-          <div className="relative">
+          <form onSubmit={submitSearch} className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder="Search for anything..."
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
-          </div>
+          </form>
           <div className="flex flex-col gap-1">
             {[
               { to: "/", label: "Home" },

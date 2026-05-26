@@ -1,7 +1,13 @@
-// USDC on Arc - update address when official deployment is known
-export const USDC_ADDRESS = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"; // placeholder
+// USDC defaults for the active marketplace chain.
+// Sourced from the central chain registry so we never drift from chains.ts.
+import { CHAINS } from "./chains";
+
+// Default trading chain — Arc Testnet while Arc Mainnet is unreleased.
+const DEFAULT = CHAINS["arc-testnet"];
+
+export const USDC_ADDRESS: `0x${string}` = DEFAULT.usdc;
 export const USDC_DECIMALS = 6;
-export const ARC_CHAIN_ID = 0xa4b1;
+export const ARC_CHAIN_ID: number = DEFAULT.id;
 
 export const ERC20_TRANSFER_ABI = [
   {
@@ -16,8 +22,8 @@ export const ERC20_TRANSFER_ABI = [
   },
 ] as const;
 
+// Helper kept for any legacy call-sites; wagmi `useWriteContract` is preferred.
 export function encodeTransfer(to: string, amount: bigint): string {
-  // function selector for transfer(address,uint256) = 0xa9059cbb
   const selector = "a9059cbb";
   const addr = to.toLowerCase().replace(/^0x/, "").padStart(64, "0");
   const amt = amount.toString(16).padStart(64, "0");

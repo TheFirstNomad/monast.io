@@ -1,95 +1,56 @@
-## Goal
+# Deep Audit & Fix Plan
 
-Port the proven Web3 / admin-auth / security infrastructure from the `usdc.directory` project (Directory Builder) into monast.io, **without** carrying over directory-specific schema or pages. Then propose a fresh marketplace schema designed for real-world goods (houses, cars, etc.) paid in USDC.
+## About the "blank preview"
+I navigated to the preview from my side and the homepage renders correctly (header, green hero, categories, recent listings). The blank screen you're seeing is almost certainly a stale cached iframe from earlier — please hard‑refresh the preview (the circular refresh icon above it). If after that it's still blank, send me a screenshot and the browser console.
 
-This is a large port. I'd recommend approving it in two phases so we can verify each phase works before the next.
-
----
-
-## Phase 1 — Infrastructure port (copy from Directory Builder)
-
-### 1a. Web3 layer
-- Copy `src/polyfills.ts` and add the `import "./polyfills"` line at top of `src/main.tsx`.
-- Create `src/components/Web3Provider.tsx` based on source project's version, with same minimal Reown AppKit config (`email/socials/swaps/send/receive/onramp/history: false`), dark theme, brand accent updated to monast.io tokens.
-- Wrap `<App />` in `<Web3Provider>` inside `src/main.tsx`.
-- Add deps: `@reown/appkit`, `@reown/appkit-adapter-wagmi`, `wagmi`, `viem`, `@wagmi/core`, `@wagmi/connectors`, `@tanstack/react-query` (already present), `ox`, `buffer`.
-- Reuse the existing `VITE_WALLET_CONNECT_PROJECT_ID` fallback id from source.
-
-### 1b. Networks — `src/lib/chains.ts`
-Rewrite chain registry with these 5 networks (replacing the existing simplified `src/lib/usdc.ts` later):
-
-| Key | Name | chainId | RPC | Native | USDC | Enabled |
-|---|---|---|---|---|---|---|
-| `base` | Base Mainnet | 8453 | mainnet.base.org | ETH | `0x8335…2913` | ✅ |
-| `arc-testnet` | Arc Testnet | 5042002 | rpc.testnet.arc.network | USDC (18-dec) | `0x75fa…AA4d` | ✅ |
-| `sepolia` | Ethereum Sepolia | 11155111 | publicnode | ETH | `0x1c7D…7238` | ✅ |
-| `tempo-mainnet` | Tempo Mainnet | 4217 | https://rpc.tempo.xyz | USDC placeholder (18-dec) | TBD `0x000…` | ✅ |
-| `tempo-moderato` | Tempo Moderato Testnet | 42431 | https://rpc.moderato.tempo.xyz | USDC placeholder | TBD `0x000…` | ✅ |
-
-Explorer URLs for Tempo: I'll use `https://explorer.tempo.xyz` and `https://explorer.moderato.tempo.xyz` as best-guess placeholders (Tempo docs not in my context); flag both as `TODO: confirm` in code.
-
-All five chains registered as custom Wagmi/AppKit chains in `Web3Provider.tsx` (Base + Sepolia from `@reown/appkit/networks`, the other three defined inline like Arc currently is).
-
-### 1c. Circle Arc App Kit + swap libs
-- Copy `src/lib/arcAppKit.ts` verbatim.
-- Copy `src/lib/swap/{chains,contracts,tokens,useQuote,useSwap}.ts` verbatim.
-- Copy edge function `supabase/functions/circle-proxy/` verbatim (will auto-deploy).
-
-### 1d. Admin auth system
-- Copy `src/lib/adminAuth.ts` verbatim (treasury wallet stays `0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c`).
-- Copy `supabase/functions/_shared/admin-auth.ts` verbatim.
-- Migration: create `admin_sig_nonces` table + scheduled cleanup function (port the source migration that defines them).
-
-### 1e. Security baseline
-- **CSP**: replace `index.html` `<head>` with strict CSP meta tag matching source's.
-- **Rate limiting**: port the `rate_limits` table + helper SQL functions used by admin/agent functions.
-- **RLS deny-all + public view pattern**: I'll apply this to monast.io's sensitive tables in Phase 2 (after the new schema lands), not retrofit to current `ads`/`profiles` yet.
-- **SSRF allowlist helper**: extract the allowlist pattern from `check-deployment` into a small shared helper module used by future outbound-fetching edge functions (no function copied since `check-deployment` is directory-specific).
-
-### 1f. NOT copied (explicit)
-Pages (Index, AIAgents, MerchantDetail, Submit, etc.), `data/`, `partners.ts`, `basePayment.ts`, `multichainPayments.ts`, `builderCode.ts`, `web3.ts`, directory-specific edge functions (`admin-agents`, `admin-featured`, `admin-listings`, `admin-payments`, `agents-api`, `boost-listing`, `check-deployment`, `mcp`, `og-agent`, `sitemap`, `submit-*`, `upload-logo`), and any `partners`/`merchants` migrations.
-
-### 1g. Reconcile with existing monast.io code
-- `src/lib/usdc.ts` → kept temporarily for `PayButton.tsx`, but I'll refactor `PayButton` and `useWallet` to use Wagmi + `chains.ts` instead of `window.ethereum` directly. Remove `useWallet` custom hook (replaced by `useAccount` / `useConnect` from wagmi / AppKit modal).
+A real‑live screenshot is below for reference (your app is up):
+- Header + "Buy & Sell Anything Worldwide with USDC on Arc" hero ✔
+- Categories grid ✔
+- Recent listings section ✔
 
 ---
 
-## Phase 2 — Fresh marketplace schema + pages (proposal only, build in next plan)
+## Critical bugs found
 
-After Phase 1 lands, propose a new schema along these lines (NOT building yet — for discussion):
+### 1. Wrong chain & wrong USDC contract in payment flow (BLOCKER)
+`src/lib/usdc.ts` ships Arbitrum's chain id (`0xa4b1` = 42161) and Arbitrum's USDC address (`0xaf88…5831`), but the app and `src/lib/chains.ts` target **Arc Testnet (5042002)** with USDC `0x75fa…AA4d`. As written today, `PayButton` would silently route real funds to the wrong network and the wrong token contract. Fix: replace `usdc.ts` constants with values pulled from `chains.ts` (default to Arc Testnet for now, selectable per‑chain later).
 
-```text
-listings
-  id, seller_id, title, description, category (house|car|electronics|other),
-  price_usdc, currency_chain, location, images[], status (draft|active|in_escrow|sold|cancelled),
-  spec (jsonb: bedrooms, mileage, year, etc.),
-  created_at, updated_at
+### 2. Wallet hook bypasses Reown / wagmi
+`src/hooks/useWallet.tsx` still uses raw `window.ethereum` + a hardcoded Arbitrum `ARC_PARAMS` block. The whole Phase‑1 infra port (Reown AppKit + wagmi + 5‑chain registry) is never used by the UI. The "Connect Wallet" button only works for MetaMask, ignores WalletConnect/Coinbase/etc., and tries to add Arbitrum to the wallet under the name "Arc". Fix: rewrite `useWallet` as a thin wrapper around wagmi (`useAccount`, `useConnect`, `useDisconnect`, `useSwitchChain`) and trigger the Reown modal via `useAppKit().open()`.
 
-offers
-  id, listing_id, buyer_id, amount_usdc, message, status (pending|accepted|rejected|expired),
-  expires_at
+### 3. PayButton chain check uses the wrong id
+Same root cause as #1 — once `usdc.ts` is fixed, `PayButton` must read the active chain from wagmi and dispatch via `useSendTransaction` / `useWriteContract` instead of `window.ethereum.request`. This also lets us support all 5 configured chains (Base, Arc, Sepolia, Tempo, Tempo Moderato).
 
-escrows
-  id, listing_id, buyer_id, seller_id, amount_usdc, chain_id, usdc_address,
-  escrow_contract_address, deposit_tx, release_tx, refund_tx,
-  state (created|funded|delivered|released|disputed|refunded), arbiter (admin wallet),
-  created_at, funded_at, released_at
+### 4. Duplicate React‑Query providers
+There's a `QueryClient` in `src/App.tsx` and another in `src/components/Web3Provider.tsx`. Nesting works but causes duplicate caches and dev‑tool confusion. Fix: keep the one in `Web3Provider` (wagmi needs it) and remove the one in `App.tsx`.
 
-wallet_links
-  user_id, wallet_address, chain_id, verified_at, signature
+## Smaller bugs / UX gaps
 
-disputes
-  id, escrow_id, opened_by, reason, evidence[], resolution, resolved_by, resolved_at
-```
+5. **Navbar search input** has no `onChange`, no submit, no navigation — purely cosmetic. Wire it to `navigate('/browse?q=' + encoded)` on Enter.
+6. **Mobile menu "Connect Wallet"** uses the same legacy hook; will be fixed by #2.
+7. **`PostAd` image upload**: no size/type validation; a 50 MB HEIC will hang the upload. Add a 5 MB / `image/*` guard and per‑file error toast.
+8. **`profiles.total_ads`** never increments. Add a trigger on `ads` (insert → +1, delete → −1 for that seller) so seller cards show real counts.
+9. **`ReviewSection`** silently fails for users who haven't paid (because of the tightened RLS). Add a friendly "Only buyers who completed payment can review" empty state and hide the form for non‑buyers.
+10. **`Auth.tsx`**: `emailRedirectTo` should point to `${window.location.origin}/dashboard` so users land somewhere useful after confirming.
 
-Pages: `/`, `/browse`, `/listing/:id`, `/sell`, `/dashboard` (seller), `/purchases` (buyer), `/escrow/:id`, `/admin`. The existing `ads/offers/payments/messages/reviews` tables will be migrated into the new `listings/offers/escrows/...` shape or kept side-by-side then deprecated — to be decided in the Phase 2 plan.
+## What I will NOT touch
+- Schema / RLS (already cleaned by the security pass).
+- The Tempo placeholder USDC addresses in `chains.ts` (still pending official deployment).
+- Page layouts and design tokens.
 
----
+## Files to change
+- `src/lib/usdc.ts` — rewrite to use Arc Testnet defaults from `chains.ts`.
+- `src/hooks/useWallet.tsx` — rewrite on top of wagmi + Reown AppKit.
+- `src/components/PayButton.tsx` — switch to wagmi `useWriteContract` + active chain checks.
+- `src/components/Navbar.tsx` — wire the search input.
+- `src/pages/PostAd.tsx` — add upload validation.
+- `src/pages/Auth.tsx` — fix `emailRedirectTo`.
+- `src/components/ReviewSection.tsx` — gate the form behind a payment check.
+- `src/App.tsx` — remove the duplicate QueryClient.
+- New migration: trigger to maintain `profiles.total_ads`.
 
-## What I need from you before building
+## Out of scope (will surface as follow‑ups, not done now)
+- Full multichain selector in `PayButton` (Base / Sepolia / Tempo) — current pass only ensures the **Arc Testnet** path is correct.
+- Saved/favorite ads, admin moderation, dispute flow.
 
-1. **Approve Phase 1 as scoped above**, or trim it (e.g. "skip swap libs for now").
-2. **Tempo confirmations**: confirm chainIds 4217 / 42431 and that I should use placeholder zero-address USDC contracts (like Arc mainnet) until official addresses ship. Also confirm explorer URLs or tell me to leave them as `TODO`.
-3. **Existing data**: the current `ads` / `payments` / `reviews` tables — keep, migrate, or drop in Phase 2? (Default: keep, deprecate gradually.)
-
-Reply "go phase 1" (with any tweaks) and I'll switch to build mode and execute. Phase 2 schema will come as a separate plan once Phase 1 is verified.
+Approve this plan and I'll implement it in one pass.
