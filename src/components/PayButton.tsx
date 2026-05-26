@@ -54,7 +54,7 @@ export const PayButton = ({ adId, sellerId, amount }: Props) => {
         functionName: "transfer",
         args: [to, toUsdcUnits(amount)],
         chainId: ARC_CHAIN_ID,
-      });
+      } as any);
       setPendingHash(hash);
       toast.success("Payment sent: " + hash.slice(0, 10) + "…");
     } catch (e: any) {
