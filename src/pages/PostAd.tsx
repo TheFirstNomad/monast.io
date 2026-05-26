@@ -30,6 +30,7 @@ const PostAd = () => {
     if (!loading && !user) navigate("/auth", { replace: true });
   }, [user, loading, navigate]);
 
+  const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length || !user) return;
@@ -37,6 +38,14 @@ const PostAd = () => {
     try {
       const uploaded: string[] = [];
       for (const file of files.slice(0, 12 - images.length)) {
+        if (!file.type.startsWith("image/")) {
+          toast({ title: "Skipped", description: `${file.name} is not an image`, variant: "destructive" });
+          continue;
+        }
+        if (file.size > MAX_FILE_BYTES) {
+          toast({ title: "Too large", description: `${file.name} exceeds 5 MB`, variant: "destructive" });
+          continue;
+        }
         const ext = file.name.split(".").pop();
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error } = await supabase.storage.from("ad-photos").upload(path, file);
@@ -44,7 +53,7 @@ const PostAd = () => {
         const { data } = supabase.storage.from("ad-photos").getPublicUrl(path);
         uploaded.push(data.publicUrl);
       }
-      setImages([...images, ...uploaded]);
+      if (uploaded.length) setImages([...images, ...uploaded]);
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
     } finally {

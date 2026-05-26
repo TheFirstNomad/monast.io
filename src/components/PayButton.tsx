@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Loader2 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { encodeTransfer, toUsdcUnits, USDC_ADDRESS, ARC_CHAIN_ID } from "@/lib/usdc";
+import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/lib/usdc";
 import { toast } from "sonner";
+import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 
 interface Props {
   adId: string;
@@ -16,13 +17,18 @@ interface Props {
 export const PayButton = ({ adId, sellerId, amount }: Props) => {
   const { address, connect } = useWallet();
   const { user } = useAuth();
-  const [paying, setPaying] = useState(false);
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync, isPending } = useWriteContract();
+  const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
+  const { isLoading: confirming, isSuccess } = useWaitForTransactionReceipt({ hash: pendingHash });
+  const [recording, setRecording] = useState(false);
+  const busy = isPending || confirming || recording;
 
   const pay = async () => {
     try {
       if (!user) { toast.error("Sign in to pay"); return; }
       if (!address) { await connect(); return; }
-      if (!window.ethereum) { toast.error("Wallet not detected"); return; }
 
       const { data: sellerProfile } = await supabase
         .from("profiles")
@@ -30,49 +36,62 @@ export const PayButton = ({ adId, sellerId, amount }: Props) => {
         .eq("id", sellerId)
         .maybeSingle();
 
-      const to = sellerProfile?.wallet_address;
+      const to = sellerProfile?.wallet_address as `0x${string}` | null | undefined;
       if (!to) { toast.error("Seller has no wallet connected"); return; }
 
-      setPaying(true);
-      const chainId = await window.ethereum.request({ method: "eth_chainId" });
-      if (parseInt(chainId, 16) !== ARC_CHAIN_ID) {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: "0x" + ARC_CHAIN_ID.toString(16) }],
-        });
+      if (chainId !== ARC_CHAIN_ID) {
+        try {
+          await switchChainAsync({ chainId: ARC_CHAIN_ID });
+        } catch {
+          toast.error("Please switch your wallet to Arc Testnet");
+          return;
+        }
       }
 
-      const data = encodeTransfer(to, toUsdcUnits(amount));
-      const txHash: string = await window.ethereum.request({
-        method: "eth_sendTransaction",
-        params: [{ from: address, to: USDC_ADDRESS, data }],
+      const hash = await writeContractAsync({
+        address: USDC_ADDRESS,
+        abi: ERC20_TRANSFER_ABI,
+        functionName: "transfer",
+        args: [to, toUsdcUnits(amount)],
+        chainId: ARC_CHAIN_ID,
       });
-
-      toast.success("Payment sent: " + txHash.slice(0, 10) + "...");
-
-      await supabase.from("payments").insert({
-        ad_id: adId,
-        buyer_id: user.id,
-        seller_id: sellerId,
-        amount_usdc: amount,
-        tx_hash: txHash,
-        chain_id: ARC_CHAIN_ID,
-      });
-      await supabase
-        .from("ads")
-        .update({ status: "sold", sold_at: new Date().toISOString() })
-        .eq("id", adId);
+      setPendingHash(hash);
+      toast.success("Payment sent: " + hash.slice(0, 10) + "…");
     } catch (e: any) {
-      toast.error(e.message || "Payment failed");
-    } finally {
-      setPaying(false);
+      toast.error(e?.shortMessage || e?.message || "Payment failed");
     }
   };
 
+  // Once the tx is mined, record the payment and mark the ad sold.
+  useEffect(() => {
+    if (!isSuccess || !pendingHash || !user) return;
+    (async () => {
+      setRecording(true);
+      try {
+        await supabase.from("payments").insert({
+          ad_id: adId,
+          buyer_id: user.id,
+          seller_id: sellerId,
+          amount_usdc: amount,
+          tx_hash: pendingHash,
+          chain_id: ARC_CHAIN_ID,
+        });
+        await supabase
+          .from("ads")
+          .update({ status: "sold", sold_at: new Date().toISOString() })
+          .eq("id", adId);
+        toast.success("Purchase recorded");
+      } finally {
+        setRecording(false);
+        setPendingHash(undefined);
+      }
+    })();
+  }, [isSuccess, pendingHash, user, adId, sellerId, amount]);
+
   return (
-    <Button onClick={pay} disabled={paying} className="w-full gap-2 font-semibold py-5">
-      {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
-      {paying ? "Processing..." : `Pay ${amount.toLocaleString()} USDC`}
+    <Button onClick={pay} disabled={busy} className="w-full gap-2 font-semibold py-5">
+      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
+      {busy ? "Processing…" : `Pay ${amount.toLocaleString()} USDC`}
     </Button>
   );
 };

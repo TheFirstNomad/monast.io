@@ -27,6 +27,7 @@ export const ReviewSection = ({ adId, sellerId, adSold }: Props) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
 
   const load = async () => {
     const { data } = await supabase
@@ -39,6 +40,20 @@ export const ReviewSection = ({ adId, sellerId, adSold }: Props) => {
 
   useEffect(() => { load(); }, [adId]);
 
+  // Check whether the current user has a recorded payment for this ad.
+  useEffect(() => {
+    if (!user) { setHasPaid(false); return; }
+    supabase
+      .from("payments")
+      .select("id")
+      .eq("ad_id", adId)
+      .eq("buyer_id", user.id)
+      .eq("seller_id", sellerId)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setHasPaid(!!data));
+  }, [user, adId, sellerId]);
+
   const submit = async () => {
     if (!user) { toast.error("Sign in to review"); return; }
     setSubmitting(true);
@@ -50,13 +65,15 @@ export const ReviewSection = ({ adId, sellerId, adSold }: Props) => {
     else { toast.success("Review submitted"); setComment(""); load(); }
   };
 
-  const canReview = user && user.id !== sellerId && adSold && !reviews.find((r) => r.buyer_id === user.id);
+  const alreadyReviewed = !!(user && reviews.find((r) => r.buyer_id === user.id));
+  const isSeller = !!(user && user.id === sellerId);
+  const canReview = user && !isSeller && adSold && hasPaid && !alreadyReviewed;
 
   return (
     <div className="bg-card rounded-xl border border-border p-5 mt-4">
       <h3 className="text-sm font-semibold text-foreground mb-3">Reviews ({reviews.length})</h3>
 
-      {canReview && (
+      {canReview ? (
         <div className="mb-4 pb-4 border-b border-border">
           <div className="flex gap-1 mb-2">
             {[1, 2, 3, 4, 5].map((n) => (
@@ -76,7 +93,11 @@ export const ReviewSection = ({ adId, sellerId, adSold }: Props) => {
             {submitting ? "Submitting..." : "Submit Review"}
           </Button>
         </div>
-      )}
+      ) : user && !isSeller && adSold && !hasPaid ? (
+        <p className="mb-4 pb-4 border-b border-border text-xs text-muted-foreground">
+          Only buyers who completed a USDC payment for this item can leave a review.
+        </p>
+      ) : null}
 
       {reviews.length === 0 ? (
         <p className="text-sm text-muted-foreground">No reviews yet.</p>
