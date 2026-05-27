@@ -55,7 +55,7 @@ suite("RLS policies & triggers", () => {
         title: "Test Item",
         description: "Test",
         category: "other",
-        condition: "new",
+        condition: "New",
         location: "Internet",
         price_usdc: 100,
       })
