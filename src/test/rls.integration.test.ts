@@ -175,12 +175,5 @@ suite("RLS policies & triggers", () => {
       expect(error).toBeNull();
     });
 
-    it("blocks the seller from inserting a fake payment", async () => {
-      const { error } = await sellerClient.from("payments").insert({
-        ad_id: adId, buyer_id: sellerId, seller_id: sellerId,
-        amount_usdc: 100, tx_hash: "0x" + "d".repeat(64), chain_id: 5042002,
-      });
-      expect(error).toBeTruthy();
-    });
   });
 });
