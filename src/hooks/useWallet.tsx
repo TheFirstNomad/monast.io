@@ -54,7 +54,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
         // 2. Ask the wallet to sign the SIWE message
         const message = buildSiweMessage(addr, nonceData.nonce);
-        const signature = await signMessageAsync({ message });
+        const signature = await signMessageAsync({ account: addr as `0x${string}`, message });
 
         // 3. Verify on server, get a session
         const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("siwe-verify", {
