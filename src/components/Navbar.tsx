@@ -151,10 +151,17 @@ export const Navbar = () => {
               </Link>
             ))}
           </div>
-          <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
-            <Wallet className="w-4 h-4" />
-            {address ? short : connecting ? "Connecting..." : "Connect Wallet"}
-          </Button>
+          {address ? (
+            <Button variant="outline" size="sm" onClick={disconnect} className="w-full gap-2">
+              <LogOut className="w-4 h-4" />
+              Sign out ({short})
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
+              <Wallet className="w-4 h-4" />
+              {connecting ? "Signing in..." : "Connect Wallet"}
+            </Button>
+          )}
         </div>
       )}
     </nav>
