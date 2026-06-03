@@ -308,6 +308,27 @@ export type Database = {
         }
         Relationships: []
       }
+      siwe_nonces: {
+        Row: {
+          address: string | null
+          created_at: string
+          nonce: string
+          used_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          nonce: string
+          used_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          nonce?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

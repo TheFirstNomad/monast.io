@@ -1,56 +1,58 @@
-# Deep Audit & Fix Plan
+# Wallet-based Sign In
 
-## About the "blank preview"
-I navigated to the preview from my side and the homepage renders correctly (header, green hero, categories, recent listings). The blank screen you're seeing is almost certainly a stale cached iframe from earlier — please hard‑refresh the preview (the circular refresh icon above it). If after that it's still blank, send me a screenshot and the browser console.
+## Goal
+Make wallet connection THE primary sign-in. The moment a user connects their wallet via the Reown AppKit modal, they are authenticated in the app (Lovable Cloud session created) — no email/password required. Email + social login stay on the roadmap for the next build (Circle/Privy embedded wallets), but are removed from the current UI to avoid confusion.
 
-A real‑live screenshot is below for reference (your app is up):
-- Header + "Buy & Sell Anything Worldwide with USDC on Arc" hero ✔
-- Categories grid ✔
-- Recent listings section ✔
+## How wallet sign-in will work (SIWE — Sign-In With Ethereum)
 
----
+Lovable Cloud auth doesn't natively support "wallet as identity", so we bridge it with a standard SIWE flow backed by an edge function:
 
-## Critical bugs found
+```text
+1. User clicks "Connect Wallet" → Reown AppKit modal → wallet connected (wagmi)
+2. Frontend requests a nonce from edge fn `siwe-nonce`
+3. Frontend asks wallet to sign a SIWE message containing that nonce
+4. Frontend POSTs { message, signature } to edge fn `siwe-verify`
+5. siwe-verify:
+   - verifies the signature with viem `verifyMessage`
+   - checks nonce is fresh & unused (stored in a new `siwe_nonces` table)
+   - upserts an auth user keyed by `<address>@wallet.monast.io` (deterministic placeholder email, email_confirm=true, random strong password)
+   - upserts `profiles.wallet_address = address`
+   - returns a Supabase session (access_token + refresh_token) via admin API
+6. Frontend calls `supabase.auth.setSession(...)` → user is signed in
+```
 
-### 1. Wrong chain & wrong USDC contract in payment flow (BLOCKER)
-`src/lib/usdc.ts` ships Arbitrum's chain id (`0xa4b1` = 42161) and Arbitrum's USDC address (`0xaf88…5831`), but the app and `src/lib/chains.ts` target **Arc Testnet (5042002)** with USDC `0x75fa…AA4d`. As written today, `PayButton` would silently route real funds to the wrong network and the wrong token contract. Fix: replace `usdc.ts` constants with values pulled from `chains.ts` (default to Arc Testnet for now, selectable per‑chain later).
+This is the same pattern Privy/Dynamic/Thirdweb use under the hood, and it keeps RLS (`auth.uid()`) working unchanged across the app.
 
-### 2. Wallet hook bypasses Reown / wagmi
-`src/hooks/useWallet.tsx` still uses raw `window.ethereum` + a hardcoded Arbitrum `ARC_PARAMS` block. The whole Phase‑1 infra port (Reown AppKit + wagmi + 5‑chain registry) is never used by the UI. The "Connect Wallet" button only works for MetaMask, ignores WalletConnect/Coinbase/etc., and tries to add Arbitrum to the wallet under the name "Arc". Fix: rewrite `useWallet` as a thin wrapper around wagmi (`useAccount`, `useConnect`, `useDisconnect`, `useSwitchChain`) and trigger the Reown modal via `useAppKit().open()`.
+## UI changes
 
-### 3. PayButton chain check uses the wrong id
-Same root cause as #1 — once `usdc.ts` is fixed, `PayButton` must read the active chain from wagmi and dispatch via `useSendTransaction` / `useWriteContract` instead of `window.ethereum.request`. This also lets us support all 5 configured chains (Base, Arc, Sepolia, Tempo, Tempo Moderato).
+- **Navbar "Connect Wallet" button** = the single sign-in entry point. After connect+SIWE succeeds, the same button shows the short address and a dropdown with Dashboard / Sign out.
+- **`/auth` page**: replace the email/password form with a big "Connect Wallet to continue" button (opens the AppKit modal). Add a small muted note: *"Email & social sign-in (with an embedded wallet) coming soon."*
+- **Sign-out**: disconnects the wallet AND calls `supabase.auth.signOut()` together so the two stay in sync.
+- **`useWallet` + `useAuth`**: `useWallet` triggers the SIWE handshake on every successful connect; `useAuth` is unchanged but will now reflect the wallet-derived session.
 
-### 4. Duplicate React‑Query providers
-There's a `QueryClient` in `src/App.tsx` and another in `src/components/Web3Provider.tsx`. Nesting works but causes duplicate caches and dev‑tool confusion. Fix: keep the one in `Web3Provider` (wagmi needs it) and remove the one in `App.tsx`.
+## Backend changes (one migration + one edge function folder)
 
-## Smaller bugs / UX gaps
+- **Migration**: new table `public.siwe_nonces (nonce text pk, address text, created_at timestamptz, used_at timestamptz)` with RLS denying all client access (only the edge function via service role touches it). GRANTs to `service_role` only.
+- **Edge functions** (public, `verify_jwt = false`, CORS enabled):
+  - `siwe-nonce` — returns a fresh nonce, stores it.
+  - `siwe-verify` — verifies signature, consumes nonce, creates/looks up the auth user, returns a session.
 
-5. **Navbar search input** has no `onChange`, no submit, no navigation — purely cosmetic. Wire it to `navigate('/browse?q=' + encoded)` on Enter.
-6. **Mobile menu "Connect Wallet"** uses the same legacy hook; will be fixed by #2.
-7. **`PostAd` image upload**: no size/type validation; a 50 MB HEIC will hang the upload. Add a 5 MB / `image/*` guard and per‑file error toast.
-8. **`profiles.total_ads`** never increments. Add a trigger on `ads` (insert → +1, delete → −1 for that seller) so seller cards show real counts.
-9. **`ReviewSection`** silently fails for users who haven't paid (because of the tightened RLS). Add a friendly "Only buyers who completed payment can review" empty state and hide the form for non‑buyers.
-10. **`Auth.tsx`**: `emailRedirectTo` should point to `${window.location.origin}/dashboard` so users land somewhere useful after confirming.
+No changes to existing tables, RLS, or the security triggers added in previous passes — `auth.uid()` continues to gate everything.
 
-## What I will NOT touch
-- Schema / RLS (already cleaned by the security pass).
-- The Tempo placeholder USDC addresses in `chains.ts` (still pending official deployment).
-- Page layouts and design tokens.
+## Out of scope (next build, per your note)
+- Email magic-link / Google social login.
+- Embedded wallets via Circle or Privy (decision pending). The placeholder email scheme (`<address>@wallet.monast.io`) is forward-compatible: when you pick Circle/Privy, we'll link the real email to the same auth user.
 
-## Files to change
-- `src/lib/usdc.ts` — rewrite to use Arc Testnet defaults from `chains.ts`.
-- `src/hooks/useWallet.tsx` — rewrite on top of wagmi + Reown AppKit.
-- `src/components/PayButton.tsx` — switch to wagmi `useWriteContract` + active chain checks.
-- `src/components/Navbar.tsx` — wire the search input.
-- `src/pages/PostAd.tsx` — add upload validation.
-- `src/pages/Auth.tsx` — fix `emailRedirectTo`.
-- `src/components/ReviewSection.tsx` — gate the form behind a payment check.
-- `src/App.tsx` — remove the duplicate QueryClient.
-- New migration: trigger to maintain `profiles.total_ads`.
+## Files touched
+- `supabase/functions/siwe-nonce/index.ts` (new)
+- `supabase/functions/siwe-verify/index.ts` (new)
+- New migration for `siwe_nonces`
+- `src/hooks/useWallet.tsx` — run SIWE after wagmi connect, manage sign-out
+- `src/pages/Auth.tsx` — replace form with Connect-Wallet CTA
+- `src/components/Navbar.tsx` — small dropdown on the address chip (Dashboard, Sign out)
 
-## Out of scope (will surface as follow‑ups, not done now)
-- Full multichain selector in `PayButton` (Base / Sepolia / Tempo) — current pass only ensures the **Arc Testnet** path is correct.
-- Saved/favorite ads, admin moderation, dispute flow.
+## One quick check before I build
+- Domain to use in the SIWE message: I'll default to `window.location.host` (works for preview + custom domain). OK?
+- The placeholder email scheme `0xabc...@wallet.monast.io` is internal-only and never shown to users — confirm you're fine with that as a stopgap until Circle/Privy lands.
 
-Approve this plan and I'll implement it in one pass.
+Reply "go" (with any tweaks) and I'll implement in one pass.

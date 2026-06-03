@@ -1,6 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +17,7 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const { address, connect, connecting } = useWallet();
+  const { address, connect, connecting, disconnect } = useWallet();
   const { user } = useAuth();
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
@@ -48,14 +55,27 @@ export const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-2">
             {address ? (
-              <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary">
-                <Wallet className="w-4 h-4 text-primary" />
-                <span className="font-medium text-foreground">{short}</span>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors">
+                    <Wallet className="w-4 h-4 text-primary" />
+                    <span className="font-medium text-foreground">{short}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={disconnect}>
+                    <LogOut className="w-4 h-4 mr-2" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="gap-2">
                 <Wallet className="w-4 h-4" />
-                {connecting ? "Connecting..." : "Connect Wallet"}
+                {connecting ? "Signing in..." : "Connect Wallet"}
               </Button>
             )}
             {user && (
@@ -131,10 +151,17 @@ export const Navbar = () => {
               </Link>
             ))}
           </div>
-          <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
-            <Wallet className="w-4 h-4" />
-            {address ? short : connecting ? "Connecting..." : "Connect Wallet"}
-          </Button>
+          {address ? (
+            <Button variant="outline" size="sm" onClick={disconnect} className="w-full gap-2">
+              <LogOut className="w-4 h-4" />
+              Sign out ({short})
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
+              <Wallet className="w-4 h-4" />
+              {connecting ? "Signing in..." : "Connect Wallet"}
+            </Button>
+          )}
         </div>
       )}
     </nav>
