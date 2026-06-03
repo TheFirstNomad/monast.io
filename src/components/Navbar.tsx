@@ -55,14 +55,27 @@ export const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-2">
             {address ? (
-              <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary">
-                <Wallet className="w-4 h-4 text-primary" />
-                <span className="font-medium text-foreground">{short}</span>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors">
+                    <Wallet className="w-4 h-4 text-primary" />
+                    <span className="font-medium text-foreground">{short}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                    <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={disconnect}>
+                    <LogOut className="w-4 h-4 mr-2" /> Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="gap-2">
                 <Wallet className="w-4 h-4" />
-                {connecting ? "Connecting..." : "Connect Wallet"}
+                {connecting ? "Signing in..." : "Connect Wallet"}
               </Button>
             )}
             {user && (
