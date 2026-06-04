@@ -1,8 +1,34 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { useAccount, useDisconnect, useSignMessage } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
+import { getAddress, isAddress } from "viem";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+/**
+ * Normalize an EVM address for comparison.
+ * - Validates the address shape.
+ * - Returns the EIP-55 checksummed form when possible.
+ * - Falls back to lowercase for anything non-standard so comparisons stay safe.
+ */
+function normalizeAddress(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  try {
+    if (isAddress(trimmed)) return getAddress(trimmed);
+  } catch {
+    // fall through
+  }
+  return trimmed.toLowerCase();
+}
+
+function addressesEqual(a: string | null | undefined, b: string | null | undefined): boolean {
+  const na = normalizeAddress(a);
+  const nb = normalizeAddress(b);
+  if (!na || !nb) return false;
+  return na.toLowerCase() === nb.toLowerCase();
+}
 
 interface WalletCtx {
   address: string | null;
