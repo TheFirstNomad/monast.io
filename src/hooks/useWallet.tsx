@@ -77,6 +77,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const [signingIn, setSigningIn] = useState(false);
+  const [rehydrationStatus, setRehydrationStatus] = useState<RehydrationStatus>("idle");
+  const [rehydrationError, setRehydrationError] = useState<string | null>(null);
   const handledAddress = useRef<string | null>(null);
 
   const doSiwe = useCallback(
