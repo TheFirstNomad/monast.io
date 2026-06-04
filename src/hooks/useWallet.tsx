@@ -30,9 +30,18 @@ function addressesEqual(a: string | null | undefined, b: string | null | undefin
   return na.toLowerCase() === nb.toLowerCase();
 }
 
+type RehydrationStatus =
+  | "idle"
+  | "checking"
+  | "rehydrated"
+  | "re-signed"
+  | "failed";
+
 interface WalletCtx {
   address: string | null;
   connecting: boolean;
+  rehydrationStatus: RehydrationStatus;
+  rehydrationError: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 }
