@@ -191,11 +191,26 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     handledAddress.current = null;
   }, [disconnectAsync]);
 
+  const resetRehydration = useCallback(() => {
+    setRehydrationStatus("idle");
+    setRehydrationError(null);
+  }, []);
+
+  // Auto-clear transient success banners after 6s
+  useEffect(() => {
+    if (rehydrationStatus === "rehydrated" || rehydrationStatus === "re-signed") {
+      const t = setTimeout(resetRehydration, 6000);
+      return () => clearTimeout(t);
+    }
+  }, [rehydrationStatus, resetRehydration]);
+
   return (
     <Ctx.Provider
       value={{
         address: normalizeAddress(address),
         connecting: signingIn,
+        rehydrationStatus,
+        rehydrationError,
         connect,
         disconnect,
       }}
