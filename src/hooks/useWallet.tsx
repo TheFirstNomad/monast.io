@@ -115,8 +115,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       handledAddress.current = null;
       return;
     }
-    if (handledAddress.current === address) return;
-    handledAddress.current = address;
+    const normalizedAddress = normalizeAddress(address);
+    if (!normalizedAddress) return;
+    if (handledAddress.current && addressesEqual(handledAddress.current, normalizedAddress)) return;
+    handledAddress.current = normalizedAddress;
 
     (async () => {
       const { data } = await supabase.auth.getSession();
@@ -124,11 +126,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         | string
         | undefined;
 
-      if (data.session && sessionWallet?.toLowerCase() === address.toLowerCase()) {
-        // Same wallet — rehydrate existing session, just mirror to profile.
+      if (data.session && addressesEqual(sessionWallet, normalizedAddress)) {
+        // Same wallet — rehydrate existing session, mirror checksummed form to profile.
         await supabase
           .from("profiles")
-          .update({ wallet_address: address })
+          .update({ wallet_address: normalizedAddress })
           .eq("id", data.session.user.id);
         return;
       }
@@ -138,7 +140,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         await supabase.auth.signOut();
       }
 
-      await doSiwe(address);
+      await doSiwe(normalizedAddress);
     })();
   }, [isConnected, address, doSiwe]);
 
