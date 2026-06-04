@@ -1,15 +1,14 @@
 import { useWallet } from "@/hooks/useWallet";
 import { CheckCircle, RefreshCw, AlertTriangle, X } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 export const RehydrationBanner = () => {
   const { rehydrationStatus, rehydrationError, address } = useWallet();
+  const [dismissed, setDismissed] = useState(false);
 
-  const dismiss = useCallback(() => {
-    // Force idle by triggering a no-op re-render path
-    window.dispatchEvent(new CustomEvent("dismiss-rehydration-banner"));
-  }, []);
+  const dismiss = useCallback(() => setDismissed(true), []);
 
+  if (dismissed) return null;
   if (rehydrationStatus === "idle" || rehydrationStatus === "checking") return null;
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
