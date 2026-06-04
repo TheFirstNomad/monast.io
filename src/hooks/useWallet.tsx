@@ -83,7 +83,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     [signMessageAsync, disconnectAsync],
   );
 
-  // When a wallet connects, run SIWE if no Supabase session yet
+  // When a wallet connects, rehydrate session if it matches, otherwise run SIWE
   useEffect(() => {
     if (!isConnected || !address) {
       handledAddress.current = null;
@@ -94,11 +94,24 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
     (async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        // Already signed in — just mirror wallet to profile.
-        await supabase.from("profiles").update({ wallet_address: address }).eq("id", data.session.user.id);
+      const sessionWallet = (data.session?.user?.user_metadata as any)?.wallet_address as
+        | string
+        | undefined;
+
+      if (data.session && sessionWallet?.toLowerCase() === address.toLowerCase()) {
+        // Same wallet — rehydrate existing session, just mirror to profile.
+        await supabase
+          .from("profiles")
+          .update({ wallet_address: address })
+          .eq("id", data.session.user.id);
         return;
       }
+
+      if (data.session) {
+        // Different wallet than the active session — sign out before re-authenticating.
+        await supabase.auth.signOut();
+      }
+
       await doSiwe(address);
     })();
   }, [isConnected, address, doSiwe]);
