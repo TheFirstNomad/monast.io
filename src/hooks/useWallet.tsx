@@ -30,9 +30,18 @@ function addressesEqual(a: string | null | undefined, b: string | null | undefin
   return na.toLowerCase() === nb.toLowerCase();
 }
 
+type RehydrationStatus =
+  | "idle"
+  | "checking"
+  | "rehydrated"
+  | "re-signed"
+  | "failed";
+
 interface WalletCtx {
   address: string | null;
   connecting: boolean;
+  rehydrationStatus: RehydrationStatus;
+  rehydrationError: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
 }
@@ -40,6 +49,8 @@ interface WalletCtx {
 const Ctx = createContext<WalletCtx>({
   address: null,
   connecting: false,
+  rehydrationStatus: "idle",
+  rehydrationError: null,
   connect: async () => {},
   disconnect: async () => {},
 });
@@ -66,6 +77,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const { open } = useAppKit();
   const { signMessageAsync } = useSignMessage();
   const [signingIn, setSigningIn] = useState(false);
+  const [rehydrationStatus, setRehydrationStatus] = useState<RehydrationStatus>("idle");
+  const [rehydrationError, setRehydrationError] = useState<string | null>(null);
   const handledAddress = useRef<string | null>(null);
 
   const doSiwe = useCallback(
@@ -113,6 +126,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isConnected || !address) {
       handledAddress.current = null;
+      setRehydrationStatus("idle");
+      setRehydrationError(null);
       return;
     }
     const normalizedAddress = normalizeAddress(address);
@@ -121,26 +136,42 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     handledAddress.current = normalizedAddress;
 
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      const sessionWallet = (data.session?.user?.user_metadata as any)?.wallet_address as
-        | string
-        | undefined;
+      setRehydrationStatus("checking");
+      setRehydrationError(null);
+      console.log("[Wallet] Checking session for address:", normalizedAddress);
 
-      if (data.session && addressesEqual(sessionWallet, normalizedAddress)) {
-        // Same wallet — rehydrate existing session, mirror checksummed form to profile.
-        await supabase
-          .from("profiles")
-          .update({ wallet_address: normalizedAddress })
-          .eq("id", data.session.user.id);
-        return;
+      try {
+        const { data } = await supabase.auth.getSession();
+        const sessionWallet = (data.session?.user?.user_metadata as any)?.wallet_address as
+          | string
+          | undefined;
+
+        console.log("[Wallet] Existing session wallet:", sessionWallet || "none");
+
+        if (data.session && addressesEqual(sessionWallet, normalizedAddress)) {
+          console.log("[Wallet] Same wallet detected — rehydrating session");
+          await supabase
+            .from("profiles")
+            .update({ wallet_address: normalizedAddress })
+            .eq("id", data.session.user.id);
+          console.log("[Wallet] Session rehydrated successfully for", normalizedAddress);
+          setRehydrationStatus("rehydrated");
+          return;
+        }
+
+        if (data.session) {
+          console.warn("[Wallet] Different wallet than active session — signing out before re-authenticating");
+          await supabase.auth.signOut();
+        }
+
+        console.log("[Wallet] No matching session — starting SIWE sign-in");
+        setRehydrationStatus("re-signed");
+        await doSiwe(normalizedAddress);
+      } catch (err: any) {
+        console.error("[Wallet] Rehydration failed:", err?.message || err);
+        setRehydrationStatus("failed");
+        setRehydrationError(err?.message || "Session recovery failed");
       }
-
-      if (data.session) {
-        // Different wallet than the active session — sign out before re-authenticating.
-        await supabase.auth.signOut();
-      }
-
-      await doSiwe(normalizedAddress);
     })();
   }, [isConnected, address, doSiwe]);
 
@@ -160,11 +191,26 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     handledAddress.current = null;
   }, [disconnectAsync]);
 
+  const resetRehydration = useCallback(() => {
+    setRehydrationStatus("idle");
+    setRehydrationError(null);
+  }, []);
+
+  // Auto-clear transient success banners after 6s
+  useEffect(() => {
+    if (rehydrationStatus === "rehydrated" || rehydrationStatus === "re-signed") {
+      const t = setTimeout(resetRehydration, 6000);
+      return () => clearTimeout(t);
+    }
+  }, [rehydrationStatus, resetRehydration]);
+
   return (
     <Ctx.Provider
       value={{
         address: normalizeAddress(address),
         connecting: signingIn,
+        rehydrationStatus,
+        rehydrationError,
         connect,
         disconnect,
       }}
