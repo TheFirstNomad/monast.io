@@ -163,7 +163,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   return (
     <Ctx.Provider
       value={{
-        address: address ?? null,
+        address: normalizeAddress(address),
         connecting: signingIn,
         connect,
         disconnect,
