@@ -49,6 +49,8 @@ interface WalletCtx {
 const Ctx = createContext<WalletCtx>({
   address: null,
   connecting: false,
+  rehydrationStatus: "idle",
+  rehydrationError: null,
   connect: async () => {},
   disconnect: async () => {},
 });
