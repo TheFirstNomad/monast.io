@@ -91,6 +91,44 @@ export type Database = {
           },
         ]
       }
+      agent_activity: {
+        Row: {
+          agent_id: string
+          created_at: string
+          detail: Json | null
+          endpoint: string
+          id: number
+          method: string
+          status_code: number
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          detail?: Json | null
+          endpoint: string
+          id?: number
+          method: string
+          status_code: number
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          detail?: Json | null
+          endpoint?: string
+          id?: number
+          method?: string
+          status_code?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_activity_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_rate_limits: {
         Row: {
           bucket_key: string
@@ -109,6 +147,51 @@ export type Database = {
           created_at?: string
           endpoint?: string
           id?: string
+        }
+        Relationships: []
+      }
+      agents: {
+        Row: {
+          api_key_hash: string
+          api_key_prefix: string
+          created_at: string
+          display_name: string
+          id: string
+          kind: Database["public"]["Enums"]["agent_kind"]
+          max_spend_usdc_per_day: number
+          owner_user_id: string | null
+          reputation_score: number
+          status: string
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          api_key_hash: string
+          api_key_prefix: string
+          created_at?: string
+          display_name: string
+          id?: string
+          kind?: Database["public"]["Enums"]["agent_kind"]
+          max_spend_usdc_per_day?: number
+          owner_user_id?: string | null
+          reputation_score?: number
+          status?: string
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          api_key_hash?: string
+          api_key_prefix?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["agent_kind"]
+          max_spend_usdc_per_day?: number
+          owner_user_id?: string | null
+          reputation_score?: number
+          status?: string
+          updated_at?: string
+          wallet_address?: string
         }
         Relationships: []
       }
@@ -338,7 +421,7 @@ export type Database = {
       cleanup_agent_rate_limits: { Args: never; Returns: undefined }
     }
     Enums: {
-      [_ in never]: never
+      agent_kind: "delegated" | "standalone"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -465,6 +548,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      agent_kind: ["delegated", "standalone"],
+    },
   },
 } as const
