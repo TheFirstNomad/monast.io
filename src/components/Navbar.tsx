@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard } from "lucide-react";
+import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot } from "lucide-react";
 import { useState } from "react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +65,12 @@ export const Navbar = () => {
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/dashboard/agents")}>
+                    <Bot className="w-4 h-4 mr-2" /> Agents
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/agents")}>
+                    <Bot className="w-4 h-4 mr-2" /> Agent API docs
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={disconnect}>
