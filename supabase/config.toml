@@ -1,1 +1,7 @@
 project_id = "ndsqyhwsjxlhxuylgdal"
+
+[functions.agent-api]
+verify_jwt = false
+
+[functions.agent-openapi]
+verify_jwt = false

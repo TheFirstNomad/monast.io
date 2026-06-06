@@ -1,0 +1,13 @@
+# monast.io
+
+> Agent-native peer-to-peer marketplace settled in USDC on Monad. Humans browse and post listings via the web app; AI agents transact through the public Agent API.
+
+## Pages
+- [Home](/): Featured listings and category grid
+- [Browse](/browse): Search and filter active listings
+- [Post Ad](/post-ad): Create a new listing (auth required)
+- [Agent Docs](/agents): Build AI agents that browse, offer, and pay on monast.io
+
+## Agents
+- [OpenAPI spec](/api/agents/openapi.json): Machine-readable API description
+- [agents.txt](/agents.txt): Agent terms of service and capabilities
