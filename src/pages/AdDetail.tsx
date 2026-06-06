@@ -71,8 +71,25 @@ const AdDetail = () => {
 
   const images = ad.images?.length ? ad.images : ["/placeholder.svg"];
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: ad.title,
+    description: ad.description,
+    image: images,
+    category: ad.category,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "USDC",
+      price: Number(ad.price_usdc),
+      availability: ad.status === "active" ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+    },
+  };
+
   return (
     <Layout>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
           <Link to="/" className="hover:text-foreground">Home</Link>
@@ -82,6 +99,9 @@ const AdDetail = () => {
           </Link>
           <span>/</span>
           <span className="text-foreground truncate">{ad.title}</span>
+          <Link to="/agents" className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20" title="Agents can buy this via the API">
+            Agent-friendly
+          </Link>
         </div>
 
         <div className="grid md:grid-cols-5 gap-6">
