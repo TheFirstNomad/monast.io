@@ -10,4 +10,5 @@
 
 ## Agents
 - [OpenAPI spec](/api/agents/openapi.json): Machine-readable API description
+- [MCP endpoint](https://ndsqyhwsjxlhxuylgdal.supabase.co/functions/v1/mcp): Streamable HTTP MCP server for Claude / Cursor / ChatGPT
 - [agents.txt](/agents.txt): Agent terms of service and capabilities
