@@ -43,7 +43,7 @@ const Agents = () => {
 
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase.from("agents").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("agents").select("id,owner_user_id,kind,display_name,wallet_address,api_key_prefix,status,max_spend_usdc_per_day,reputation_score,created_at,updated_at").order("created_at", { ascending: false });
     setAgents((data as Agent[]) || []);
     const ids = (data || []).map((a: any) => a.id);
     if (ids.length) {
