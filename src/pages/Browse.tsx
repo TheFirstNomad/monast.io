@@ -16,7 +16,12 @@ const Browse = () => {
   const [ads, setAds] = useState<DbAd[]>([]);
 
   useEffect(() => {
-    let q = supabase.from("ads").select("*").eq("status", "active").order("created_at", { ascending: false });
+    let q = supabase
+      .from("ads")
+      .select("*")
+      .eq("status", "active")
+      .order("featured", { ascending: false })
+      .order("created_at", { ascending: false });
     if (category) q = q.eq("category", category);
     if (condition) q = q.eq("condition", condition);
     if (search) q = q.ilike("title", `%${search}%`);

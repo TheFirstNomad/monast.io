@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { CategoryGrid } from "@/components/CategoryGrid";
 import { AdCard } from "@/components/AdCard";
+import { Spotlight } from "@/components/Spotlight";
 import { supabase } from "@/integrations/supabase/client";
 import { DbAd } from "@/lib/types";
 import { Plus, Shield, Zap, Globe } from "lucide-react";
@@ -21,7 +22,6 @@ const Index = () => {
       .then(({ data }) => setAds((data as DbAd[]) || []));
   }, []);
 
-  const featuredAds = ads.filter((a) => a.featured);
   const recentAds = ads.slice(0, 8);
 
   return (
@@ -77,23 +77,8 @@ const Index = () => {
         </div>
       </section>
 
-      {featuredAds.length > 0 && (
-        <section className="py-10 px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-foreground">Featured Ads</h2>
-              <Link to="/browse" className="text-sm text-primary font-medium hover:underline">
-                View all →
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {featuredAds.map((ad) => (
-                <AdCard key={ad.id} ad={ad} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      <Spotlight />
+
 
       <section className="py-10 px-4">
         <div className="max-w-6xl mx-auto">

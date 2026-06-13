@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DbAd } from "@/lib/types";
-import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2 } from "lucide-react";
+import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
 import { PayButton } from "@/components/PayButton";
@@ -174,10 +174,18 @@ const AdDetail = () => {
                   This item has been sold
                 </div>
               ) : user && user.id === ad.seller_id ? (
-                <Button onClick={markSold} disabled={marking} className="w-full gap-2 font-semibold py-5">
-                  <CheckCircle2 className="w-4 h-4" />
-                  {marking ? "Marking..." : "Mark as Sold"}
-                </Button>
+                <>
+                  <Button onClick={markSold} disabled={marking} className="w-full gap-2 font-semibold py-5">
+                    <CheckCircle2 className="w-4 h-4" />
+                    {marking ? "Marking..." : "Mark as Sold"}
+                  </Button>
+                  <Link to={`/promote/${ad.id}`} className="block">
+                    <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
+                      <Sparkles className="w-4 h-4" />
+                      {ad.featured ? "Extend Featured Boost" : "Promote to Spotlight"}
+                    </Button>
+                  </Link>
+                </>
               ) : (
                 <>
                   <PayButton adId={ad.id} sellerId={ad.seller_id} amount={Number(ad.price_usdc)} />

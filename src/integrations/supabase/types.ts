@@ -39,6 +39,7 @@ export type Database = {
           created_at: string
           description: string
           featured: boolean
+          featured_until: string | null
           id: string
           images: string[]
           location: string
@@ -55,6 +56,7 @@ export type Database = {
           created_at?: string
           description: string
           featured?: boolean
+          featured_until?: string | null
           id?: string
           images?: string[]
           location: string
@@ -71,6 +73,7 @@ export type Database = {
           created_at?: string
           description?: string
           featured?: boolean
+          featured_until?: string | null
           id?: string
           images?: string[]
           location?: string
@@ -360,6 +363,59 @@ export type Database = {
           wallet_address?: string | null
         }
         Relationships: []
+      }
+      promotions: {
+        Row: {
+          ad_id: string
+          chain_id: number | null
+          created_at: string
+          ends_at: string
+          id: string
+          owner_user_id: string
+          price_usdc: number
+          starts_at: string
+          status: string
+          tier: string
+          tx_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          chain_id?: number | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          owner_user_id: string
+          price_usdc: number
+          starts_at?: string
+          status?: string
+          tier: string
+          tx_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          chain_id?: number | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          owner_user_id?: string
+          price_usdc?: number
+          starts_at?: string
+          status?: string
+          tier?: string
+          tx_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {

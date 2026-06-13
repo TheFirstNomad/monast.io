@@ -8,3 +8,8 @@ verify_jwt = false
 
 [functions.mcp]
 verify_jwt = false
+
+[functions.promote-checkout]
+verify_jwt = false
+
+
