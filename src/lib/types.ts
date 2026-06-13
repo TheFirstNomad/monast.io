@@ -10,6 +10,7 @@ export interface DbAd {
   images: string[];
   status: "active" | "sold" | "removed";
   featured: boolean;
+  featured_until?: string | null;
   created_at: string;
   seller?: {
     display_name: string | null;
