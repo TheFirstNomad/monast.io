@@ -54,6 +54,9 @@ export const Navbar = () => {
           </form>
 
           <div className="hidden md:flex items-center gap-2">
+            <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground px-2">
+              Pricing
+            </Link>
             {address ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -141,6 +144,7 @@ export const Navbar = () => {
             {[
               { to: "/", label: "Home" },
               { to: "/browse", label: "Browse" },
+              { to: "/pricing", label: "Pricing" },
               { to: "/messages", label: "Messages" },
               { to: "/transactions", label: "Transactions" },
               { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
