@@ -1,84 +1,49 @@
-# Revenue Expansion Plan for Monast
+## Goal
+Harden the JSON-LD block in `src/pages/AdDetail.tsx` against XSS and lock the behavior with regression tests.
 
-A multi-stream monetization layer built on the existing agent marketplace. Each stream reuses current tables (`ads`, `agents`, `payments`, `offers`) and adds focused UI surfaces.
+## Changes
 
-## Revenue Streams
+### 1. Extract a reusable sanitizer: `src/lib/jsonLdSafe.ts`
+A single pure function `serializeJsonLdSafe(value: unknown): string` that:
+- Recursively walks the input and drops any non-plain values (functions, symbols, undefined). Only allows: `string | number | boolean | null | plain object | array`.
+- Rejects/strips keys starting with `@` unless in an allow-list (`@context`, `@type`, `@id`, `@graph`) to prevent JSON-LD directive smuggling.
+- Caps string length (e.g. 5000 chars) and total serialized size (e.g. 100 KB) — truncates strings, throws on total overflow so caller can fall back to omitting the block.
+- After `JSON.stringify`, escapes every character that can break out of a `<script>` context or be misparsed by an HTML parser:
+  - `<` → `\u003c`, `>` → `\u003e`, `&` → `\u0026`
+  - `'` → `\u0027`, `"` stays inside JSON but any lone `"` outside JSON isn't possible post-stringify
+  - `/` → `\u002f` (defense against `</script>` variants and HTML comment sequences)
+  - U+2028 → `\u2028`, U+2029 → `\u2029` (JS line terminators)
+  - `\u0000` stripped
+- Returns `""` on failure (caller then skips rendering the script tag).
 
-### 1. Featured Listings (Sellers pay to boost ads)
-- Sellers pay USDC (or card via Stripe) to mark their ad `featured = true` for N days.
-- Featured ads surface in a new "Spotlight" carousel on `/` and pin to the top of `/browse` category results.
-- Tiers: 24h / 7d / 30d at increasing prices.
-- New page: `/promote/:adId` with tier picker, live preview of where the ad will appear, and checkout.
+### 2. Update `src/pages/AdDetail.tsx`
+- Import `serializeJsonLdSafe`.
+- Replace the inline `.replace(...)` chain with a single call; only render the `<script>` when the returned string is non-empty.
+- Keep `dangerouslySetInnerHTML` (required for JSON-LD) but sourced only from the sanitizer.
 
-### 2. Agent Pro Subscriptions
-- Free tier: 1 agent, 100 USDC/day spend cap, 30 writes/min.
-- Pro ($19/mo): 5 agents, 1,000 USDC/day cap, 300 writes/min, priority MCP endpoint, webhook support.
-- Scale ($99/mo): unlimited agents, 10k USDC/day cap, dedicated rate bucket, SLA badge on agent profile.
-- New page: `/agents/billing` with plan cards, current usage meters, upgrade/downgrade.
+### 3. Regression tests: `src/lib/jsonLdSafe.test.ts`
+Vitest unit tests covering:
+- Round-trips a normal Product object unchanged in meaning (parse back with `JSON.parse` after unescaping).
+- Escapes `</script>` payload in title/description so the output contains no literal `</script>` substring (case-insensitive) and no literal `<!--`.
+- Escapes `<script>`, `<img onerror=...>`, `"><svg onload=...>` payloads — asserts none of `<`, `>` appear literally in output.
+- Escapes U+2028 / U+2029.
+- Strips function/symbol/undefined values.
+- Drops unknown `@`-prefixed keys, keeps allow-listed ones.
+- Truncates oversized strings; returns `""` on total-size overflow.
+- Idempotent: sanitizing the output's decoded JSON produces the same string.
 
-### 3. Transaction Fee (marketplace take rate)
-- 1.5% protocol fee added on top of every successful `payments` insert, routed to a treasury wallet.
-- Transparent fee breakdown shown on `PayButton` and `AdDetail` before confirmation.
-- Pro subscribers get 0.5% discount as a retention hook.
+### 4. Component regression test: `src/pages/AdDetail.jsonld.test.tsx`
+Renders a minimal wrapper that calls the same serializer with a malicious ad payload (title/description containing `</script><img src=x onerror=alert(1)>`) and asserts the rendered `<script type="application/ld+json">` innerHTML:
+- Contains no literal `</script>` (case-insensitive).
+- Contains no literal `<` or `>`.
+- Parses back (after reversing the unicode escapes) into an object whose `name` equals the original malicious string (proving semantics preserved while syntax neutralized).
 
-### 4. Promoted Search Placements
-- Sellers bid USDC per impression for keyword slots (e.g. "gpu", "domain", "dataset").
-- Top of search results shows up to 2 "Promoted" cards with a subtle badge.
-- New page: `/promote/search` with keyword picker, suggested bid, daily budget cap.
+Uses `@testing-library/react`; no Supabase calls — the test imports the serializer directly and the component test renders a minimal `<head>`-less wrapper to avoid routing/auth setup.
 
-### 5. Verified Agent Marketplace
-- Public directory `/agents/marketplace` where developers list their agents as services (e.g. "Domain Sniper Agent — 2 USDC/run").
-- Buyers fund a job, agent executes via existing Agent API, marketplace takes 10% fee.
-- Agent cards show reputation_score, success rate from `agent_activity`, and reviews.
+## Out of scope
+- No changes to other pages, DB, or edge functions.
+- No new dependencies (uses existing vitest + RTL).
 
-### 6. White-Label Agent API Keys
-- Enterprise tier: custom-branded MCP server URL + dashboard subdomain.
-- Flat $499/mo, sold via a `/enterprise` landing page with contact form.
-
-## New Design System Surfaces
-
-- **Pricing page** (`/pricing`) — three-column plan cards, comparison table, FAQ. Distinctive monospaced numerals + accent gradient for selected tier.
-- **Spotlight carousel** on home — auto-scrolling featured ads with subtle parallax and "Promoted" chip.
-- **Billing dashboard** (`/agents/billing`) — usage meters (spend, API calls, agent count), invoice history, plan switcher.
-- **Promote-this-ad CTA** — appears on seller-owned `AdDetail` view as a sticky bottom card.
-- **Promoted badge component** — reusable chip with shimmer for paid placements.
-- **Treasury/earnings widget** on Dashboard — shows seller's gross sales, fees paid, net.
-
-## Technical Outline (collapsed for non-technical readers)
-
-```text
-DB additions:
-  promotions(id, ad_id, tier, starts_at, ends_at, payment_id, status)
-  subscriptions(id, user_id, plan, status, current_period_end, stripe_sub_id)
-  search_bids(id, owner_user_id, keyword, bid_usdc, daily_budget, spent_today)
-  agent_listings(id, agent_id, title, price_per_run_usdc, description, active)
-  agent_jobs(id, listing_id, buyer_id, input, output, status, fee_usdc)
-  treasury_ledger(id, source, amount_usdc, ref_id, created_at)
-
-Edge functions:
-  promote-checkout       issue featured-listing payment + activate
-  subscription-webhook   Stripe webhook -> update subscriptions
-  search-bid-engine      ranks promoted slots per query
-  agent-job-run          escrow USDC, invoke agent, settle fee
-  treasury-sweep         cron: collect 1.5% per payment into ledger
-
-Payments:
-  Stripe (built-in) for fiat subscriptions
-  USDC on existing chain for featured / bids / agent jobs
-```
-
-## Suggested Build Order
-
-1. Featured Listings + `/pricing` + Spotlight (fastest path to revenue, reuses `ads.featured`).
-2. Transaction fee + treasury ledger + earnings widget.
-3. Agent Pro Subscriptions via Stripe + billing dashboard.
-4. Promoted Search + bid engine.
-5. Verified Agent Marketplace + job escrow.
-6. White-label enterprise tier.
-
-## Open Questions
-
-- Do you want fiat (Stripe) for subscriptions, or USDC-only across the board?
-- Target take-rate for transaction fee — 1.5% as proposed, or different?
-- Should promoted placements be clearly labeled "Promoted" (recommended for trust) or blended?
-- Which stream do you want me to build first?
+## Technical notes
+- We keep `dangerouslySetInnerHTML` because JSON-LD must be a raw `<script>` body; React can't render it via children without escaping quotes incorrectly for JSON.
+- The `/` → `\u002f` escape is the key addition over the current implementation, which is what closes the `</script>` breakout class of bugs.
