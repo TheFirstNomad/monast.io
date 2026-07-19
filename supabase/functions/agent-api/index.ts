@@ -3,6 +3,7 @@ import {
   authenticateAgent, checkRateLimit, corsHeaders, json, logActivity,
   svcClient, todaySpendUsdc,
 } from "../_shared/agent-auth.ts";
+import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 
 const BASE = "/agent-api";
 
