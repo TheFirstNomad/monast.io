@@ -11,6 +11,7 @@ import { OfferDialog } from "@/components/OfferDialog";
 import { PayButton } from "@/components/PayButton";
 import { ReviewSection } from "@/components/ReviewSection";
 import { toast } from "sonner";
+import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 
 const AdDetail = () => {
   const { id } = useParams();
@@ -87,21 +88,16 @@ const AdDetail = () => {
     },
   };
 
+  const jsonLdHtml = serializeJsonLdSafe(jsonLd);
+
   return (
     <Layout>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          // Escape characters that would let a crafted string break out of the
-          // JSON-LD <script> block and inject HTML/JS (XSS defence-in-depth).
-          __html: JSON.stringify(jsonLd)
-            .replace(/</g, "\\u003c")
-            .replace(/>/g, "\\u003e")
-            .replace(/&/g, "\\u0026")
-            .replace(/\u2028/g, "\\u2028")
-            .replace(/\u2029/g, "\\u2029"),
-        }}
-      />
+      {jsonLdHtml && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml }}
+        />
+      )}
       <div className="max-w-5xl mx-auto px-4 py-6">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
           <Link to="/" className="hover:text-foreground">Home</Link>
