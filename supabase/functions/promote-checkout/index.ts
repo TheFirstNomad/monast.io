@@ -1,8 +1,12 @@
 // Promote-checkout: activates a paid featured-listing promotion for an ad.
-// Validates JWT in code, confirms ad ownership, records the promotion, and
-// flips ads.featured/featured_until via service role (bypassing the
-// prevent_seller_featured_change trigger, which only blocks authenticated users).
+// Validates JWT in code, confirms ad ownership, verifies the treasury payment
+// on-chain, records the promotion, and flips ads.featured/featured_until via
+// service role (bypassing the prevent_seller_featured_change trigger, which
+// only blocks authenticated users).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+
+const TREASURY = "0x000000000000000000000000000000000000dEaD"; // keep in sync with src/lib/promotionTiers.ts
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
