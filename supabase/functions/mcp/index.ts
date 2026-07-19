@@ -168,8 +168,17 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
       return toolResult(data);
     }
     case "accept_offer": {
+      if (!agent.owner_user_id) return toolError("standalone agents cannot accept offers");
+      const offerId = String(args?.offer_id ?? "");
+      const { data: offer } = await svc.from("offers")
+        .select("id, status, ad_id, ad:ads!offers_ad_id_fkey(seller_id)")
+        .eq("id", offerId).maybeSingle();
+      const sellerId = (offer as any)?.ad?.seller_id;
+      if (!offer) return toolError("offer_not_found");
+      if (sellerId !== agent.owner_user_id) return toolError("only the ad's seller can accept this offer");
+      if (offer.status !== "pending") return toolError("offer is not pending");
       const { data, error } = await svc.from("offers")
-        .update({ status: "accepted" }).eq("id", String(args?.offer_id)).select("*").single();
+        .update({ status: "accepted" }).eq("id", offerId).select("*").single();
       if (error) return toolError(error.message);
       return toolResult(data);
     }
@@ -183,19 +192,33 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
     }
     case "submit_payment": {
       if (!agent.owner_user_id) return toolError("standalone agents cannot submit payments yet");
-      const row = {
-        ad_id: String(args?.ad_id ?? ""),
-        seller_id: String(args?.seller_id ?? ""),
-        buyer_id: agent.owner_user_id,
-        amount_usdc: Number(args?.amount_usdc),
-        tx_hash: String(args?.tx_hash ?? ""),
-        chain_id: Number(args?.chain_id),
-      };
-      if (!row.ad_id || !row.seller_id || !row.tx_hash || !Number.isFinite(row.amount_usdc) || !Number.isFinite(row.chain_id))
-        return toolError("missing fields");
-      const { data, error } = await svc.from("payments").insert(row).select("*").single();
-      if (error) return toolError(error.message);
+      const adId = String(args?.ad_id ?? "");
+      const txHash = String(args?.tx_hash ?? "");
+      const chainId = Number(args?.chain_id);
+      if (!adId || !/^0x[0-9a-f]{64}$/i.test(txHash) || !Number.isFinite(chainId))
+        return toolError("ad_id, tx_hash and chain_id required");
+      const { data: ad } = await svc.from("ads").select("id, seller_id, price_usdc").eq("id", adId).maybeSingle();
+      if (!ad) return toolError("ad_not_found");
+      let expected = Number(ad.price_usdc);
+      const { data: accepted } = await svc.from("offers")
+        .select("amount_usdc").eq("ad_id", adId).eq("buyer_id", agent.owner_user_id).eq("status", "accepted").maybeSingle();
+      if (accepted) expected = Number(accepted.amount_usdc);
+      const { data: sellerProf } = await svc.from("profiles").select("wallet_address").eq("id", ad.seller_id).maybeSingle();
+      if (!sellerProf?.wallet_address) return toolError("seller has no wallet on file");
+      const check = await verifyUsdcTransfer({
+        chainId, txHash,
+        expectedTo: sellerProf.wallet_address,
+        expectedAmountUsdc: expected,
+        expectedFrom: agent.wallet_address,
+      });
+      if (!check.ok) return toolError(`payment verification failed: ${check.error}`);
+      const { data, error } = await svc.from("payments").insert({
+        ad_id: adId, seller_id: ad.seller_id, buyer_id: agent.owner_user_id,
+        amount_usdc: expected, tx_hash: txHash, chain_id: chainId,
+      }).select("*").single();
+      if (error) return toolError(error.code === "23505" ? "tx_hash already recorded" : error.message);
       await svc.from("agents").update({ reputation_score: agent.reputation_score + 1 }).eq("id", agent.id);
+      await svc.from("ads").update({ status: "sold", sold_at: new Date().toISOString() }).eq("id", adId);
       return toolResult(data);
     }
     case "list_messages": {
