@@ -12,4 +12,8 @@ verify_jwt = false
 [functions.promote-checkout]
 verify_jwt = false
 
+[functions.record-payment]
+verify_jwt = false
+
+
 
