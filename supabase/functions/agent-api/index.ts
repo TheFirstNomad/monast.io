@@ -139,27 +139,49 @@ Deno.serve(async (req) => {
       }
     }
 
-    // /payments POST
+    // /payments POST — verified on-chain before recording.
     else if (route === "/payments" && method === "POST") {
       if (!agent.owner_user_id) { status = 400; body = { error: "standalone agents cannot submit payments yet" }; }
       else {
         const b = await req.json().catch(() => ({}));
-        const row = {
-          ad_id: String(b?.ad_id ?? ""),
-          seller_id: String(b?.seller_id ?? ""),
-          buyer_id: agent.owner_user_id,
-          amount_usdc: Number(b?.amount_usdc),
-          tx_hash: String(b?.tx_hash ?? ""),
-          chain_id: Number(b?.chain_id),
-        };
-        if (!row.ad_id || !row.seller_id || !row.tx_hash || !Number.isFinite(row.amount_usdc) || !Number.isFinite(row.chain_id)) {
-          status = 400; body = { error: "missing fields" };
+        const adId = String(b?.ad_id ?? "");
+        const txHash = String(b?.tx_hash ?? "");
+        const chainId = Number(b?.chain_id);
+        if (!adId || !/^0x[0-9a-f]{64}$/i.test(txHash) || !Number.isFinite(chainId)) {
+          status = 400; body = { error: "ad_id, tx_hash and chain_id required" };
         } else {
-          const { data, error } = await svc.from("payments").insert(row).select("*").single();
-          if (error) { status = 400; body = { error: error.message }; }
+          const { data: ad } = await svc.from("ads").select("id, seller_id, price_usdc").eq("id", adId).maybeSingle();
+          if (!ad) { status = 404; body = { error: "ad_not_found" }; }
           else {
-            await svc.from("agents").update({ reputation_score: agent.reputation_score + 1 }).eq("id", agent.id);
-            body = data;
+            let expected = Number(ad.price_usdc);
+            const { data: accepted } = await svc.from("offers")
+              .select("amount_usdc").eq("ad_id", adId).eq("buyer_id", agent.owner_user_id).eq("status", "accepted").maybeSingle();
+            if (accepted) expected = Number(accepted.amount_usdc);
+            const { data: sellerProf } = await svc.from("profiles").select("wallet_address").eq("id", ad.seller_id).maybeSingle();
+            if (!sellerProf?.wallet_address) { status = 400; body = { error: "seller has no wallet on file" }; }
+            else {
+              const check = await verifyUsdcTransfer({
+                chainId, txHash,
+                expectedTo: sellerProf.wallet_address,
+                expectedAmountUsdc: expected,
+                expectedFrom: agent.wallet_address,
+              });
+              if (!check.ok) { status = 400; body = { error: `payment verification failed: ${check.error}` }; }
+              else {
+                const { data, error } = await svc.from("payments").insert({
+                  ad_id: adId, seller_id: ad.seller_id, buyer_id: agent.owner_user_id,
+                  amount_usdc: expected, tx_hash: txHash, chain_id: chainId,
+                }).select("*").single();
+                if (error) {
+                  status = error.code === "23505" ? 409 : 400;
+                  body = { error: error.code === "23505" ? "tx_hash already recorded" : error.message };
+                } else {
+                  await svc.from("agents").update({ reputation_score: agent.reputation_score + 1 }).eq("id", agent.id);
+                  await svc.from("ads").update({ status: "sold", sold_at: new Date().toISOString() }).eq("id", adId);
+                  body = data;
+                }
+              }
+            }
           }
         }
       }
