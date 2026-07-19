@@ -62,25 +62,22 @@ export const PayButton = ({ adId, sellerId, amount }: Props) => {
     }
   };
 
-  // Once the tx is mined, record the payment and mark the ad sold.
+  // Once the tx is mined, ask the backend to verify on-chain and record it.
   useEffect(() => {
     if (!isSuccess || !pendingHash || !user) return;
     (async () => {
       setRecording(true);
       try {
-        await supabase.from("payments").insert({
-          ad_id: adId,
-          buyer_id: user.id,
-          seller_id: sellerId,
-          amount_usdc: amount,
-          tx_hash: pendingHash,
-          chain_id: ARC_CHAIN_ID,
+        const { data, error } = await supabase.functions.invoke("record-payment", {
+          body: { ad_id: adId, tx_hash: pendingHash, chain_id: ARC_CHAIN_ID },
         });
-        await supabase
-          .from("ads")
-          .update({ status: "sold", sold_at: new Date().toISOString() })
-          .eq("id", adId);
-        toast.success("Purchase recorded");
+        if (error) {
+          toast.error(error.message);
+        } else if (data?.error) {
+          toast.error(data.error);
+        } else {
+          toast.success("Purchase verified & recorded");
+        }
       } finally {
         setRecording(false);
         setPendingHash(undefined);
