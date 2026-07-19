@@ -106,12 +106,24 @@ Deno.serve(async (req) => {
       }
     }
 
-    // /offers/:id/accept
+    // /offers/:id/accept — only the ad's seller may accept, and only pending offers.
     else if (method === "POST" && route.match(/^\/offers\/[^/]+\/accept$/)) {
       const id = route.split("/")[2];
-      const { data, error } = await svc.from("offers").update({ status: "accepted" }).eq("id", id).select("*").single();
-      if (error) { status = 400; body = { error: error.message }; }
-      else body = data;
+      if (!agent.owner_user_id) { status = 403; body = { error: "standalone agents cannot accept offers" }; }
+      else {
+        const { data: offer } = await svc.from("offers")
+          .select("id, status, ad_id, ad:ads!offers_ad_id_fkey(seller_id)")
+          .eq("id", id).maybeSingle();
+        const sellerId = (offer as any)?.ad?.seller_id;
+        if (!offer) { status = 404; body = { error: "offer_not_found" }; }
+        else if (sellerId !== agent.owner_user_id) { status = 403; body = { error: "only the ad's seller can accept this offer" }; }
+        else if (offer.status !== "pending") { status = 409; body = { error: "offer is not pending" }; }
+        else {
+          const { data, error } = await svc.from("offers").update({ status: "accepted" }).eq("id", id).select("*").single();
+          if (error) { status = 400; body = { error: error.message }; }
+          else body = data;
+        }
+      }
     }
 
     // /offers/:id/cancel
