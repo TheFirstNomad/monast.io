@@ -11,6 +11,7 @@
 import {
   authenticateAgent, checkRateLimit, corsHeaders, logActivity, svcClient, todaySpendUsdc,
 } from "../_shared/agent-auth.ts";
+import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 
 const PROTOCOL_VERSION = "2024-11-05";
 
