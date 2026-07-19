@@ -1,8 +1,12 @@
 // Promote-checkout: activates a paid featured-listing promotion for an ad.
-// Validates JWT in code, confirms ad ownership, records the promotion, and
-// flips ads.featured/featured_until via service role (bypassing the
-// prevent_seller_featured_change trigger, which only blocks authenticated users).
+// Validates JWT in code, confirms ad ownership, verifies the treasury payment
+// on-chain, records the promotion, and flips ads.featured/featured_until via
+// service role (bypassing the prevent_seller_featured_change trigger, which
+// only blocks authenticated users).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+
+const TREASURY = "0x000000000000000000000000000000000000dEaD"; // keep in sync with src/lib/promotionTiers.ts
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +81,16 @@ Deno.serve(async (req) => {
   const existingEnd = ad.featured_until ? new Date(ad.featured_until) : null;
   const baseEnd = existingEnd && existingEnd > startsAt ? existingEnd : startsAt;
   const endsAt = new Date(baseEnd.getTime() + conf.hours * 3600 * 1000);
+
+  // On-chain payment verification — must be a USDC transfer to the treasury
+  // for at least this tier's price on the specified chain.
+  if (!txHash || !chainId) return json({ error: "tx_hash and chain_id are required" }, 400);
+  const check = await verifyUsdcTransfer({
+    chainId, txHash,
+    expectedTo: TREASURY,
+    expectedAmountUsdc: conf.price,
+  });
+  if (!check.ok) return json({ error: `payment verification failed: ${check.error}` }, 400);
 
   // Record the promotion (unique tx_hash prevents reuse).
   const { data: promo, error: insErr } = await admin.from("promotions").insert({
