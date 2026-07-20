@@ -198,6 +198,87 @@ export type Database = {
         }
         Relationships: []
       }
+      escrows: {
+        Row: {
+          ad_id: string
+          amount_usdc: number
+          buyer_id: string
+          chain_id: number
+          circle_escrow_id: string | null
+          created_at: string
+          deposit_tx_hash: string | null
+          funded_at: string | null
+          id: string
+          metadata: Json
+          offer_id: string | null
+          refund_tx_hash: string | null
+          refunded_at: string | null
+          release_tx_hash: string | null
+          released_at: string | null
+          seller_id: string
+          status: string
+          tx_hashes: Json
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          amount_usdc: number
+          buyer_id: string
+          chain_id: number
+          circle_escrow_id?: string | null
+          created_at?: string
+          deposit_tx_hash?: string | null
+          funded_at?: string | null
+          id?: string
+          metadata?: Json
+          offer_id?: string | null
+          refund_tx_hash?: string | null
+          refunded_at?: string | null
+          release_tx_hash?: string | null
+          released_at?: string | null
+          seller_id: string
+          status?: string
+          tx_hashes?: Json
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          amount_usdc?: number
+          buyer_id?: string
+          chain_id?: number
+          circle_escrow_id?: string | null
+          created_at?: string
+          deposit_tx_hash?: string | null
+          funded_at?: string | null
+          id?: string
+          metadata?: Json
+          offer_id?: string | null
+          refund_tx_hash?: string | null
+          refunded_at?: string | null
+          release_tx_hash?: string | null
+          released_at?: string | null
+          seller_id?: string
+          status?: string
+          tx_hashes?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrows_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrows_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           ad_id: string | null
@@ -332,6 +413,8 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          circle_user_id: string | null
+          circle_wallet_address: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -343,6 +426,8 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          circle_user_id?: string | null
+          circle_wallet_address?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -354,6 +439,8 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          circle_user_id?: string | null
+          circle_wallet_address?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -465,6 +552,45 @@ export type Database = {
           created_at?: string
           nonce?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      user_wallets: {
+        Row: {
+          address: string
+          chain_id: number | null
+          created_at: string
+          id: string
+          is_primary: boolean
+          kind: string
+          label: string | null
+          linked_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          chain_id?: number | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          kind: string
+          label?: string | null
+          linked_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          chain_id?: number | null
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          kind?: string
+          label?: string | null
+          linked_at?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
