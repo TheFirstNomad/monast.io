@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
             {
               user_id: user.id,
               address: (w.address as string).toLowerCase(),
-              kind: "circle",
+              kind: "email_circle",
               chain_id: null,
               label: w.blockchain,
               is_primary: false,
