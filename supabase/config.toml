@@ -15,5 +15,8 @@ verify_jwt = false
 [functions.record-payment]
 verify_jwt = false
 
+[functions.circle-provision-wallet]
+verify_jwt = true
+
 
 
