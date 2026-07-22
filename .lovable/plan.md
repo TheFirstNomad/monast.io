@@ -1,41 +1,44 @@
+## Goal
+Begin the unified onboarding build: **Email OTP → auto-provisioned Circle multichain wallet**, alongside the existing **self-custody wallet connect** flow. Scope this session to what ~4 credits can safely deliver, with clean pause points.
 
-# Step 1 only — Store Circle credentials, then stop
+## Session 1 scope (this session, ~3–4 credits)
 
-You have ~1 credit left, so this plan intentionally does **only the secret-storage step**. Building the actual features resumes tomorrow when your credits refresh.
+### 1. Wire Circle credentials
+- Save `CIRCLE_APP_ID` as a non-secret constant in `src/lib/circle/config.ts` (it's a public identifier, safe in code).
+- Confirm `CIRCLE_API_KEY` is already stored in the secret manager (server-side only, used by edge functions — never shipped to the browser).
 
-## What happens the moment you approve
+### 2. Email OTP auth surface
+- Add a new `/login` page with two clear paths:
+  - **"Continue with email"** → Supabase email OTP (magic link + 6-digit code fallback).
+  - **"Connect wallet"** → existing Reown AppKit + SIWE flow (already built).
+- Update `Navbar` sign-in entry point to route to `/login`.
 
-1. Open the secure secret form for `CIRCLE_API_KEY` so it's saved on the server as an environment variable (not in the chat transcript).
-2. Set `VITE_CIRCLE_APP_ID = a8b80470-0e58-5523-83e8-5f78de4b8fcb` in the public env file (this ID is public and safe to commit).
-3. Stop. No code changes, no edge functions, no UI work today.
+### 3. Circle wallet provisioning edge function
+- Create `supabase/functions/circle-provision-wallet/index.ts`:
+  - Triggered after first successful email OTP login.
+  - Calls Circle User-Controlled Wallets API using `CIRCLE_API_KEY` to create a `userId` + initialize a wallet set on Arc / Base / ETH.
+  - Returns a `userToken` + `encryptionKey` to the client so the Circle Web SDK can complete PIN setup (non-custodial — Circle never sees the PIN).
+  - Persists the Circle `user_id` and provisioned addresses into the existing `user_wallets` table (source = `'circle'`).
 
-## After you approve — one-time housekeeping on your side
+### 4. Client-side Circle SDK handshake
+- Install `@circle-fin/w3s-pw-web-sdk`.
+- Create `src/lib/circle/client.ts` initializing the SDK with `CIRCLE_APP_ID`.
+- Create `WalletSetupDialog.tsx` that runs after first email login: prompts the user to set a PIN + security questions, finalizing the Circle wallet.
 
-- In the Circle console (Developers → API Keys), delete the current key and create a fresh one. Sandbox keys have no real risk, but rotating removes any trace from this chat.
-- Tomorrow, paste the new key into the secure form I'll reopen — takes 5 seconds.
+### 5. Pause point
+Stop after the email OTP flow provisions a Circle wallet and stores addresses in `user_wallets`. Escrow contract integration and multi-wallet management UI = **Session 2 tomorrow**.
 
-## Tomorrow's plan (resumes after credits refresh)
+## Explicitly out of scope this session
+- Circle escrow contract calls (deferred to Session 2).
+- Migrating existing payments (`PayButton`, agent-api, mcp) off direct USDC transfer onto Circle escrow (Session 3).
+- Social login providers inside Circle (we're using Supabase for auth; Circle is wallet-only).
 
-The full monast.io + Circle build:
+## Technical notes
+- `CIRCLE_APP_ID` is a public client identifier by Circle's design — treated like a Supabase anon key, safe in the bundle.
+- `CIRCLE_API_KEY` stays server-side in edge functions only. Never imported into `src/`.
+- The `user_wallets` table (created previously) already has the shape we need: `user_id`, `address`, `chain`, `source`, `is_primary`.
+- Email OTP uses Supabase's built-in `signInWithOtp` — no new auth provider config needed beyond confirming email is enabled.
+- If credits run out mid-step, safe pause points are: after step 2 (auth UI only), after step 3 (backend ready), or after step 4 (full flow).
 
-1. Enable Email OTP in Lovable Cloud Auth.
-2. Two-tab `/auth` page: "Continue with email" (OTP) + "Connect wallet" (SIWE, existing).
-3. Edge function `circle-user-provision` — on first email sign-in, creates a Circle user, session token, and multichain wallet (Arc / Base / Ethereum); writes `profiles.circle_wallet_address` and `user_wallets` primary row.
-4. `<CircleWalletProvider>` in the browser using `@circle-fin/w3s-pw-web-sdk` for PIN setup + tx signing.
-5. Rework checkout to use Circle's Arc-native escrow (`escrow-create`, `escrow-fund`, `escrow-release`, `escrow-refund`, `escrow-webhook`) instead of raw USDC transfer.
-6. Extend `agent-api` and `mcp` with escrow tools so AI shoppers use escrow by default.
-
-Database (`user_wallets`, `escrows`, `profiles.circle_*`) is already migrated.
-
-```text
-Email OTP ─┐
-           ├─► Supabase user ─► profiles + user_wallets
-SIWE     ──┘                         │
-                                     ▼
-                    ┌── Circle User-Controlled Wallet (Arc/Base/ETH)
-                    └── External self-custody wallet(s)
-                                     │
-                                     ▼
-                         Circle Arc Escrow primitive
-                    (create → fund → release / refund / dispute)
-```
+## Deliverable at session end
+A user can visit `/login`, enter an email, receive an OTP, land back in the app signed in, and have a Circle multichain wallet provisioned + PIN set. Self-custody wallet connect continues to work unchanged.
