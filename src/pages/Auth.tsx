@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { WalletSetupDialog } from "@/components/WalletSetupDialog";
 
 type Step = "choose" | "email" | "otp";
 
@@ -21,10 +22,15 @@ const Auth = () => {
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [walletDialogOpen, setWalletDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/dashboard", { replace: true });
-  }, [user, navigate]);
+    // Wallet users: navigate straight to dashboard.
+    // Email users: stay so the WalletSetupDialog can complete first.
+    if (user && !walletDialogOpen && step === "choose") {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate, walletDialogOpen, step]);
 
   const sendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,10 +74,12 @@ const Auth = () => {
       toast({ title: "Invalid code", description: error.message, variant: "destructive" });
       return;
     }
-    // Fire-and-forget Circle wallet provisioning; safe to call repeatedly.
-    supabase.functions.invoke("circle-provision-wallet").catch(() => {
-      /* handled on dashboard */
-    });
+    // Open the setup dialog; it handles provisioning + PIN entry, then routes.
+    setWalletDialogOpen(true);
+  };
+
+  const finishWalletSetup = () => {
+    setWalletDialogOpen(false);
     navigate("/dashboard", { replace: true });
   };
 
