@@ -191,6 +191,12 @@ const Auth = () => {
           <Link to="/" className="hover:text-foreground">← Back to home</Link>
         </div>
       </div>
+
+      <WalletSetupDialog
+        open={walletDialogOpen}
+        onOpenChange={setWalletDialogOpen}
+        onComplete={finishWalletSetup}
+      />
     </Layout>
   );
 };
