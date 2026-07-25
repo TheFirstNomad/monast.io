@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.guard_escrow_status_transitions() FROM anon, authenticated, public;
