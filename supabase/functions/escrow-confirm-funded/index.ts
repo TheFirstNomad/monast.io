@@ -1,0 +1,80 @@
+// Verifies that the buyer's USDC deposit landed at the escrow treasury on-chain,
+// then flips the escrow row from `created` to `funded`.
+
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const ESCROW_TREASURY = Deno.env.get("ESCROW_TREASURY_ADDRESS") ??
+  "0x000000000000000000000000000000000000dEaD";
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  try {
+    const auth = req.headers.get("Authorization") ?? "";
+    if (!auth.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+    const asUser = createClient(SUPABASE_URL, ANON, {
+      global: { headers: { Authorization: auth } },
+    });
+    const { data: userRes } = await asUser.auth.getUser();
+    if (!userRes?.user) return json({ error: "Unauthorized" }, 401);
+    const buyerId = userRes.user.id;
+
+    const body = await req.json().catch(() => ({}));
+    const escrowId = String(body.escrow_id ?? "");
+    const txHash = String(body.tx_hash ?? "");
+    if (!escrowId || !txHash) return json({ error: "escrow_id and tx_hash required" }, 400);
+
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const { data: esc } = await admin
+      .from("escrows")
+      .select("*")
+      .eq("id", escrowId)
+      .maybeSingle();
+    if (!esc) return json({ error: "Escrow not found" }, 404);
+    if (esc.buyer_id !== buyerId) return json({ error: "Not your escrow" }, 403);
+    if (esc.status !== "created") return json({ error: `Escrow already ${esc.status}` }, 400);
+
+    const verify = await verifyUsdcTransfer({
+      chainId: esc.chain_id,
+      txHash,
+      expectedTo: ESCROW_TREASURY,
+      expectedAmountUsdc: Number(esc.amount_usdc),
+    });
+    if (!verify.ok) return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
+
+    const nextHashes = Array.isArray(esc.tx_hashes) ? [...esc.tx_hashes, { kind: "deposit", hash: txHash }] : [{ kind: "deposit", hash: txHash }];
+    const { data: updated, error } = await admin
+      .from("escrows")
+      .update({
+        status: "funded",
+        deposit_tx_hash: txHash,
+        funded_at: new Date().toISOString(),
+        tx_hashes: nextHashes,
+      })
+      .eq("id", escrowId)
+      .select("*")
+      .single();
+    if (error) throw error;
+
+    return json({ escrow: updated });
+  } catch (e) {
+    console.error("escrow-confirm-funded", e);
+    return json({ error: (e as Error).message }, 500);
+  }
+});
+
+function json(b: unknown, status = 200) {
+  return new Response(JSON.stringify(b), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
