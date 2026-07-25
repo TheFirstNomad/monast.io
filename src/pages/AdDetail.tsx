@@ -8,7 +8,7 @@ import { DbAd } from "@/lib/types";
 import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
-import { PayButton } from "@/components/PayButton";
+import { EscrowButton } from "@/components/EscrowButton";
 import { ReviewSection } from "@/components/ReviewSection";
 import { toast } from "sonner";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
@@ -196,7 +196,7 @@ const AdDetail = () => {
                 </>
               ) : (
                 <>
-                  <PayButton adId={ad.id} sellerId={ad.seller_id} amount={Number(ad.price_usdc)} />
+                  <EscrowButton adId={ad.id} sellerId={ad.seller_id} amount={Number(ad.price_usdc)} />
                   <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
                     <MessageCircle className="w-4 h-4" />
                     Chat with Seller

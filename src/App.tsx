@@ -18,6 +18,7 @@ import Agents from "./pages/Agents";
 import AgentDocs from "./pages/AgentDocs";
 import Pricing from "./pages/Pricing";
 import Promote from "./pages/Promote";
+import EscrowDetail from "./pages/EscrowDetail";
 
 const App = () => (
   <TooltipProvider>
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/dashboard/agents" element={<Agents />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/promote/:adId" element={<Promote />} />
+              <Route path="/escrow/:id" element={<EscrowDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </WalletProvider>

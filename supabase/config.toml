@@ -18,5 +18,17 @@ verify_jwt = false
 [functions.circle-provision-wallet]
 verify_jwt = true
 
+[functions.escrow-create]
+verify_jwt = true
 
+[functions.escrow-confirm-funded]
+verify_jwt = true
 
+[functions.escrow-release]
+verify_jwt = true
+
+[functions.escrow-refund]
+verify_jwt = true
+
+[functions.escrow-dispute]
+verify_jwt = true
