@@ -1,44 +1,63 @@
-## Goal
-Begin the unified onboarding build: **Email OTP → auto-provisioned Circle multichain wallet**, alongside the existing **self-custody wallet connect** flow. Scope this session to what ~4 credits can safely deliver, with clean pause points.
+## Session 3 — Circle Escrow integration (biggest MVP unlock)
 
-## Session 1 scope (this session, ~3–4 credits)
+Goal: replace direct USDC transfers with a Circle-backed escrow so a buyer's funds are held until delivery is confirmed (or refunded on dispute). Existing `escrows` table already has the shape we need.
 
-### 1. Wire Circle credentials
-- Save `CIRCLE_APP_ID` as a non-secret constant in `src/lib/circle/config.ts` (it's a public identifier, safe in code).
-- Confirm `CIRCLE_API_KEY` is already stored in the secret manager (server-side only, used by edge functions — never shipped to the browser).
+### Flow
 
-### 2. Email OTP auth surface
-- Add a new `/login` page with two clear paths:
-  - **"Continue with email"** → Supabase email OTP (magic link + 6-digit code fallback).
-  - **"Connect wallet"** → existing Reown AppKit + SIWE flow (already built).
-- Update `Navbar` sign-in entry point to route to `/login`.
+```text
+Buyer clicks Buy
+   -> POST /escrow-create   (edge fn)
+        - validates ad + amount (or accepted offer)
+        - creates Circle escrow / holding wallet
+        - inserts escrows row status='created'
+Buyer funds escrow
+   -> Circle wallet SDK (email user)  OR  wagmi USDC transfer (self-custody)
+   -> POST /escrow-confirm-funded   (edge fn)
+        - verifies on-chain deposit via _shared/tx-verify
+        - status='funded', funded_at=now()
+Seller ships / delivers
+Buyer clicks "Confirm received"
+   -> POST /escrow-release
+        - releases funds to seller (Circle transfer)
+        - status='released', marks ad sold, records payments row
+Either party opens dispute (v1: manual admin)
+   -> POST /escrow-dispute   (status='disputed')
+Refund path
+   -> POST /escrow-refund  (admin or seller-initiated)
+        - status='refunded'
+```
 
-### 3. Circle wallet provisioning edge function
-- Create `supabase/functions/circle-provision-wallet/index.ts`:
-  - Triggered after first successful email OTP login.
-  - Calls Circle User-Controlled Wallets API using `CIRCLE_API_KEY` to create a `userId` + initialize a wallet set on Arc / Base / ETH.
-  - Returns a `userToken` + `encryptionKey` to the client so the Circle Web SDK can complete PIN setup (non-custodial — Circle never sees the PIN).
-  - Persists the Circle `user_id` and provisioned addresses into the existing `user_wallets` table (source = `'circle'`).
+### Work items
 
-### 4. Client-side Circle SDK handshake
-- Install `@circle-fin/w3s-pw-web-sdk`.
-- Create `src/lib/circle/client.ts` initializing the SDK with `CIRCLE_APP_ID`.
-- Create `WalletSetupDialog.tsx` that runs after first email login: prompts the user to set a PIN + security questions, finalizing the Circle wallet.
+1. **Edge functions** under `supabase/functions/`:
+   - `escrow-create` — validates buyer/ad/amount, creates Circle escrow record, inserts row.
+   - `escrow-confirm-funded` — verifies deposit tx via `_shared/tx-verify.ts`, flips status.
+   - `escrow-release` — buyer-only; releases to seller, writes `payments` row, marks ad sold.
+   - `escrow-refund` — seller-or-admin; refunds buyer.
+   - `escrow-dispute` — either party; sets `status='disputed'`.
+   All use service-role client, validate `auth.uid()` matches buyer/seller, and update `tx_hashes` jsonb.
 
-### 5. Pause point
-Stop after the email OTP flow provisions a Circle wallet and stores addresses in `user_wallets`. Escrow contract integration and multi-wallet management UI = **Session 2 tomorrow**.
+2. **Config** — add each function to `supabase/config.toml` with `verify_jwt = true` (except any webhook Circle calls back on, which stays `false` and validates a signature).
 
-## Explicitly out of scope this session
-- Circle escrow contract calls (deferred to Session 2).
-- Migrating existing payments (`PayButton`, agent-api, mcp) off direct USDC transfer onto Circle escrow (Session 3).
-- Social login providers inside Circle (we're using Supabase for auth; Circle is wallet-only).
+3. **Client**:
+   - New `src/components/EscrowButton.tsx` replacing `PayButton` on `AdDetail`.
+   - `src/pages/EscrowDetail.tsx` — shows escrow state, action buttons (Confirm received / Open dispute / Refund).
+   - Dashboard tab "Escrows" listing buyer + seller escrows, using existing `escrows_select_participant` policy.
+   - Circle-wallet users fund via `@circle-fin/w3s-pw-web-sdk` transfer; self-custody users fund via wagmi. Both hit `escrow-confirm-funded` with the tx hash.
 
-## Technical notes
-- `CIRCLE_APP_ID` is a public client identifier by Circle's design — treated like a Supabase anon key, safe in the bundle.
-- `CIRCLE_API_KEY` stays server-side in edge functions only. Never imported into `src/`.
-- The `user_wallets` table (created previously) already has the shape we need: `user_id`, `address`, `chain`, `source`, `is_primary`.
-- Email OTP uses Supabase's built-in `signInWithOtp` — no new auth provider config needed beyond confirming email is enabled.
-- If credits run out mid-step, safe pause points are: after step 2 (auth UI only), after step 3 (backend ready), or after step 4 (full flow).
+4. **Safety**
+   - Trigger enforcing status transitions: `created → funded → released|refunded|disputed`, `disputed → released|refunded`. Nothing else.
+   - `payments` insert only happens inside `escrow-release` edge fn (service role) to preserve current "verified on-chain" invariant.
 
-## Deliverable at session end
-A user can visit `/login`, enter an email, receive an OTP, land back in the app signed in, and have a Circle multichain wallet provisioned + PIN set. Self-custody wallet connect continues to work unchanged.
+5. **Out of scope this session**
+   - Automated dispute resolution UI (v1 = manual admin action).
+   - Migrating agent-api / MCP payments onto escrow (Session 4).
+   - Notifications (Session 5).
+
+### Pause points
+- After (1) + (2): backend ready, no UI change.
+- After (3): full happy-path buy → confirm → release working.
+- After (4): status-transition trigger + tests.
+
+### Deliverable
+On `/ad/:id`, buyer clicks Buy → escrow row created → funds sent (Circle wallet or self-custody) → verified → seller sees "Awaiting delivery" → buyer clicks "Confirm received" → funds released, ad marked sold, review unlocked. Refund + dispute paths reachable but resolved manually for v1.
