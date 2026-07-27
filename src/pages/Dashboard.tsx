@@ -74,6 +74,8 @@ const Dashboard = () => {
           </div>
         </div>
 
+        <EscrowsList />
+
         <OffersInbox />
 
         <h2 className="text-lg font-bold text-foreground mb-4">My Ads</h2>
