@@ -1,32 +1,61 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
 import { DbAd, categories, conditions } from "@/lib/types";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+type SortKey = "newest" | "price_asc" | "price_desc";
 
 const Browse = () => {
   const [searchParams] = useSearchParams();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("q") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [condition, setCondition] = useState("");
+  const [location, setLocation] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sort, setSort] = useState<SortKey>("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [ads, setAds] = useState<DbAd[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let q = supabase
-      .from("ads")
-      .select("*")
-      .eq("status", "active")
-      .order("featured", { ascending: false })
-      .order("created_at", { ascending: false });
+    setLoading(true);
+    let q = supabase.from("ads").select("*").eq("status", "active");
+
+    // Featured-first always, then chosen sort as tiebreaker.
+    q = q.order("featured", { ascending: false });
+    if (sort === "price_asc") q = q.order("price_usdc", { ascending: true });
+    else if (sort === "price_desc") q = q.order("price_usdc", { ascending: false });
+    else q = q.order("created_at", { ascending: false });
+
     if (category) q = q.eq("category", category);
     if (condition) q = q.eq("condition", condition);
-    if (search) q = q.ilike("title", `%${search}%`);
-    q.limit(60).then(({ data }) => setAds((data as DbAd[]) || []));
-  }, [search, category, condition]);
+    if (search) q = q.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
+    if (location) q = q.ilike("location", `%${location}%`);
+    const min = Number(minPrice);
+    const max = Number(maxPrice);
+    if (minPrice && !Number.isNaN(min)) q = q.gte("price_usdc", min);
+    if (maxPrice && !Number.isNaN(max)) q = q.lte("price_usdc", max);
+
+    q.limit(60).then(({ data }) => {
+      setAds((data as DbAd[]) || []);
+      setLoading(false);
+    });
+  }, [search, category, condition, location, minPrice, maxPrice, sort]);
+
+  const activeFilterCount = useMemo(
+    () => [category, condition, location, minPrice, maxPrice].filter(Boolean).length,
+    [category, condition, location, minPrice, maxPrice]
+  );
+
+  const clearAll = () => {
+    setSearch(""); setCategory(""); setCondition("");
+    setLocation(""); setMinPrice(""); setMaxPrice(""); setSort("newest");
+  };
 
   return (
     <Layout>
@@ -42,82 +71,100 @@ const Browse = () => {
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="h-10 px-3 rounded-lg bg-card border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary shrink-0"
+            aria-label="Sort"
+          >
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price ↑</option>
+            <option value="price_desc">Price ↓</option>
+          </select>
           <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-2 shrink-0">
             <SlidersHorizontal className="w-4 h-4" />
-            Filters
+            Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
           </Button>
         </div>
 
         {showFilters && (
-          <div className="bg-card border border-border rounded-xl p-4 mb-6 space-y-3">
+          <div className="bg-card border border-border rounded-xl p-4 mb-6 space-y-4">
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Category</label>
               <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => setCategory("")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                    !category ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"
-                  }`}
-                >
-                  All
-                </button>
+                <FilterChip active={!category} onClick={() => setCategory("")}>All</FilterChip>
                 {categories.map((c) => (
-                  <button
-                    key={c.name}
-                    onClick={() => setCategory(c.name)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                      category === c.name ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"
-                    }`}
-                  >
+                  <FilterChip key={c.name} active={category === c.name} onClick={() => setCategory(c.name)}>
                     {c.icon} {c.name}
-                  </button>
+                  </FilterChip>
                 ))}
               </div>
             </div>
+
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Condition</label>
-              <div className="flex gap-1.5">
-                <button
-                  onClick={() => setCondition("")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                    !condition ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
-                  }`}
-                >
-                  All
-                </button>
+              <div className="flex flex-wrap gap-1.5">
+                <FilterChip active={!condition} onClick={() => setCondition("")}>All</FilterChip>
                 {conditions.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setCondition(c)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                      condition === c ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground"
-                    }`}
-                  >
-                    {c}
-                  </button>
+                  <FilterChip key={c} active={condition === c} onClick={() => setCondition(c)}>{c}</FilterChip>
                 ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                  <input
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="City or country"
+                    className="w-full h-9 pl-8 pr-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min price (USDC)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  placeholder="0"
+                  className="w-full h-9 px-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Max price (USDC)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  placeholder="Any"
+                  className="w-full h-9 px-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
               </div>
             </div>
           </div>
         )}
 
-        {(category || condition) && (
-          <div className="flex items-center gap-2 mb-4">
+        {activeFilterCount > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className="text-xs text-muted-foreground">Filters:</span>
-            {category && (
-              <button onClick={() => setCategory("")} className="flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary text-xs">
-                {category} <X className="w-3 h-3" />
-              </button>
-            )}
-            {condition && (
-              <button onClick={() => setCondition("")} className="flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary text-xs">
-                {condition} <X className="w-3 h-3" />
-              </button>
-            )}
+            {category && <ActiveTag onClear={() => setCategory("")}>{category}</ActiveTag>}
+            {condition && <ActiveTag onClear={() => setCondition("")}>{condition}</ActiveTag>}
+            {location && <ActiveTag onClear={() => setLocation("")}>📍 {location}</ActiveTag>}
+            {minPrice && <ActiveTag onClear={() => setMinPrice("")}>≥ {minPrice} USDC</ActiveTag>}
+            {maxPrice && <ActiveTag onClear={() => setMaxPrice("")}>≤ {maxPrice} USDC</ActiveTag>}
+            <button onClick={clearAll} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">Clear all</button>
           </div>
         )}
 
-        <div className="text-sm text-muted-foreground mb-4">{ads.length} ads found</div>
+        <div className="text-sm text-muted-foreground mb-4">
+          {loading ? "Loading…" : `${ads.length} ad${ads.length === 1 ? "" : "s"} found`}
+        </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {ads.map((ad) => (
@@ -125,17 +172,32 @@ const Browse = () => {
           ))}
         </div>
 
-        {ads.length === 0 && (
+        {!loading && ads.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-muted-foreground mb-4">No ads found matching your criteria</p>
-            <Button variant="outline" onClick={() => { setSearch(""); setCategory(""); setCondition(""); }}>
-              Clear Filters
-            </Button>
+            <p className="text-muted-foreground mb-4">No ads match your filters.</p>
+            <Button variant="outline" onClick={clearAll}>Clear filters</Button>
           </div>
         )}
       </div>
     </Layout>
   );
 };
+
+const FilterChip = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
+  <button
+    onClick={onClick}
+    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+      active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"
+    }`}
+  >
+    {children}
+  </button>
+);
+
+const ActiveTag = ({ children, onClear }: { children: React.ReactNode; onClear: () => void }) => (
+  <button onClick={onClear} className="flex items-center gap-1 px-2 py-1 rounded bg-primary/10 text-primary text-xs">
+    {children} <X className="w-3 h-3" />
+  </button>
+);
 
 export default Browse;
