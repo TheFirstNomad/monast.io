@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DbAd } from "@/lib/types";
 import { OffersInbox } from "@/components/OffersInbox";
+import { EscrowsList } from "@/components/EscrowsList";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -72,6 +73,8 @@ const Dashboard = () => {
             <div className="text-lg font-bold text-foreground">{myAds.length}</div>
           </div>
         </div>
+
+        <EscrowsList />
 
         <OffersInbox />
 
