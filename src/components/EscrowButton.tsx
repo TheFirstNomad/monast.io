@@ -26,8 +26,41 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
   const [escrowId, setEscrowId] = useState<string | null>(null);
   const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
   const [confirming, setConfirming] = useState(false);
+  const [hasCircleWallet, setHasCircleWallet] = useState(false);
+  const [creating, setCreating] = useState(false);
   const { isSuccess, isLoading: mining } = useWaitForTransactionReceipt({ hash: pendingHash });
   const busy = isPending || mining || confirming;
+
+  // Email-signup buyers pay from their Circle wallet instead of a browser wallet.
+  useEffect(() => {
+    if (!user) { setHasCircleWallet(false); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("circle_user_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      setHasCircleWallet(!!data?.circle_user_id);
+    })();
+  }, [user]);
+
+  // Creates (or reuses) the escrow row and sends the buyer to the escrow page,
+  // where they fund it from their Circle wallet.
+  const buyWithCircle = async () => {
+    if (!user) { toast.error("Sign in to buy"); return; }
+    setCreating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("escrow-create", {
+        body: { ad_id: adId, chain_id: ARC_CHAIN_ID },
+      });
+      if (error) { toast.error(error.message); return; }
+      if (data?.error) { toast.error(data.error); return; }
+      navigate(`/escrow/${data.escrow.id}`);
+    } finally {
+      setCreating(false);
+    }
+  };
+
 
   const buy = async () => {
     try {
