@@ -2,6 +2,7 @@
 // in v1 — a future function will resolve to released or refunded.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { notify } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +44,15 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
     if (error) throw error;
+    const counterparty = esc.buyer_id === userId ? esc.seller_id : esc.buyer_id;
+    await notify({
+      userId: counterparty,
+      kind: "escrow_disputed",
+      title: "A dispute was opened",
+      body: reason || "The other party opened a dispute on this escrow.",
+      link: `/escrow/${escrowId}`,
+    });
+
     return json({ escrow: updated });
   } catch (e) {
     console.error("escrow-dispute", e);

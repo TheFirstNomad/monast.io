@@ -3,6 +3,7 @@
 // the treasury to the seller is triggered in a follow-up job (Session 4).
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { notify } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,14 @@ Deno.serve(async (req) => {
       .from("ads")
       .update({ status: "sold", sold_at: new Date().toISOString() })
       .eq("id", esc.ad_id);
+
+    await notify({
+      userId: esc.seller_id,
+      kind: "escrow_released",
+      title: "Escrow released to you",
+      body: `The buyer confirmed delivery. ${Number(esc.amount_usdc).toLocaleString()} USDC has been released.`,
+      link: `/escrow/${escrowId}`,
+    });
 
     return json({ escrow: updated });
   } catch (e) {
