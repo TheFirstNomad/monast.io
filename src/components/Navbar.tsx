@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot } from "lucide-react";
 import { useState } from "react";
+import { NotificationsBell } from "@/components/NotificationsBell";
+
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 
