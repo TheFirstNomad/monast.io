@@ -2,6 +2,7 @@
 // then flips the escrow row from `created` to `funded`.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { notify } from "../_shared/notify.ts";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 
 const corsHeaders = {
@@ -64,6 +65,14 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
     if (error) throw error;
+
+    await notify({
+      userId: esc.seller_id,
+      kind: "escrow_funded",
+      title: "Buyer funded an escrow",
+      body: `${Number(esc.amount_usdc).toLocaleString()} USDC is held in escrow. Deliver the item, then the buyer releases the funds.`,
+      link: `/escrow/${escrowId}`,
+    });
 
     return json({ escrow: updated });
   } catch (e) {

@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot } from "lucide-react";
 import { useState } from "react";
+import { NotificationsBell } from "@/components/NotificationsBell";
+
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -89,6 +91,7 @@ export const Navbar = () => {
             )}
             {user && (
               <>
+                <NotificationsBell />
                 <Link to="/messages">
                   <Button variant="ghost" size="icon" className="rounded-lg">
                     <MessageCircle className="w-5 h-5" />
@@ -101,6 +104,7 @@ export const Navbar = () => {
                 </Link>
               </>
             )}
+
             <Link to={user ? "/dashboard" : "/auth"}>
               <Button variant="ghost" size="icon" className="rounded-lg">
                 <User className="w-5 h-5" />

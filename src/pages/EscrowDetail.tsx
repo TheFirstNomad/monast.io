@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
 import { toast } from "sonner";
 import { Shield, Loader2, CheckCircle2, AlertTriangle, RotateCcw } from "lucide-react";
+import { CircleFundButton } from "@/components/CircleFundButton";
+
 
 interface EscrowRow {
   id: string;
@@ -91,7 +93,20 @@ const EscrowDetail = () => {
         </div>
 
         <div className="space-y-2">
+          {isBuyer && escrow.status === "created" && (
+            <>
+              <p className="text-sm text-muted-foreground mb-1">
+                This escrow is waiting for your payment.
+              </p>
+              <CircleFundButton
+                escrowId={escrow.id}
+                amount={Number(escrow.amount_usdc)}
+                onFunded={load}
+              />
+            </>
+          )}
           {canRelease && (
+
             <Button onClick={() => call("escrow-release", "Release")} disabled={!!action} className="w-full gap-2 py-5">
               {action === "Release" ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               Confirm received & release to seller

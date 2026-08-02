@@ -2,6 +2,7 @@
 // Actual on-chain payout back to buyer is handled by the payout job (Session 4).
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { notify } from "../_shared/notify.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,6 +42,14 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
     if (error) throw error;
+
+    await notify({
+      userId: esc.buyer_id,
+      kind: "escrow_refunded",
+      title: "Escrow refunded",
+      body: `The seller refunded ${Number(esc.amount_usdc).toLocaleString()} USDC back to you.`,
+      link: `/escrow/${escrowId}`,
+    });
 
     return json({ escrow: updated });
   } catch (e) {
