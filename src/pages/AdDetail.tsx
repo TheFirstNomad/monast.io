@@ -12,6 +12,7 @@ import { EscrowButton } from "@/components/EscrowButton";
 import { ReviewSection } from "@/components/ReviewSection";
 import { toast } from "sonner";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 const AdDetail = () => {
   const { id } = useParams();
