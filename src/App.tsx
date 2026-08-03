@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WalletProvider } from "@/hooks/useWallet";
+import { FavoritesProvider } from "@/hooks/useFavorites";
 import Index from "./pages/Index";
 import PostAd from "./pages/PostAd";
 import AdDetail from "./pages/AdDetail";

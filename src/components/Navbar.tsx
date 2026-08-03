@@ -13,6 +13,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -21,6 +22,7 @@ export const Navbar = () => {
   const [query, setQuery] = useState("");
   const { address, connect, connecting, disconnect } = useWallet();
   const { user } = useAuth();
+  const { count: favCount } = useFavorites();
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
 
