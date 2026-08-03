@@ -161,8 +161,11 @@ const AdDetail = () => {
 
           <div className="md:col-span-2 space-y-4">
             <div className="bg-card rounded-xl border border-border p-5">
-              <div className="text-2xl font-bold text-primary mb-1">
-                {Number(ad.price_usdc).toLocaleString()} USDC
+              <div className="flex items-start justify-between gap-3 mb-1">
+                <div className="text-2xl font-bold text-primary">
+                  {Number(ad.price_usdc).toLocaleString()} USDC
+                </div>
+                <FavoriteButton adId={ad.id} size="lg" />
               </div>
               <h1 className="text-lg font-semibold text-foreground mb-3">{ad.title}</h1>
               <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
