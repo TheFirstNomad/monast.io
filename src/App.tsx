@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WalletProvider } from "@/hooks/useWallet";
+import { FavoritesProvider } from "@/hooks/useFavorites";
 import Index from "./pages/Index";
 import PostAd from "./pages/PostAd";
 import AdDetail from "./pages/AdDetail";
@@ -19,6 +20,7 @@ import AgentDocs from "./pages/AgentDocs";
 import Pricing from "./pages/Pricing";
 import Promote from "./pages/Promote";
 import EscrowDetail from "./pages/EscrowDetail";
+import Favorites from "./pages/Favorites";
 
 const App = () => (
   <TooltipProvider>
@@ -27,6 +29,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <WalletProvider>
+            <FavoritesProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -34,6 +37,7 @@ const App = () => (
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/browse" element={<Browse />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/favorites" element={<Favorites />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/seller/:id" element={<SellerProfile />} />
@@ -44,7 +48,9 @@ const App = () => (
               <Route path="/escrow/:id" element={<EscrowDetail />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </FavoritesProvider>
           </WalletProvider>
+
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

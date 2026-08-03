@@ -7,12 +7,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot } from "lucide-react";
+import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot, Heart } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
+import { useFavorites } from "@/hooks/useFavorites";
 
 export const Navbar = () => {
   const location = useLocation();
@@ -21,6 +22,7 @@ export const Navbar = () => {
   const [query, setQuery] = useState("");
   const { address, connect, connecting, disconnect } = useWallet();
   const { user } = useAuth();
+  const { count: favCount } = useFavorites();
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
 
@@ -92,6 +94,16 @@ export const Navbar = () => {
             {user && (
               <>
                 <NotificationsBell />
+                <Link to="/favorites">
+                  <Button variant="ghost" size="icon" className="rounded-lg relative">
+                    <Heart className="w-5 h-5" />
+                    {favCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                        {favCount > 99 ? "99+" : favCount}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
                 <Link to="/messages">
                   <Button variant="ghost" size="icon" className="rounded-lg">
                     <MessageCircle className="w-5 h-5" />
@@ -104,6 +116,7 @@ export const Navbar = () => {
                 </Link>
               </>
             )}
+
 
             <Link to={user ? "/dashboard" : "/auth"}>
               <Button variant="ghost" size="icon" className="rounded-lg">
@@ -149,7 +162,9 @@ export const Navbar = () => {
               { to: "/", label: "Home" },
               { to: "/browse", label: "Browse" },
               { to: "/pricing", label: "Pricing" },
+              { to: "/favorites", label: "Saved items" },
               { to: "/messages", label: "Messages" },
+
               { to: "/transactions", label: "Transactions" },
               { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
             ].map((link) => (

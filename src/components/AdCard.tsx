@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { DbAd } from "@/lib/types";
 import { MapPin } from "lucide-react";
+import { FavoriteButton } from "@/components/FavoriteButton";
+
 
 export const AdCard = ({ ad }: { ad: DbAd }) => {
   const cover = ad.images?.[0] || "/placeholder.svg";
@@ -22,6 +24,7 @@ export const AdCard = ({ ad }: { ad: DbAd }) => {
           <span className="absolute top-2 right-2 bg-card/90 backdrop-blur text-xs font-medium px-2 py-0.5 rounded text-foreground">
             {ad.condition}
           </span>
+          <FavoriteButton adId={ad.id} className="absolute bottom-2 right-2 z-10" />
           {ad.status === "sold" && (
             <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
               <span className="bg-destructive text-destructive-foreground text-xs font-bold px-3 py-1 rounded uppercase tracking-wide">
