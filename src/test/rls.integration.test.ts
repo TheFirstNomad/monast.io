@@ -173,13 +173,25 @@ suite("RLS policies & triggers", () => {
       expect(error).toBeTruthy();
     });
 
-    it("allows a correct payment from the real buyer", async () => {
+    it("blocks even a correct payment inserted directly by the buyer (server-only table)", async () => {
+      // Payments are written exclusively by the record-payment edge function
+      // after on-chain verification, so no client insert is allowed.
       const { error } = await buyerClient.from("payments").insert({
         ad_id: adId, buyer_id: buyerId, seller_id: sellerId,
         amount_usdc: 100, tx_hash: "0x" + "c".repeat(64), chain_id: 5042002,
       });
+      expect(error).toBeTruthy();
+      expect(String(error?.code)).toBe("42501");
+    });
+
+    it("lets the service role record a verified payment", async () => {
+      const { error } = await admin.from("payments").insert({
+        ad_id: adId, buyer_id: buyerId, seller_id: sellerId,
+        amount_usdc: 100, tx_hash: "0x" + "d".repeat(64), chain_id: 5042002,
+      });
       expect(error).toBeNull();
     });
+
 
   });
 });
