@@ -101,26 +101,32 @@ suite("RLS policies & triggers", () => {
       offerId = data!.id;
     });
 
+    // Column-level privileges revoke UPDATE on every offers column except
+    // `status`, so tampering fails with "permission denied for table offers"
+    // before the immutability trigger even runs. Either message is acceptable.
+    const TAMPER_BLOCKED = /permission denied|immutable|cannot be changed/i;
+
     it("blocks the seller from raising the offer amount", async () => {
       const { error } = await sellerClient
         .from("offers").update({ amount_usdc: 999 }).eq("id", offerId);
       expect(error).toBeTruthy();
-      expect(String(error?.message)).toMatch(/amount_usdc/i);
+      expect(String(error?.message)).toMatch(TAMPER_BLOCKED);
     });
 
     it("blocks the buyer from changing their own offer amount", async () => {
       const { error } = await buyerClient
         .from("offers").update({ amount_usdc: 1 }).eq("id", offerId);
       expect(error).toBeTruthy();
-      expect(String(error?.message)).toMatch(/amount_usdc/i);
+      expect(String(error?.message)).toMatch(TAMPER_BLOCKED);
     });
 
     it("blocks the seller from reassigning buyer_id", async () => {
       const { error } = await sellerClient
         .from("offers").update({ buyer_id: strangerId }).eq("id", offerId);
       expect(error).toBeTruthy();
-      expect(String(error?.message)).toMatch(/buyer_id/i);
+      expect(String(error?.message)).toMatch(TAMPER_BLOCKED);
     });
+
 
     it("blocks a stranger from accepting the offer", async () => {
       // Stranger isn't buyer or seller — RLS UPDATE policy rejects them.
@@ -167,13 +173,25 @@ suite("RLS policies & triggers", () => {
       expect(error).toBeTruthy();
     });
 
-    it("allows a correct payment from the real buyer", async () => {
+    it("blocks even a correct payment inserted directly by the buyer (server-only table)", async () => {
+      // Payments are written exclusively by the record-payment edge function
+      // after on-chain verification, so no client insert is allowed.
       const { error } = await buyerClient.from("payments").insert({
         ad_id: adId, buyer_id: buyerId, seller_id: sellerId,
         amount_usdc: 100, tx_hash: "0x" + "c".repeat(64), chain_id: 5042002,
       });
+      expect(error).toBeTruthy();
+      expect(String(error?.code)).toBe("42501");
+    });
+
+    it("lets the service role record a verified payment", async () => {
+      const { error } = await admin.from("payments").insert({
+        ad_id: adId, buyer_id: buyerId, seller_id: sellerId,
+        amount_usdc: 100, tx_hash: "0x" + crypto.randomUUID().replace(/-/g, "").repeat(2), chain_id: 5042002,
+      });
       expect(error).toBeNull();
     });
+
 
   });
 });

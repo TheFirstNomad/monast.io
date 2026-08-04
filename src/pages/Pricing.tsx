@@ -3,8 +3,16 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { PROMOTION_TIERS } from "@/lib/promotionTiers";
 import { Sparkles, Check, Zap, TrendingUp, Bot } from "lucide-react";
+import { useSeo } from "@/hooks/useSeo";
 
 const Pricing = () => {
+  useSeo({
+    title: "Featured listing pricing — monast.io",
+    description:
+      "Boost your listing with a featured slot on monast.io. Transparent USDC pricing, spotlight placement and agent-API priority.",
+    canonicalPath: "/pricing",
+  });
+
   const faqs = [
     { q: "How does featuring work?", a: "Your ad gets a Spotlight slot on the home page, a prominent badge, and top placement in browse and search results for the duration of your boost." },
     { q: "What if my ad sells before the boost ends?", a: "The badge stays until the boost expires. Sold ads still appear in Spotlight as social proof for your other listings." },

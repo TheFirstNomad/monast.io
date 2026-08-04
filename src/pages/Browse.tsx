@@ -6,10 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { DbAd, categories, conditions } from "@/lib/types";
 import { Search, SlidersHorizontal, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSeo } from "@/hooks/useSeo";
 
 type SortKey = "newest" | "price_asc" | "price_desc";
 
 const Browse = () => {
+  useSeo({
+    title: "Browse listings — monast.io marketplace",
+    description:
+      "Search thousands of listings across every category and buy safely with USDC escrow on monast.io.",
+    canonicalPath: "/browse",
+  });
+
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("q") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");

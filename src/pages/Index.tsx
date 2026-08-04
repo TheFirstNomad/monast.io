@@ -8,8 +8,16 @@ import { Spotlight } from "@/components/Spotlight";
 import { supabase } from "@/integrations/supabase/client";
 import { DbAd } from "@/lib/types";
 import { Plus, Shield, Zap, Globe } from "lucide-react";
+import { useSeo } from "@/hooks/useSeo";
 
 const Index = () => {
+  useSeo({
+    title: "monast.io — Buy & Sell Anything Worldwide with USDC",
+    description:
+      "Global peer-to-peer marketplace. Post free ads and trade anything worldwide with USDC escrow on Arc, Base and Tempo.",
+    canonicalPath: "/",
+  });
+
   const [ads, setAds] = useState<DbAd[]>([]);
 
   useEffect(() => {

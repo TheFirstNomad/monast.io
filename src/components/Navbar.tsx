@@ -73,6 +73,9 @@ export const Navbar = () => {
                   <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <User className="w-4 h-4 mr-2" /> Profile settings
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/dashboard/agents")}>
                     <Bot className="w-4 h-4 mr-2" /> Agents
                   </DropdownMenuItem>
@@ -166,6 +169,7 @@ export const Navbar = () => {
               { to: "/messages", label: "Messages" },
 
               { to: "/transactions", label: "Transactions" },
+              { to: "/settings", label: "Profile settings" },
               { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
             ].map((link) => (
               <Link

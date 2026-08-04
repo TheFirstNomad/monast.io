@@ -21,9 +21,12 @@ import Pricing from "./pages/Pricing";
 import Promote from "./pages/Promote";
 import EscrowDetail from "./pages/EscrowDetail";
 import Favorites from "./pages/Favorites";
+import Settings from "./pages/Settings";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const App = () => (
-  <TooltipProvider>
+  <ErrorBoundary>
+    <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -38,6 +41,7 @@ const App = () => (
               <Route path="/browse" element={<Browse />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/seller/:id" element={<SellerProfile />} />
@@ -54,6 +58,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+  </ErrorBoundary>
 );
 
 export default App;
