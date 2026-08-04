@@ -187,7 +187,7 @@ suite("RLS policies & triggers", () => {
     it("lets the service role record a verified payment", async () => {
       const { error } = await admin.from("payments").insert({
         ad_id: adId, buyer_id: buyerId, seller_id: sellerId,
-        amount_usdc: 100, tx_hash: "0x" + "d".repeat(64), chain_id: 5042002,
+        amount_usdc: 100, tx_hash: "0x" + crypto.randomUUID().replace(/-/g, "").repeat(2), chain_id: 5042002,
       });
       expect(error).toBeNull();
     });
