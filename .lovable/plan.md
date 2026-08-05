@@ -87,11 +87,38 @@ Each chain has its own address inside the same wallet set, managed from one scre
 
 **Who releases funds.** Buyer-initiated release is the default path. A scheduled job auto-releases funded escrows after a delivery-confirmation window when the buyer goes silent. Disputes go to a human arbitrator role in the admin queue. AI stays out of the money path: an agent may summarise chat and evidence to assist a decision, but never authorises a transfer.
 
+**Who controls the treasury.** In Phase 1 the keys sit with Circle, but only the monast.io backend can authorise a transfer using the API key plus entity secret. That means the platform owner controls it and the model is custodial: users trust monast.io rather than code. This is the deliberate trade-off of shipping fast, and the reason Phase 2 exists.
+
+## Trustless escrow (Phase 2)
+
+Phase 2 replaces custody with an on-chain escrow contract:
+
+```text
+Buyer -> escrow contract (holds USDC, per-deal)
+         release()  by buyer   -> 99% seller, 1% revenue wallet
+         refund()   by seller  -> 100% buyer
+         resolve()  by arbitrator role, dispute only
+         autoRelease() after the confirmation window
+```
+
+The platform never takes possession of funds; the app only reads contract state and submits transactions. Deployment is done from a backend function (Circle's Smart Contract Platform), so no local development environment is required. The contract must be reviewed and, before meaningful volume, audited — this is the one part of the build where a mistake is unrecoverable, so it is deliberately not bundled into Phase 1.
+
+## Fee model
+
+- **Listing fee: 0.15 USDC per ad.** Charged when the ad is published, paid to the revenue wallet, verified on-chain before the ad becomes active. Purpose is spam prevention, so it is flat and non-refundable.
+- **Platform fee: 1% of the sale.** Deducted from the escrowed amount at release: the seller receives 99% and 1% goes to the revenue wallet in the same payout step. Refunds return 100% to the buyer with no fee taken.
+- Both rates live in one shared config so client, backend, and contract cannot drift, and every fee movement is written to the ledger table.
+
+## Decentralisation stance
+
+No KYC/AML, no identity gating, no sanctions screening — the marketplace stays permissionless. A short privacy notice is still worth keeping because user emails are stored. Note plainly: while Phase 1 custody is custodial, "decentralised" describes the intent rather than the actual trust model; it becomes accurate once the escrow contract is live.
+
 ## Effort estimate
 
-- Phase 1 (real treasury, payouts, ledger, reconciliation): roughly 10-14 credits.
-- Phase 2 (roles, dispute queue, moderation, auto-release): roughly 8-11 credits.
-- Phase 3 (email, search, legal pages, dead-code cleanup): roughly 7-10 credits.
+- Phase 1 (real treasury, payouts, fees, ledger, reconciliation): roughly 12-16 credits.
+- Phase 2 (escrow contract, arbitrator role, dispute queue, moderation, auto-release): roughly 14-20 credits.
+- Phase 3 (email, search, analytics, dead-code cleanup): roughly 6-9 credits.
 
-Total roughly 25-35 credits. Each phase ends in a working, testable state rather than one large pass.
+Total roughly 32-45 credits. Each phase ends in a working, testable state rather than one large pass.
+
 
