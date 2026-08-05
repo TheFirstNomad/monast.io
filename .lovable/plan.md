@@ -29,8 +29,7 @@
 - No transactional email: only in-app notifications; no email on offer, sale, escrow funded/released, or dispute.
 - Search is `ilike` over title/description with no index, no full-text ranking, no pagination — fine at 100 ads, not at 100k.
 - No shipping/delivery tracking, no order confirmation window, no auto-release timer on funded escrow.
-- No KYC/AML or sanctions screening, no terms/privacy/refund policy pages — required for a global money-moving marketplace.
-- No seller payout ledger or fee accounting; platform take rate is not modelled anywhere.
+- No seller payout ledger or fee accounting; no listing fee and no platform take rate are modelled anywhere.
 - Dead code: the entire `src/lib/swap/*` DEX module (411 lines) is imported by nothing and has no route; `src/lib/mockData.ts` is unreferenced.
 - No analytics/observability on funnel or function failures.
 
@@ -41,8 +40,11 @@
 - Build the payout leg: an `escrow-payout` path that sends USDC from the treasury wallet to the seller on release and back to the buyer on refund, records the tx hash, and only then flips status.
 - Add idempotency and retry on payouts, plus a reconciliation view of treasury balance vs. open escrow liability.
 
-**Phase 2 — trust and safety**
-- Arbitrator role via a `user_roles` table and `has_role`, an admin dispute queue, and a `escrow-resolve` endpoint restricted to that role.
+- Add the 0.15 USDC listing fee and the 1% release fee (see Fee model below).
+
+**Phase 2 — trustless escrow and trust/safety**
+- Replace custodial custody with an on-chain escrow contract so the platform never holds funds (see Custody below).
+- Arbitrator role via a `user_roles` table and `has_role`, an admin dispute queue, and a resolve path restricted to that role.
 - Reports/moderation table plus report buttons on ads and profiles, and an admin review screen.
 - Auto-release timer on funded escrows and a delivery-confirmation window.
 
@@ -51,7 +53,7 @@
 - Full-text search index with ranking and paginated browse.
 - Disable or correct the Tempo/Arc-mainnet chain entries.
 - Delete the dead swap module and mock data, or ship the DEX as a real route.
-- Legal pages, cookie/consent, and basic product analytics.
+- Basic product analytics and a short privacy notice (emails are stored). No KYC/AML: the marketplace stays permissionless by design.
 
 ## Technical notes
 
