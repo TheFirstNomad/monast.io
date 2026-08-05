@@ -59,3 +59,37 @@
 - USDC addresses and RPC URLs are duplicated in `src/lib/chains.ts`, `src/lib/swap/tokens.ts`, and `supabase/functions/_shared/tx-verify.ts` with differing casing — drift risk.
 - `tx-verify.ts` validates the Transfer log and receipt status but does not require a confirmation depth; add one before mainnet.
 - SIWE users get a deterministic `@wallet.monast.io` email; this is intentional but means wallet users cannot receive email notifications.
+
+## Treasury and fund custody design
+
+**Two separate wallets, never one.** A Circle developer-controlled wallet set with two wallets per chain:
+
+```text
+Escrow wallet     <- buyer deposits only
+                  -> seller on release, buyer on refund
+                  -> withdrawals disabled by design
+
+Revenue wallet    <- commission split at release, promotion payments
+                  -> owner withdrawals allowed
+```
+
+Each chain has its own address inside the same wallet set, managed from one screen.
+
+**Setup path (browser only).** The owner generates an Entity Secret in the Circle Console and saves the recovery file, then pastes the secret into Lovable's secure secret form. A backend function creates the wallet set and wallets. No terminal or local environment is needed.
+
+**Withdrawals.** An owner-only admin screen, guarded by the existing wallet-signature admin auth, triggers a Circle transfer from the revenue wallet to any address the owner enters. The escrow wallet has no withdrawal path.
+
+**Separating revenue from user funds.** On release the payout splits: seller amount to the seller, platform fee to the revenue wallet. Every movement is written to a ledger table. The admin dashboard shows escrow liability (sum of funded escrows) against the escrow wallet's on-chain balance, plus available revenue; a drift between the two raises an alert.
+
+**Safety controls.** Keys stay with Circle; no private key exists in the app or browser. The entity secret lives only in backend secrets. Payouts are idempotent, amount-validated against the escrow row, and gated by the existing status-transition trigger so an escrow cannot pay out twice. Caveat to accept knowingly: holding user funds in a platform treasury is custody, which carries licensing implications in most jurisdictions and is the main reason to migrate to an on-chain escrow contract later.
+
+**Who releases funds.** Buyer-initiated release is the default path. A scheduled job auto-releases funded escrows after a delivery-confirmation window when the buyer goes silent. Disputes go to a human arbitrator role in the admin queue. AI stays out of the money path: an agent may summarise chat and evidence to assist a decision, but never authorises a transfer.
+
+## Effort estimate
+
+- Phase 1 (real treasury, payouts, ledger, reconciliation): roughly 10-14 credits.
+- Phase 2 (roles, dispute queue, moderation, auto-release): roughly 8-11 credits.
+- Phase 3 (email, search, legal pages, dead-code cleanup): roughly 7-10 credits.
+
+Total roughly 25-35 credits. Each phase ends in a working, testable state rather than one large pass.
+
