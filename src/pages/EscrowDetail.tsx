@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
-import { platformFee, sellerNet, PLATFORM_FEE_PERCENT } from "@/lib/fees";
+import { splitSale, SALE_FEE_LABEL } from "@/lib/fees";
 import { toast } from "sonner";
 import {
   Shield,
