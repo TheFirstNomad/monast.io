@@ -92,25 +92,40 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-3">
             {myAds.map((ad) => (
-              <Link
+              <div
                 key={ad.id}
-                to={`/ad/${ad.id}`}
-                className="flex items-center gap-4 bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition-colors"
+                className="flex items-center gap-4 bg-card border border-border rounded-xl p-3"
               >
-                <img
-                  src={ad.images?.[0] || "/placeholder.svg"}
-                  alt={ad.title}
-                  className="w-16 h-16 rounded-lg object-cover bg-secondary"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground truncate">{ad.title}</div>
-                  <div className="text-primary font-bold text-sm">
-                    {Number(ad.price_usdc).toLocaleString()} USDC
+                <Link to={`/ad/${ad.id}`} className="flex items-center gap-4 flex-1 min-w-0 group">
+                  <img
+                    src={ad.images?.[0] || "/placeholder.svg"}
+                    alt={ad.title}
+                    className="w-16 h-16 rounded-lg object-cover bg-secondary"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                      {ad.title}
+                    </div>
+                    <div className="text-primary font-bold text-sm">
+                      {Number(ad.price_usdc).toLocaleString()} USDC
+                    </div>
+                    <div className="text-xs text-muted-foreground">{ad.location}</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">{ad.location}</div>
-                </div>
-                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded capitalize">{ad.status}</span>
-              </Link>
+                </Link>
+
+                {/* An unpaid listing is invisible to buyers until the fee clears. */}
+                {ad.status === "pending_fee" ? (
+                  <Link to={`/publish/${ad.id}`} className="shrink-0">
+                    <Button size="sm" className="gap-1">
+                      <Sparkles className="w-3.5 h-3.5" /> Publish
+                    </Button>
+                  </Link>
+                ) : (
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded capitalize shrink-0">
+                    {ad.status}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         )}
