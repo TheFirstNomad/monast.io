@@ -48,6 +48,7 @@ const App = () => (
               <Route path="/agents" element={<AgentDocs />} />
               <Route path="/dashboard/agents" element={<Agents />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/publish/:adId" element={<PublishAd />} />
               <Route path="/promote/:adId" element={<Promote />} />
               <Route path="/escrow/:id" element={<EscrowDetail />} />
               <Route path="*" element={<NotFound />} />
