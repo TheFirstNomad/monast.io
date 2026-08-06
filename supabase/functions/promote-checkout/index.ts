@@ -125,5 +125,17 @@ Deno.serve(async (req) => {
   }).eq("id", adId);
   if (updErr) return json({ error: updErr.message }, 500);
 
+  await writeLedger(admin, {
+    kind: "promotion_fee",
+    adId,
+    fromUserId: userId,
+    chainId,
+    amountUsdc: conf.price,
+    txHash,
+    status: "confirmed",
+    idempotencyKey: `promotion_fee:${promo.id}`,
+    notes: `featured listing ${tier}`,
+  });
+
   return json({ ok: true, promotion: promo, ends_at: endsAt.toISOString() });
 });
