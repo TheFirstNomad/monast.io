@@ -67,6 +67,11 @@ const AdminTreasury = () => {
         body: JSON.stringify(body),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 403) {
+        throw new Error(
+          `This wallet (${address.slice(0, 6)}…${address.slice(-4)}) is not the owner wallet. Switch to the owner wallet to use the treasury console.`,
+        );
+      }
       if (!res.ok) throw new Error(data?.error ?? `${fn} failed (${res.status})`);
       return data;
     },
