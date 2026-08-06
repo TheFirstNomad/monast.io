@@ -52,6 +52,7 @@ const App = () => (
               <Route path="/publish/:adId" element={<PublishAd />} />
               <Route path="/promote/:adId" element={<Promote />} />
               <Route path="/escrow/:id" element={<EscrowDetail />} />
+              <Route path="/admin/treasury" element={<AdminTreasury />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </FavoritesProvider>
