@@ -119,7 +119,7 @@ const EscrowDetail = () => {
           <Row k="Status" v={<span className="font-medium text-foreground">{ESCROW_STATUS_LABEL[escrow.status]}</span>} />
           <Row k="Amount in escrow" v={<span className="font-mono">{amount.toLocaleString()} USDC</span>} />
           <Row
-            k={`Platform fee (${PLATFORM_FEE_PERCENT}%)`}
+            k={`Platform fee (${SALE_FEE_LABEL})`}
             v={<span className="font-mono">{fee.toLocaleString()} USDC</span>}
           />
           <Row
