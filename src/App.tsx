@@ -19,6 +19,7 @@ import Agents from "./pages/Agents";
 import AgentDocs from "./pages/AgentDocs";
 import Pricing from "./pages/Pricing";
 import Promote from "./pages/Promote";
+import PublishAd from "./pages/PublishAd";
 import EscrowDetail from "./pages/EscrowDetail";
 import Favorites from "./pages/Favorites";
 import Settings from "./pages/Settings";
