@@ -16,7 +16,5 @@ export const PROMOTION_TIERS: TierConfig[] = [
   { id: "30d", label: "Month", duration: "30 days",  price: 80, perDay: 80 / 30, highlight: "Best value" },
 ];
 
-// Treasury wallet that receives promotion payments.
-// TODO: replace with the real marketplace treasury address before launch.
-export const PROMOTION_TREASURY: `0x${string}` =
-  "0x000000000000000000000000000000000000dEaD";
+// Promotion payments go to the revenue treasury wallet, resolved at runtime via
+// `useTreasuryAddress("revenue")`. Never hardcode a destination address here.

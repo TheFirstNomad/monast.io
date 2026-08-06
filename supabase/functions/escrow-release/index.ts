@@ -1,9 +1,14 @@
-// Buyer confirms delivery. Flips escrow to `released`, marks ad sold, and writes
-// a payments row so the review flow unlocks. The actual on-chain payout from
-// the treasury to the seller is triggered in a follow-up job (Session 4).
+// Buyer confirms delivery. Sends the real USDC payout from the escrow treasury
+// to the seller (minus the platform fee, which is swept to the revenue wallet),
+// then flips the escrow to `released` and marks the ad sold.
+//
+// The status only moves after the transfer has been accepted by Circle, so a
+// released escrow always has money in flight behind it.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
+import { runPayout } from "../_shared/payout.ts";
+import { loadFeeSettings } from "../_shared/fees.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +43,10 @@ Deno.serve(async (req) => {
     if (!["funded", "disputed"].includes(esc.status))
       return json({ error: `Cannot release from status ${esc.status}` }, 400);
 
+    const fees = await loadFeeSettings(admin);
+    const payout = await runPayout(admin, esc, "release", fees.saleFeeBps);
+    if (!payout.ok) return json({ error: payout.error }, 400);
+
     const { data: updated, error } = await admin
       .from("escrows")
       .update({ status: "released", released_at: new Date().toISOString() })
@@ -67,11 +76,19 @@ Deno.serve(async (req) => {
       userId: esc.seller_id,
       kind: "escrow_released",
       title: "Escrow released to you",
-      body: `The buyer confirmed delivery. ${Number(esc.amount_usdc).toLocaleString()} USDC has been released.`,
+      body: `The buyer confirmed delivery. ${payout.sellerNet?.toLocaleString()} USDC is on its way to your wallet` +
+        (payout.fee ? ` (after a ${payout.fee} USDC platform fee).` : "."),
       link: `/escrow/${escrowId}`,
     });
 
-    return json({ escrow: updated });
+    return json({
+      escrow: updated,
+      payout: {
+        circle_transaction_id: payout.circleTransactionId,
+        seller_net_usdc: payout.sellerNet,
+        platform_fee_usdc: payout.fee,
+      },
+    });
   } catch (e) {
     console.error("escrow-release", e);
     return json({ error: (e as Error).message }, 500);

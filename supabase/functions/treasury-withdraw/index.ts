@@ -1,0 +1,80 @@
+// Owner-only revenue withdrawal. Moves USDC out of the REVENUE treasury wallet
+// to any address the owner supplies. The escrow wallet is deliberately not
+// reachable from here — user funds have no withdrawal path.
+
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { verifyAdmin } from "../_shared/admin-auth.ts";
+import { getTreasury } from "../_shared/treasury.ts";
+import { treasuryTransfer, walletBalance } from "../_shared/circle-dev.ts";
+import { writeLedger } from "../_shared/ledger.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-admin-address, x-admin-timestamp, x-admin-signature",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+  try {
+    if (!(await verifyAdmin(req, admin))) return json({ error: "Forbidden" }, 403);
+    if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+    const body = await req.json().catch(() => ({}));
+    const chainId = Number(body.chain_id ?? 5042002);
+    const to = String(body.destination_address ?? "").trim();
+    const amount = Number(body.amount_usdc);
+
+    if (!/^0x[0-9a-fA-F]{40}$/.test(to)) return json({ error: "destination_address is not a valid address" }, 400);
+    if (!Number.isFinite(amount) || amount <= 0) return json({ error: "amount_usdc must be positive" }, 400);
+    if (!Number.isInteger(chainId) || chainId <= 0) return json({ error: "chain_id invalid" }, 400);
+
+    const revenue = await getTreasury(admin, "revenue", chainId);
+    if (!revenue.circle_wallet_id) return json({ error: "Revenue wallet is not linked to Circle" }, 400);
+
+    // Never let a withdrawal exceed the wallet's actual balance.
+    const balances = await walletBalance(revenue.circle_wallet_id);
+    const usdc = Number(
+      balances.find((b) => b.token?.symbol?.toUpperCase().includes("USDC"))?.amount ?? "0",
+    );
+    if (amount > usdc) {
+      return json({ error: `Revenue wallet holds ${usdc} USDC; cannot withdraw ${amount}` }, 400);
+    }
+
+    const idempotencyKey = `withdrawal:${chainId}:${Date.now()}:${to.toLowerCase()}`;
+    const tx = await treasuryTransfer({
+      walletId: revenue.circle_wallet_id,
+      destinationAddress: to,
+      amountUsdc: amount,
+      chainId,
+      idempotencyKey: crypto.randomUUID(),
+    });
+
+    await writeLedger(admin, {
+      kind: "revenue_withdrawal",
+      chainId,
+      amountUsdc: amount,
+      circleTransactionId: tx.id,
+      status: "pending",
+      idempotencyKey,
+      notes: `owner withdrawal to ${to}`,
+    });
+
+    return json({ circle_transaction_id: tx.id, amount_usdc: amount, destination_address: to });
+  } catch (e) {
+    console.error("treasury-withdraw", e);
+    return json({ error: (e as Error).message }, 500);
+  }
+});
+
+function json(b: unknown, status = 200) {
+  return new Response(JSON.stringify(b), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
