@@ -108,7 +108,31 @@ The platform never takes possession of funds; the app only reads contract state 
 - Triggered from an owner-only admin screen: choose network, confirm, done.
 - Arc Testnet first, exercised through a full fund / release / refund / dispute cycle with test USDC, then the identical bytecode goes to the production chain.
 - One deployment per supported chain; the resulting addresses and deploy tx hashes are stored in the chain config and shown in the admin panel for auditability.
-- Contract ownership is real power (arbitrator and fee recipient are settable). Handing ownership to a multisig, or renouncing it, is the follow-up step for genuine trustlessness and is not required on day one.
+
+**Target networks.** Arc Testnet is the only live network until Arc Mainnet launches on Sep 16, 2026. Base and Sepolia stay available for wallet compatibility, Tempo entries get disabled until their USDC address is published. On Sep 16 the same audited bytecode is deployed to Arc Mainnet from the admin screen and the chain config flips `arc-mainnet` to enabled — no code rewrite, just a deploy plus a config change. Everything in Phase 1 and 2 is built and rehearsed on Arc Testnet first so mainnet day is a deployment, not a build.
+
+**Relation to Circle's reference contracts.** Circle publishes several escrow/payment reference implementations (`refund-protocol`, `arc-escrow`, `arc-ecommerce-payments`). They solve overlapping but different problems, so the plan is to read the current source of each before writing ours rather than assume:
+
+- A refund-protocol style contract is about reversible payments: funds move to the merchant with a time-boxed window in which the payer can be refunded. Good for card-like commerce, weaker for P2P where the buyer wants funds withheld until delivery.
+- An escrow-style contract is closer to what monast.io needs: funds locked per deal, released on confirmation, refundable, with a third-party resolver for disputes.
+- An ecommerce-payments style contract targets checkout flows — authorise, capture, settle — with a merchant on one side rather than two anonymous peers.
+
+What monast.io needs on top of any of them: per-ad deal linkage, a 1% fee split at release, an arbitrator role we control, and an auto-release timer. Decision to make once the sources are read: fork the closest Circle contract and add those, or write a minimal contract and borrow their patterns. Forking a Circle-audited base is preferred if it fits, because it inherits their audit.
+
+**Can a depositor withdraw if they change their mind?** Yes, with rules that protect both sides:
+
+```text
+created  (nothing deposited)      -> buyer or seller cancels freely, no cost
+funded   (USDC locked)            -> buyer requests cancel; seller approves -> full refund
+                                  -> seller ignores past a timeout -> buyer refund unlocks
+                                  -> seller marked delivered -> becomes a dispute, arbitrator decides
+released / refunded               -> terminal, nothing to withdraw
+```
+
+A buyer cannot unilaterally pull funds out of a funded escrow the instant a seller has shipped — that would make the escrow useless for sellers. The seller-approval path plus the timeout is what keeps it fair without a human in the loop for the common case.
+
+**Charges on cancellation and refund.** No platform fee on any refund: a cancelled or refunded escrow returns 100% of the USDC to the buyer. The only unrecoverable cost is gas, which on Arc is paid in USDC and is a fraction of a cent. The 0.15 USDC listing fee stays non-refundable since it exists to price spam. The 1% fee is charged only on a successful release.
+
 
 ## Fee model
 
