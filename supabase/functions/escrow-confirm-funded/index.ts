@@ -74,6 +74,21 @@ Deno.serve(async (req) => {
       .single();
     if (error) throw error;
 
+    // Append-only record of the deposit leg.
+    await writeLedger(admin, {
+      kind: "escrow_deposit",
+      escrowId,
+      adId: esc.ad_id,
+      fromUserId: esc.buyer_id,
+      chainId: esc.chain_id,
+      amountUsdc: Number(esc.amount_usdc),
+      txHash,
+      status: "confirmed",
+      idempotencyKey: `escrow_deposit:${escrowId}`,
+    });
+
+
+
     await notify({
       userId: esc.seller_id,
       kind: "escrow_funded",
