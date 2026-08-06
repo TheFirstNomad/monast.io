@@ -84,8 +84,13 @@ const PostAd = () => {
         .select()
         .single();
       if (error) throw error;
-      toast({ title: "Ad posted!", description: "Your ad is now live on monast.io" });
-      navigate(`/ad/${data.id}`);
+      // The ad is created in `pending_fee` and goes live only after the
+      // anti-spam listing fee is confirmed on-chain.
+      toast({
+        title: "Ad saved",
+        description: "Pay the listing fee to publish it.",
+      });
+      navigate(`/publish/${data.id}`);
     } catch (err: any) {
       toast({ title: "Failed to post", description: err.message, variant: "destructive" });
     } finally {
