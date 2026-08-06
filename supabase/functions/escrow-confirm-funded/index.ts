@@ -44,10 +44,18 @@ Deno.serve(async (req) => {
     if (esc.buyer_id !== buyerId) return json({ error: "Not your escrow" }, 403);
     if (esc.status !== "created") return json({ error: `Escrow already ${esc.status}` }, 400);
 
+    let treasury;
+    try {
+      treasury = await getTreasury(admin, "escrow", esc.chain_id);
+    } catch (e) {
+      if (isTreasuryMissing(e)) return json({ error: (e as Error).message, configured: false }, 503);
+      throw e;
+    }
+
     const verify = await verifyUsdcTransfer({
       chainId: esc.chain_id,
       txHash,
-      expectedTo: ESCROW_TREASURY,
+      expectedTo: treasury.address,
       expectedAmountUsdc: Number(esc.amount_usdc),
     });
     if (!verify.ok) return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
