@@ -8,7 +8,9 @@ export interface DbAd {
   condition: "New" | "Used" | "Refurbished";
   location: string;
   images: string[];
-  status: "active" | "sold" | "removed";
+  // `pending_fee` = created but not yet published (listing fee unpaid),
+  // `reserved` = an escrow is in flight so it cannot be bought by anyone else.
+  status: "pending_fee" | "active" | "reserved" | "sold" | "removed";
   featured: boolean;
   featured_until?: string | null;
   created_at: string;

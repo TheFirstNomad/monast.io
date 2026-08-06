@@ -4,6 +4,7 @@
 // function only mints the userToken and the challenge.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,8 +17,6 @@ const CIRCLE_API_KEY = Deno.env.get("CIRCLE_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ESCROW_TREASURY = Deno.env.get("ESCROW_TREASURY_ADDRESS") ??
-  "0x000000000000000000000000000000000000dEaD";
 
 // Circle blockchain id -> { evm chain id, USDC token contract }
 const CIRCLE_CHAINS: Record<string, { chainId: number; usdc: string }> = {
@@ -90,6 +89,14 @@ Deno.serve(async (req) => {
     const wallet = wallets.find((w: any) => w.blockchain === blockchain) ?? wallets[0];
     if (!wallet) return json({ error: "No Circle wallet found for this chain" }, 400);
 
+    let treasury;
+    try {
+      treasury = await getTreasury(admin, "escrow", chainConf.chainId);
+    } catch (e) {
+      if (isTreasuryMissing(e)) return json({ error: (e as Error).message, configured: false }, 503);
+      throw e;
+    }
+
     const amount = Number(esc.amount_usdc);
     const txRes = await circle("/user/transactions/transfer", {
       method: "POST",
@@ -97,7 +104,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         idempotencyKey: crypto.randomUUID(),
         walletId: wallet.id,
-        destinationAddress: ESCROW_TREASURY,
+        destinationAddress: treasury.address,
         tokenAddress: chainConf.usdc,
         blockchain,
         amounts: [amount.toString()],

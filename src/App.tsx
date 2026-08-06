@@ -19,6 +19,8 @@ import Agents from "./pages/Agents";
 import AgentDocs from "./pages/AgentDocs";
 import Pricing from "./pages/Pricing";
 import Promote from "./pages/Promote";
+import PublishAd from "./pages/PublishAd";
+import AdminTreasury from "./pages/AdminTreasury";
 import EscrowDetail from "./pages/EscrowDetail";
 import Favorites from "./pages/Favorites";
 import Settings from "./pages/Settings";
@@ -48,8 +50,10 @@ const App = () => (
               <Route path="/agents" element={<AgentDocs />} />
               <Route path="/dashboard/agents" element={<Agents />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/publish/:adId" element={<PublishAd />} />
               <Route path="/promote/:adId" element={<Promote />} />
               <Route path="/escrow/:id" element={<EscrowDetail />} />
+              <Route path="/admin/treasury" element={<AdminTreasury />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </FavoritesProvider>

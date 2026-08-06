@@ -42,6 +42,10 @@ export type Database = {
           featured_until: string | null
           id: string
           images: string[]
+          listing_fee_chain_id: number | null
+          listing_fee_paid_at: string | null
+          listing_fee_tx_hash: string | null
+          listing_fee_usdc: number
           location: string
           price_usdc: number
           seller_id: string
@@ -59,6 +63,10 @@ export type Database = {
           featured_until?: string | null
           id?: string
           images?: string[]
+          listing_fee_chain_id?: number | null
+          listing_fee_paid_at?: string | null
+          listing_fee_tx_hash?: string | null
+          listing_fee_usdc?: number
           location: string
           price_usdc: number
           seller_id: string
@@ -76,6 +84,10 @@ export type Database = {
           featured_until?: string | null
           id?: string
           images?: string[]
+          listing_fee_chain_id?: number | null
+          listing_fee_paid_at?: string | null
+          listing_fee_tx_hash?: string | null
+          listing_fee_usdc?: number
           location?: string
           price_usdc?: number
           seller_id?: string
@@ -202,20 +214,30 @@ export type Database = {
         Row: {
           ad_id: string
           amount_usdc: number
+          auto_release_at: string | null
           buyer_id: string
+          cancel_reason: string | null
+          cancel_requested_at: string | null
+          cancel_requested_by: string | null
           chain_id: number
           circle_escrow_id: string | null
           created_at: string
+          delivery_marked_at: string | null
           deposit_tx_hash: string | null
           funded_at: string | null
           id: string
           metadata: Json
           offer_id: string | null
+          payout_circle_tx_id: string | null
+          payout_started_at: string | null
+          payout_status: string
+          platform_fee_usdc: number
           refund_tx_hash: string | null
           refunded_at: string | null
           release_tx_hash: string | null
           released_at: string | null
           seller_id: string
+          seller_net_usdc: number | null
           status: string
           tx_hashes: Json
           updated_at: string
@@ -223,20 +245,30 @@ export type Database = {
         Insert: {
           ad_id: string
           amount_usdc: number
+          auto_release_at?: string | null
           buyer_id: string
+          cancel_reason?: string | null
+          cancel_requested_at?: string | null
+          cancel_requested_by?: string | null
           chain_id: number
           circle_escrow_id?: string | null
           created_at?: string
+          delivery_marked_at?: string | null
           deposit_tx_hash?: string | null
           funded_at?: string | null
           id?: string
           metadata?: Json
           offer_id?: string | null
+          payout_circle_tx_id?: string | null
+          payout_started_at?: string | null
+          payout_status?: string
+          platform_fee_usdc?: number
           refund_tx_hash?: string | null
           refunded_at?: string | null
           release_tx_hash?: string | null
           released_at?: string | null
           seller_id: string
+          seller_net_usdc?: number | null
           status?: string
           tx_hashes?: Json
           updated_at?: string
@@ -244,20 +276,30 @@ export type Database = {
         Update: {
           ad_id?: string
           amount_usdc?: number
+          auto_release_at?: string | null
           buyer_id?: string
+          cancel_reason?: string | null
+          cancel_requested_at?: string | null
+          cancel_requested_by?: string | null
           chain_id?: number
           circle_escrow_id?: string | null
           created_at?: string
+          delivery_marked_at?: string | null
           deposit_tx_hash?: string | null
           funded_at?: string | null
           id?: string
           metadata?: Json
           offer_id?: string | null
+          payout_circle_tx_id?: string | null
+          payout_started_at?: string | null
+          payout_status?: string
+          platform_fee_usdc?: number
           refund_tx_hash?: string | null
           refunded_at?: string | null
           release_tx_hash?: string | null
           released_at?: string | null
           seller_id?: string
+          seller_net_usdc?: number | null
           status?: string
           tx_hashes?: Json
           updated_at?: string
@@ -304,6 +346,96 @@ export type Database = {
             columns: ["ad_id"]
             isOneToOne: false
             referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
+      ledger_entries: {
+        Row: {
+          ad_id: string | null
+          amount_usdc: number
+          chain_id: number
+          circle_transaction_id: string | null
+          created_at: string
+          escrow_id: string | null
+          from_user_id: string | null
+          id: string
+          idempotency_key: string | null
+          kind: string
+          notes: string | null
+          status: string
+          to_user_id: string | null
+          tx_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_id?: string | null
+          amount_usdc: number
+          chain_id: number
+          circle_transaction_id?: string | null
+          created_at?: string
+          escrow_id?: string | null
+          from_user_id?: string | null
+          id?: string
+          idempotency_key?: string | null
+          kind: string
+          notes?: string | null
+          status?: string
+          to_user_id?: string | null
+          tx_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string | null
+          amount_usdc?: number
+          chain_id?: number
+          circle_transaction_id?: string | null
+          created_at?: string
+          escrow_id?: string | null
+          from_user_id?: string | null
+          id?: string
+          idempotency_key?: string | null
+          kind?: string
+          notes?: string | null
+          status?: string
+          to_user_id?: string | null
+          tx_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_entries_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_entries_escrow_id_fkey"
+            columns: ["escrow_id"]
+            isOneToOne: false
+            referencedRelation: "escrows"
             referencedColumns: ["id"]
           },
         ]
@@ -614,6 +746,45 @@ export type Database = {
           created_at?: string
           nonce?: string
           used_at?: string | null
+        }
+        Relationships: []
+      }
+      treasury_wallets: {
+        Row: {
+          address: string
+          chain_id: number
+          circle_blockchain: string
+          circle_wallet_id: string | null
+          circle_wallet_set_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          purpose: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          chain_id: number
+          circle_blockchain: string
+          circle_wallet_id?: string | null
+          circle_wallet_set_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          purpose: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          chain_id?: number
+          circle_blockchain?: string
+          circle_wallet_id?: string | null
+          circle_wallet_set_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          purpose?: string
+          updated_at?: string
         }
         Relationships: []
       }

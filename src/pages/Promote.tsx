@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
 import { DbAd } from "@/lib/types";
-import { PROMOTION_TIERS, PromotionTier, PROMOTION_TREASURY } from "@/lib/promotionTiers";
+import { PROMOTION_TIERS, PromotionTier } from "@/lib/promotionTiers";
+import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/lib/usdc";
 import { toast } from "sonner";
 import { Sparkles, Check, Loader2, ArrowLeft, Wallet } from "lucide-react";
@@ -28,7 +29,9 @@ const Promote = () => {
   const [tier, setTier] = useState<PromotionTier>("7d");
   const [activating, setActivating] = useState(false);
   const selected = PROMOTION_TIERS.find((t) => t.id === tier)!;
+  const { treasury, error: treasuryError } = useTreasuryAddress("revenue", ARC_CHAIN_ID);
   const busy = isPending || confirming || activating;
+
 
   useEffect(() => {
     if (!adId) return;
@@ -57,6 +60,10 @@ const Promote = () => {
     if (!user) { toast.error("Sign in first"); return; }
     if (!ad) return;
     if (!address) { await connect(); return; }
+    if (!treasury) {
+      toast.error(treasuryError ?? "Promotions are unavailable right now");
+      return;
+    }
     try {
       if (chainId !== ARC_CHAIN_ID) {
         await switchChainAsync({ chainId: ARC_CHAIN_ID });
@@ -65,7 +72,7 @@ const Promote = () => {
         address: USDC_ADDRESS,
         abi: ERC20_TRANSFER_ABI,
         functionName: "transfer",
-        args: [PROMOTION_TREASURY, toUsdcUnits(selected.price)],
+        args: [treasury.address, toUsdcUnits(selected.price)],
         chainId: ARC_CHAIN_ID,
       } as any);
       setPendingHash(hash);

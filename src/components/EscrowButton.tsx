@@ -6,7 +6,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/lib/usdc";
-import { ESCROW_TREASURY } from "@/lib/escrow";
+import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { toast } from "sonner";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 
@@ -29,6 +29,10 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
   const [hasCircleWallet, setHasCircleWallet] = useState(false);
   const [creating, setCreating] = useState(false);
   const { isSuccess, isLoading: mining } = useWaitForTransactionReceipt({ hash: pendingHash });
+  const { treasury, error: treasuryError, loading: treasuryLoading } = useTreasuryAddress(
+    "escrow",
+    ARC_CHAIN_ID,
+  );
   const busy = isPending || mining || confirming;
 
   // Email-signup buyers pay from their Circle wallet instead of a browser wallet.
@@ -66,8 +70,11 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
     try {
       if (!user) { toast.error("Sign in to buy"); return; }
       if (!address) { await connect(); return; }
+      if (!treasury) {
+        toast.error(treasuryError ?? "Escrow payments are unavailable right now");
+        return;
+      }
 
-      // 1. Create escrow row.
       const { data: created, error } = await supabase.functions.invoke("escrow-create", {
         body: { ad_id: adId, chain_id: ARC_CHAIN_ID },
       });
@@ -91,7 +98,7 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
         address: USDC_ADDRESS,
         abi: ERC20_TRANSFER_ABI,
         functionName: "transfer",
-        args: [ESCROW_TREASURY, toUsdcUnits(Number(escrow.amount_usdc))],
+        args: [treasury.address, toUsdcUnits(Number(escrow.amount_usdc))],
         chainId: ARC_CHAIN_ID,
       } as any);
       setPendingHash(hash);
@@ -132,10 +139,23 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
     );
   }
 
+  // No treasury configured means there is nowhere safe to send funds.
+  if (treasuryError) {
+    return (
+      <div className="space-y-2">
+        <Button disabled className="w-full gap-2 font-semibold py-5">
+          <Shield className="w-4 h-4" />
+          Escrow unavailable
+        </Button>
+        <p className="text-xs text-muted-foreground text-center">{treasuryError}</p>
+      </div>
+    );
+  }
+
   return (
-    <Button onClick={buy} disabled={busy} className="w-full gap-2 font-semibold py-5">
-      {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-      {confirming ? "Verifying…" : mining ? "Confirming payment…" : isPending ? "Awaiting wallet…" : `Buy with Escrow — ${amount.toLocaleString()} USDC`}
+    <Button onClick={buy} disabled={busy || treasuryLoading} className="w-full gap-2 font-semibold py-5">
+      {busy || treasuryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+      {confirming ? "Verifying…" : mining ? "Confirming payment…" : isPending ? "Awaiting wallet…" : treasuryLoading ? "Loading…" : `Buy with Escrow — ${amount.toLocaleString()} USDC`}
     </Button>
   );
 

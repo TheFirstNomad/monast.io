@@ -1,9 +1,7 @@
-// Marketplace escrow treasury address on Arc Testnet.
-// Buyers send USDC here when funding an escrow; the marketplace releases
-// funds to the seller (or refunds the buyer) after resolution.
-// TODO: swap for a Circle-managed contract wallet in Session 4.
-export const ESCROW_TREASURY: `0x${string}` =
-  "0x000000000000000000000000000000000000dEaD";
+// The escrow deposit address is never hardcoded. It lives in the backend
+// `treasury_wallets` table and is fetched at runtime via `useTreasuryAddress`,
+// so a misconfigured deployment surfaces an error instead of quietly sending
+// buyer funds to a placeholder address.
 
 export type EscrowStatus =
   | "created"

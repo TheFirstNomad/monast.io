@@ -4,6 +4,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
+import { writeLedger } from "../_shared/ledger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,8 +16,6 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ESCROW_TREASURY = Deno.env.get("ESCROW_TREASURY_ADDRESS") ??
-  "0x000000000000000000000000000000000000dEaD";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -44,10 +44,18 @@ Deno.serve(async (req) => {
     if (esc.buyer_id !== buyerId) return json({ error: "Not your escrow" }, 403);
     if (esc.status !== "created") return json({ error: `Escrow already ${esc.status}` }, 400);
 
+    let treasury;
+    try {
+      treasury = await getTreasury(admin, "escrow", esc.chain_id);
+    } catch (e) {
+      if (isTreasuryMissing(e)) return json({ error: (e as Error).message, configured: false }, 503);
+      throw e;
+    }
+
     const verify = await verifyUsdcTransfer({
       chainId: esc.chain_id,
       txHash,
-      expectedTo: ESCROW_TREASURY,
+      expectedTo: treasury.address,
       expectedAmountUsdc: Number(esc.amount_usdc),
     });
     if (!verify.ok) return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
@@ -65,6 +73,27 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
     if (error) throw error;
+
+    // Append-only record of the deposit leg.
+    await writeLedger(admin, {
+      kind: "escrow_deposit",
+      escrowId,
+      adId: esc.ad_id,
+      fromUserId: esc.buyer_id,
+      chainId: esc.chain_id,
+      amountUsdc: Number(esc.amount_usdc),
+      txHash,
+      status: "confirmed",
+      idempotencyKey: `escrow_deposit:${escrowId}`,
+    });
+
+    // Take the item off the market while the money is held.
+    await admin
+      .from("ads")
+      .update({ status: "reserved" })
+      .eq("id", esc.ad_id)
+      .eq("status", "active");
+
 
     await notify({
       userId: esc.seller_id,
