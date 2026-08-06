@@ -87,6 +87,12 @@ Deno.serve(async (req) => {
       idempotencyKey: `escrow_deposit:${escrowId}`,
     });
 
+    // Take the item off the market while the money is held.
+    await admin
+      .from("ads")
+      .update({ status: "reserved" })
+      .eq("id", esc.ad_id)
+      .eq("status", "active");
 
 
     await notify({
