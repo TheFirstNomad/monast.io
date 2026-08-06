@@ -133,6 +133,33 @@ A buyer cannot unilaterally pull funds out of a funded escrow the instant a sell
 
 **Charges on cancellation and refund.** No platform fee on any refund: a cancelled or refunded escrow returns 100% of the USDC to the buyer. The only unrecoverable cost is gas, which on Arc is paid in USDC and is a fraction of a cent. The 0.15 USDC listing fee stays non-refundable since it exists to price spam. The 1% fee is charged only on a successful release.
 
+## Arc Mainnet cutover (Sep 16) and audit
+
+**Nothing happens automatically, by design.** An automatic mainnet flip is exactly how real money gets lost. The cutover is a short, owner-triggered checklist:
+
+```text
+1. Add Arc Mainnet to the chain config: chain id, RPC, official USDC address, explorer.
+   -> the real USDC address only exists once Arc Mainnet is live; it must be read from
+      Circle's own docs, not guessed. Today's arc-mainnet entry is a placeholder.
+2. Create the Circle wallets (escrow + revenue) on Arc Mainnet.
+3. Deploy the audited escrow contract from the admin screen; record address + tx hash.
+4. Smoke test with a tiny real amount: fund 1 USDC, release, refund. Owner's own funds.
+5. Flip arc-mainnet to enabled. Arc Testnet stays enabled for ongoing testing.
+```
+
+Steps 1-3 are roughly one build session; step 4-5 the same day. If Arc Mainnet slips past Sep 16, nothing breaks — the app keeps running on Arc Testnet.
+
+**Who audits, and can it be done on both networks.** Auditing is done on the source code, not on a network, so one audit covers both deployments provided the bytecode is identical — which is why the plan deploys the same compiled artifact to testnet and mainnet and records both addresses. There is no such thing as "auditing the mainnet copy" separately; what you do on mainnet is verify the deployed bytecode matches what was audited, which the explorer's contract verification shows publicly.
+
+Realistic options, in order of what fits this project:
+
+- **Fork a Circle-audited contract.** Cheapest and most reliable: inherit their audit, and keep our additions (fee split, arbitrator, timer) small enough to review in isolation. This is the recommended route.
+- **Automated tooling plus a full test suite.** Slither/Aderyn static analysis, plus tests covering every state transition, reentrancy on release, double-release, wrong-amount deposits, fee rounding. I can build this inside the project. It catches common classes of bugs but is not a substitute for human review.
+- **A paid human audit.** Independent firms (Trail of Bits, OpenZeppelin, Spearbit, Cantina) or a competitive contest platform (Code4rena, Sherlock). Budget for a small contract is realistically in the low tens of thousands for a firm; a contest can be cheaper. This is a decision for you, outside what I can do — I can prepare the audit package (source, spec, threat model, tests).
+- **A bug bounty after launch,** plus a deposit cap for the first weeks so the maximum loss is bounded.
+
+**How reliable is this honestly.** A forked Circle contract with a small reviewed delta, a full test suite, static analysis, and a per-escrow deposit cap is a defensible risk posture for launch. It is not the same as a clean report from a top-tier firm. I will not tell you a contract I wrote is safe because I wrote it — that judgement needs an independent reviewer, and until you have one the deposit cap is what limits the damage. The safest sequencing is: launch on Arc Testnet, run Phase 1's custodial flow with real but small amounts, and only move escrow on-chain once the contract has been reviewed.
+
 
 ## Fee model
 
