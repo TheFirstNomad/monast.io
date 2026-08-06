@@ -137,7 +137,8 @@ A buyer cannot unilaterally pull funds out of a funded escrow the instant a sell
 ## Fee model
 
 - **Listing fee: 0.15 USDC per ad.** Charged when the ad is published, paid to the revenue wallet, verified on-chain before the ad becomes active. Purpose is spam prevention, so it is flat and non-refundable.
-- **Platform fee: 1% of the sale.** Deducted from the escrowed amount at release: the seller receives 99% and 1% goes to the revenue wallet in the same payout step. Refunds return 100% to the buyer with no fee taken.
+- **Platform fee: 1% of the sale.** Deducted from the escrowed amount at release: the seller receives 99% and 1% goes to the revenue wallet in the same payout step.
+- **Cancellations and refunds: 0%.** The buyer gets the full amount back; the platform takes nothing on a deal that did not complete.
 - Both rates live in one shared config so client, backend, and contract cannot drift, and every fee movement is written to the ledger table.
 
 ## Decentralisation stance
