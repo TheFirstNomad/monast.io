@@ -89,6 +89,14 @@ Deno.serve(async (req) => {
     const wallet = wallets.find((w: any) => w.blockchain === blockchain) ?? wallets[0];
     if (!wallet) return json({ error: "No Circle wallet found for this chain" }, 400);
 
+    let treasury;
+    try {
+      treasury = await getTreasury(admin, "escrow", chainConf.chainId);
+    } catch (e) {
+      if (isTreasuryMissing(e)) return json({ error: (e as Error).message, configured: false }, 503);
+      throw e;
+    }
+
     const amount = Number(esc.amount_usdc);
     const txRes = await circle("/user/transactions/transfer", {
       method: "POST",
@@ -96,7 +104,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         idempotencyKey: crypto.randomUUID(),
         walletId: wallet.id,
-        destinationAddress: ESCROW_TREASURY,
+        destinationAddress: treasury.address,
         tokenAddress: chainConf.usdc,
         blockchain,
         amounts: [amount.toString()],
