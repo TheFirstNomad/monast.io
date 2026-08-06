@@ -91,8 +91,9 @@ const EscrowDetail = () => {
   const isBuyer = user?.id === escrow.buyer_id;
   const isSeller = user?.id === escrow.seller_id;
   const amount = Number(escrow.amount_usdc);
-  const fee = escrow.platform_fee_usdc != null ? Number(escrow.platform_fee_usdc) : platformFee(amount);
-  const net = escrow.seller_net_usdc != null ? Number(escrow.seller_net_usdc) : sellerNet(amount);
+  const split = splitSale(amount);
+  const fee = escrow.platform_fee_usdc != null ? Number(escrow.platform_fee_usdc) : split.fee;
+  const net = escrow.seller_net_usdc != null ? Number(escrow.seller_net_usdc) : split.sellerNet;
 
   const openCancelRequest = !!escrow.cancel_requested_at && escrow.status === "funded";
   const canRelease = isBuyer && (escrow.status === "funded" || escrow.status === "disputed");
