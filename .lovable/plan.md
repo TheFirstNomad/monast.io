@@ -101,7 +101,14 @@ Buyer -> escrow contract (holds USDC, per-deal)
          autoRelease() after the confirmation window
 ```
 
-The platform never takes possession of funds; the app only reads contract state and submits transactions. Deployment is done from a backend function (Circle's Smart Contract Platform), so no local development environment is required. The contract must be reviewed and, before meaningful volume, audited — this is the one part of the build where a mistake is unrecoverable, so it is deliberately not bundled into Phase 1.
+The platform never takes possession of funds; the app only reads contract state and submits transactions. The contract stays deliberately tiny — deposit, release, refund, resolve, autoRelease and nothing more — so it is cheap to review, and it must be audited before meaningful volume. This is the one part of the build where a mistake is unrecoverable, which is why it is not bundled into Phase 1.
+
+**Who deploys it and where.** The contract source is written and compiled inside this project; the owner never uses a terminal. Deployment is submitted by a backend function through Circle's Smart Contract Platform, with the Circle developer-controlled wallet acting as deployer and paying gas. That makes the same wallet the contract owner, which is what allows setting the arbitrator role and the fee recipient afterwards.
+
+- Triggered from an owner-only admin screen: choose network, confirm, done.
+- Arc Testnet first, exercised through a full fund / release / refund / dispute cycle with test USDC, then the identical bytecode goes to the production chain.
+- One deployment per supported chain; the resulting addresses and deploy tx hashes are stored in the chain config and shown in the admin panel for auditability.
+- Contract ownership is real power (arbitrator and fee recipient are settable). Handing ownership to a multisig, or renouncing it, is the follow-up step for genuine trustlessness and is not required on day one.
 
 ## Fee model
 
