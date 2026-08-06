@@ -5,8 +5,8 @@
 // only blocks authenticated users).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
-
-const TREASURY = "0x000000000000000000000000000000000000dEaD"; // keep in sync with src/lib/promotionTiers.ts
+import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
+import { writeLedger } from "../_shared/ledger.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
