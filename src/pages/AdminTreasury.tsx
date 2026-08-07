@@ -96,7 +96,7 @@ const AdminTreasury = () => {
   const provision = async () => {
     setProvisioning(true);
     try {
-      await callAdmin("treasury-provision", { chain_id: ARC_CHAIN_ID });
+      await callAdmin("treasury-provision", { chain_ids: [ARC_CHAIN_ID] });
       toast.success("Treasury wallets created");
       await load();
     } catch (e: any) {
