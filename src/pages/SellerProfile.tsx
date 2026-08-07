@@ -98,6 +98,9 @@ const SellerProfile = () => {
               </span>
             </div>
             {profile.bio && <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>}
+            <div className="mt-2">
+              <ReportDialog targetType="profile" targetId={profile.id} variant="ghost" label="Report seller" />
+            </div>
           </div>
         </div>
 
