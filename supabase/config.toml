@@ -39,3 +39,12 @@ verify_jwt = true
 [functions.circle-tx-status]
 verify_jwt = true
 
+
+[functions.escrow-maintenance]
+verify_jwt = false
+
+[functions.admin-disputes]
+verify_jwt = false
+
+[functions.admin-roles]
+verify_jwt = false
