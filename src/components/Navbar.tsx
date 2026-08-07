@@ -26,8 +26,19 @@ export const Navbar = () => {
   const { address, connect, connecting, disconnect } = useWallet();
   const { user } = useAuth();
   const { count: favCount } = useFavorites();
+  const { isArbitrator, isModerator, has } = useRoles();
+
+  const isOwner = isOwnerWallet(address);
+  const showAdmin = isOwner || isModerator;
+  const adminLinks = [
+    ...(isOwner ? [{ to: "/admin/treasury", label: "Treasury", Icon: Banknote }] : []),
+    ...(isOwner || isArbitrator ? [{ to: "/admin/disputes", label: "Disputes", Icon: Gavel }] : []),
+    ...(isOwner || isModerator || has("admin") ? [{ to: "/admin/reports", label: "Reports", Icon: Flag }] : []),
+    ...(isOwner ? [{ to: "/admin/roles", label: "Roles", Icon: ShieldCheck }] : []),
+  ];
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
+
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
