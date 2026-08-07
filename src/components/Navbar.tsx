@@ -7,13 +7,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot, Heart } from "lucide-react";
+import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot, Heart, Banknote, Gavel, Flag, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useRoles } from "@/hooks/useRoles";
+import { isOwnerWallet } from "@/lib/owner";
+
 
 export const Navbar = () => {
   const location = useLocation();
