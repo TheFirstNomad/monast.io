@@ -66,6 +66,23 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {isOwnerWallet(address) && (
+          <div className="bg-card border border-primary/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <Banknote className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">Treasury console</div>
+              <p className="text-sm text-muted-foreground">
+                Create the escrow and revenue wallets, view balances, and withdraw revenue. Payments
+                stay disabled until the wallets exist.
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/treasury">Open</Link>
+            </Button>
+          </div>
+        )}
+
+
         <div className="bg-card border border-border rounded-xl p-4 mb-6 flex items-center gap-3">
           <Package className="w-5 h-5 text-primary" />
           <div>
