@@ -198,11 +198,44 @@ const AdminTreasury = () => {
               Create the escrow and revenue wallets on Arc Testnet. Until this is done, payments and
               escrow funding stay disabled — no funds can be sent anywhere unsafe.
             </p>
-            <Button onClick={provision} disabled={provisioning} className="gap-2">
-              {provisioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
-              Create treasury wallets
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={provision} disabled={provisioning} className="gap-2">
+                {provisioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
+                Create treasury wallets
+              </Button>
+              <Button variant="outline" onClick={getCiphertext} disabled={gettingCipher} className="gap-2">
+                {gettingCipher ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                Get entity secret ciphertext
+              </Button>
+            </div>
+            {ciphertext && (
+              <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
+                <p className="text-sm font-medium">One-time Circle setup</p>
+                <ol className="text-xs text-muted-foreground list-decimal pl-4 space-y-1">
+                  <li>Copy the ciphertext below.</li>
+                  <li>In the Circle console open Wallets → Configurator → Register entity secret.</li>
+                  <li>Paste the ciphertext, confirm, then come back and click “Create treasury wallets”.</li>
+                </ol>
+                <textarea
+                  readOnly
+                  value={ciphertext}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="w-full h-24 rounded-md border border-border bg-background p-2 text-xs font-mono"
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    navigator.clipboard.writeText(ciphertext);
+                    toast.success("Ciphertext copied");
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            )}
           </div>
+
         )}
 
         {status?.provisioned && (
