@@ -50,6 +50,9 @@ const AdminTreasury = () => {
   const [withdrawing, setWithdrawing] = useState(false);
   const [dest, setDest] = useState("");
   const [amount, setAmount] = useState("");
+  const [ciphertext, setCiphertext] = useState<string | null>(null);
+  const [gettingCipher, setGettingCipher] = useState(false);
+
 
   useSeo({
     title: "Treasury console | monast.io",
