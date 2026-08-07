@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { AdCard } from "@/components/AdCard";
+import { ReportDialog } from "@/components/ReportDialog";
 import { DbAd } from "@/lib/types";
 import { Star } from "lucide-react";
 
@@ -98,6 +99,9 @@ const SellerProfile = () => {
               </span>
             </div>
             {profile.bio && <p className="text-sm text-muted-foreground mt-2">{profile.bio}</p>}
+            <div className="mt-2">
+              <ReportDialog targetType="profile" targetId={profile.id} variant="ghost" label="Report seller" />
+            </div>
           </div>
         </div>
 

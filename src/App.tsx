@@ -21,6 +21,9 @@ import Pricing from "./pages/Pricing";
 import Promote from "./pages/Promote";
 import PublishAd from "./pages/PublishAd";
 import AdminTreasury from "./pages/AdminTreasury";
+import AdminDisputes from "./pages/AdminDisputes";
+import AdminReports from "./pages/AdminReports";
+import AdminRoles from "./pages/AdminRoles";
 import EscrowDetail from "./pages/EscrowDetail";
 import Favorites from "./pages/Favorites";
 import Settings from "./pages/Settings";
@@ -54,6 +57,9 @@ const App = () => (
               <Route path="/promote/:adId" element={<Promote />} />
               <Route path="/escrow/:id" element={<EscrowDetail />} />
               <Route path="/admin/treasury" element={<AdminTreasury />} />
+              <Route path="/admin/disputes" element={<AdminDisputes />} />
+              <Route path="/admin/reports" element={<AdminReports />} />
+              <Route path="/admin/roles" element={<AdminRoles />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </FavoritesProvider>

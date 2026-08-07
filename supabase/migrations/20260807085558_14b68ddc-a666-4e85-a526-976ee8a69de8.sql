@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.protect_report_immutables() FROM PUBLIC, anon, authenticated;

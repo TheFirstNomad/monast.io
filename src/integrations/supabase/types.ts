@@ -371,6 +371,24 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_config: {
+        Row: {
+          created_at: string
+          key: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       ledger_entries: {
         Row: {
           ad_id: string | null
@@ -698,6 +716,51 @@ export type Database = {
           },
         ]
       }
+      reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_notes: string | null
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           ad_id: string
@@ -788,6 +851,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          granted_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          granted_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_wallets: {
         Row: {
           address: string
@@ -834,9 +918,18 @@ export type Database = {
     Functions: {
       cleanup_admin_sig_nonces: { Args: never; Returns: undefined }
       cleanup_agent_rate_limits: { Args: never; Returns: undefined }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      run_escrow_maintenance: { Args: never; Returns: undefined }
     }
     Enums: {
       agent_kind: "delegated" | "standalone"
+      app_role: "admin" | "arbitrator" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -965,6 +1058,7 @@ export const Constants = {
   public: {
     Enums: {
       agent_kind: ["delegated", "standalone"],
+      app_role: ["admin", "arbitrator", "moderator", "user"],
     },
   },
 } as const

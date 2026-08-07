@@ -60,20 +60,22 @@ export const CHAINS: Record<ChainKey, ChainEntry> = {
     explorer: "https://sepolia.etherscan.io",
     enabled: true,
   },
-  // Tempo — USDC-native gas, like Arc. USDC contract TBD: replace 0x000... once Tempo publishes it.
+  // Tempo — USDC-native gas, like Arc. Kept disabled until Tempo publishes its
+  // official USDC contract address: a zero token address would silently send a
+  // payment nowhere, so these must never be selectable with 0x000...0 here.
   "tempo-mainnet": {
     id: 4217, key: "tempo-mainnet", label: "Tempo Mainnet", network: "tempo",
     rpc: "https://rpc.tempo.xyz",
-    usdc: "0x0000000000000000000000000000000000000000", // TODO: confirm
-    explorer: "https://explorer.tempo.xyz", // TODO: confirm
-    enabled: true,
+    usdc: "0x0000000000000000000000000000000000000000", // unpublished
+    explorer: "https://explorer.tempo.xyz", // unconfirmed
+    enabled: false,
   },
   "tempo-moderato": {
     id: 42431, key: "tempo-moderato", label: "Tempo Moderato Testnet", network: "tempo-moderato",
     rpc: "https://rpc.moderato.tempo.xyz",
-    usdc: "0x0000000000000000000000000000000000000000", // TODO: confirm
-    explorer: "https://explorer.moderato.tempo.xyz", // TODO: confirm
-    enabled: true,
+    usdc: "0x0000000000000000000000000000000000000000", // unpublished
+    explorer: "https://explorer.moderato.tempo.xyz", // unconfirmed
+    enabled: false,
   },
 };
 

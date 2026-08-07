@@ -13,6 +13,7 @@ import { ReviewSection } from "@/components/ReviewSection";
 import { toast } from "sonner";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { ReportDialog } from "@/components/ReportDialog";
 
 const AdDetail = () => {
   const { id } = useParams();
@@ -169,13 +170,16 @@ const AdDetail = () => {
                 <FavoriteButton adId={ad.id} size="lg" />
               </div>
               <h1 className="text-lg font-semibold text-foreground mb-3">{ad.title}</h1>
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
                   <MapPin className="w-3 h-3" />
                   {ad.location}
                 </span>
                 <span className="bg-secondary px-2 py-1 rounded">{ad.condition}</span>
                 <span className="bg-secondary px-2 py-1 rounded">{ad.category}</span>
+                {user && user.id !== ad.seller_id && (
+                  <ReportDialog targetType="ad" targetId={ad.id} className="ml-auto" />
+                )}
               </div>
             </div>
 
