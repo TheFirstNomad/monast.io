@@ -2,15 +2,19 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Package, LogOut, Sparkles } from "lucide-react";
+import { Plus, Package, LogOut, Sparkles, Banknote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWallet } from "@/hooks/useWallet";
+import { isOwnerWallet } from "@/lib/owner";
 import { DbAd } from "@/lib/types";
 import { OffersInbox } from "@/components/OffersInbox";
 import { EscrowsList } from "@/components/EscrowsList";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
+  const { address } = useWallet();
+
   const navigate = useNavigate();
   const [myAds, setMyAds] = useState<DbAd[]>([]);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
