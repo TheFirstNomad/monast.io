@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { AdCard } from "@/components/AdCard";
+import { ReportDialog } from "@/components/ReportDialog";
 import { DbAd } from "@/lib/types";
 import { Star } from "lucide-react";
 
