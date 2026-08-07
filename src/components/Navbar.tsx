@@ -199,6 +199,8 @@ export const Navbar = () => {
               { to: "/transactions", label: "Transactions" },
               { to: "/settings", label: "Profile settings" },
               { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
+              ...(showAdmin ? adminLinks.map((l) => ({ to: l.to, label: `Admin · ${l.label}` })) : []),
+
             ].map((link) => (
               <Link
                 key={link.to}
