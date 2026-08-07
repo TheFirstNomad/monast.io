@@ -103,11 +103,29 @@ const AdminTreasury = () => {
       toast.success("Treasury wallets created");
       await load();
     } catch (e: any) {
-      toast.error(e.message);
+      if (/entity secret has not been set/i.test(e.message ?? "")) {
+        toast.error("Register your entity secret in the Circle console first — see the box below.");
+        await getCiphertext();
+      } else {
+        toast.error(e.message);
+      }
     } finally {
       setProvisioning(false);
     }
   };
+
+  const getCiphertext = async () => {
+    setGettingCipher(true);
+    try {
+      const data = await callAdmin("treasury-entity-ciphertext");
+      setCiphertext(data.ciphertext);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setGettingCipher(false);
+    }
+  };
+
 
   const withdraw = async () => {
     const value = Number(amount);
