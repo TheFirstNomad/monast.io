@@ -96,7 +96,19 @@ export const Navbar = () => {
                   <DropdownMenuItem onClick={() => navigate("/agents")}>
                     <Bot className="w-4 h-4 mr-2" /> Agent API docs
                   </DropdownMenuItem>
+                  {showAdmin && adminLinks.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Admin</DropdownMenuLabel>
+                      {adminLinks.map(({ to, label, Icon }) => (
+                        <DropdownMenuItem key={to} onClick={() => navigate(to)}>
+                          <Icon className="w-4 h-4 mr-2" /> {label}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
                   <DropdownMenuSeparator />
+
                   <DropdownMenuItem onClick={disconnect}>
                     <LogOut className="w-4 h-4 mr-2" /> Sign out
                   </DropdownMenuItem>
