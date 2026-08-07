@@ -4,16 +4,21 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot, Heart } from "lucide-react";
+import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot, Heart, Banknote, Gavel, Flag, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useRoles } from "@/hooks/useRoles";
+import { isOwnerWallet } from "@/lib/owner";
+
 
 export const Navbar = () => {
   const location = useLocation();
@@ -23,8 +28,19 @@ export const Navbar = () => {
   const { address, connect, connecting, disconnect } = useWallet();
   const { user } = useAuth();
   const { count: favCount } = useFavorites();
+  const { isArbitrator, isModerator, has } = useRoles();
+
+  const isOwner = isOwnerWallet(address);
+  const showAdmin = isOwner || isModerator;
+  const adminLinks = [
+    ...(isOwner ? [{ to: "/admin/treasury", label: "Treasury", Icon: Banknote }] : []),
+    ...(isOwner || isArbitrator ? [{ to: "/admin/disputes", label: "Disputes", Icon: Gavel }] : []),
+    ...(isOwner || isModerator || has("admin") ? [{ to: "/admin/reports", label: "Reports", Icon: Flag }] : []),
+    ...(isOwner ? [{ to: "/admin/roles", label: "Roles", Icon: ShieldCheck }] : []),
+  ];
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
+
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,7 +98,19 @@ export const Navbar = () => {
                   <DropdownMenuItem onClick={() => navigate("/agents")}>
                     <Bot className="w-4 h-4 mr-2" /> Agent API docs
                   </DropdownMenuItem>
+                  {showAdmin && adminLinks.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">Admin</DropdownMenuLabel>
+                      {adminLinks.map(({ to, label, Icon }) => (
+                        <DropdownMenuItem key={to} onClick={() => navigate(to)}>
+                          <Icon className="w-4 h-4 mr-2" /> {label}
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
                   <DropdownMenuSeparator />
+
                   <DropdownMenuItem onClick={disconnect}>
                     <LogOut className="w-4 h-4 mr-2" /> Sign out
                   </DropdownMenuItem>
@@ -171,6 +199,8 @@ export const Navbar = () => {
               { to: "/transactions", label: "Transactions" },
               { to: "/settings", label: "Profile settings" },
               { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
+              ...(showAdmin ? adminLinks.map((l) => ({ to: l.to, label: `Admin · ${l.label}` })) : []),
+
             ].map((link) => (
               <Link
                 key={link.to}

@@ -2,15 +2,19 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Package, LogOut, Sparkles } from "lucide-react";
+import { Plus, Package, LogOut, Sparkles, Banknote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWallet } from "@/hooks/useWallet";
+import { isOwnerWallet } from "@/lib/owner";
 import { DbAd } from "@/lib/types";
 import { OffersInbox } from "@/components/OffersInbox";
 import { EscrowsList } from "@/components/EscrowsList";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
+  const { address } = useWallet();
+
   const navigate = useNavigate();
   const [myAds, setMyAds] = useState<DbAd[]>([]);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
@@ -65,6 +69,23 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
+
+        {isOwnerWallet(address) && (
+          <div className="bg-card border border-primary/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <Banknote className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <div className="font-semibold text-foreground">Treasury console</div>
+              <p className="text-sm text-muted-foreground">
+                Create the escrow and revenue wallets, view balances, and withdraw revenue. Payments
+                stay disabled until the wallets exist.
+              </p>
+            </div>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/treasury">Open</Link>
+            </Button>
+          </div>
+        )}
+
 
         <div className="bg-card border border-border rounded-xl p-4 mb-6 flex items-center gap-3">
           <Package className="w-5 h-5 text-primary" />
