@@ -67,7 +67,7 @@ export const Layout = ({ children }: { children: ReactNode }) => (
           ))}
         </div>
         <div className="border-t border-border pt-6 text-center text-sm text-muted-foreground">
-          © 2026 monast.io — Buy &amp; Sell Anything with USDC on Arc
+          © 2026 monast.io&nbsp; Buy &amp; Sell Anything with USDC on Arc
         </div>
       </div>
     </footer>
