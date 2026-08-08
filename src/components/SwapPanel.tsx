@@ -161,7 +161,7 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
 
       <Button
         onClick={runSwap}
-        disabled={!address ? connecting : !canSwap}
+        disabled={busy || (Boolean(address) && !canSwap)}
         className="w-full py-6 font-bold gap-2"
       >
         {busy ? (
@@ -170,12 +170,23 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
           </>
         ) : !address ? (
           <>
-            <Wallet className="w-4 h-4" /> {connecting ? "Signing in…" : "Connect wallet to swap"}
+            <Wallet className="w-4 h-4" />{" "}
+            {connecting ? "Signing in…" : circleOnly ? "Connect a wallet to swap" : "Sign in to swap"}
           </>
         ) : (
           `Swap ${fromSymbol} → ${toSymbol}`
         )}
       </Button>
+
+      {circleOnly && (
+        <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+          Your email (Circle) wallet works for buying, selling and escrow. Swapping on Arc Testnet
+          needs a self-custody wallet signer — connect one above to trade.
+        </p>
+      )}
+
+      <SignInChoiceDialog open={signInOpen} onOpenChange={setSignInOpen} />
+
 
       {txHash && (
         <a
