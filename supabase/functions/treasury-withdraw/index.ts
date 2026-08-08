@@ -46,14 +46,65 @@ Deno.serve(async (req) => {
       return json({ error: `Revenue wallet holds ${usdc} USDC; cannot withdraw ${amount}` }, 400);
     }
 
-    const idempotencyKey = `withdrawal:${chainId}:${Date.now()}:${to.toLowerCase()}`;
-    const tx = await treasuryTransfer({
-      walletId: revenue.circle_wallet_id,
-      destinationAddress: to,
-      amountUsdc: amount,
-      chainId,
-      idempotencyKey: crypto.randomUUID(),
-    });
+    // Deterministic key: no timestamp, so a retry of the SAME attempt reuses it
+    // and Circle dedupes. A genuinely new withdrawal supplies a new
+    // client_request_id (the admin UI generates one per button press).
+    const requestId = String(body.client_request_id ?? "").trim().slice(0, 64) || "manual";
+    if (!/^[A-Za-z0-9_.:-]+$/.test(requestId)) {
+      return json({ error: "client_request_id has invalid characters" }, 400);
+    }
+    const idempotencyKey =
+      `withdrawal:${chainId}:${to.toLowerCase()}:${amount}:${requestId}`;
+
+    // Concurrency guard: the unique index on idempotency_key means only one
+    // caller can claim this withdrawal. Two parallel requests -> one transfer.
+    const { error: claimErr } = await admin
+      .from("treasury_withdrawal_claims")
+      .insert({
+        idempotency_key: idempotencyKey,
+        chain_id: chainId,
+        destination_address: to,
+        amount_usdc: amount,
+        status: "in_progress",
+      });
+    if (claimErr) {
+      if ((claimErr as any).code === "23505") {
+        console.error("WITHDRAWAL_BLOCKED", JSON.stringify({ idempotencyKey }));
+        return json(
+          {
+            error:
+              "A withdrawal for this exact request is already in progress or complete. " +
+              "Refresh the treasury page to see its status before trying again.",
+          },
+          409,
+        );
+      }
+      throw claimErr;
+    }
+
+    let tx: { id: string };
+    try {
+      tx = await treasuryTransfer({
+        walletId: revenue.circle_wallet_id,
+        destinationAddress: to,
+        amountUsdc: amount,
+        chainId,
+        idempotencyKey,
+      });
+    } catch (e) {
+      // Leave the claim row behind, marked failed: a retry of the same attempt
+      // must not open a fresh slot, and Circle dedupes on the same key anyway.
+      await admin
+        .from("treasury_withdrawal_claims")
+        .update({ status: "failed", error: (e as Error).message })
+        .eq("idempotency_key", idempotencyKey);
+      throw e;
+    }
+
+    await admin
+      .from("treasury_withdrawal_claims")
+      .update({ status: "sent", circle_transaction_id: tx.id })
+      .eq("idempotency_key", idempotencyKey);
 
     await writeLedger(admin, {
       kind: "revenue_withdrawal",

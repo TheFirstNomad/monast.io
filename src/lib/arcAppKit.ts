@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
  * request. The browser never sees it — App Kit is constructed with this
  * non-secret placeholder and all traffic is relayed through the proxy.
  */
-export const ARC_KIT_KEY = "KIT_KEY:proxy";
+export const ARC_KIT_KEY = "KIT_KEY:proxy:proxy";
 
 
 // Treasury / admin wallet for monast.io
@@ -85,12 +85,16 @@ export async function payListingFee(
 ) {
   const kit = getAppKit();
   const chain = chainString(chainId);
-  const result = await kit.send({
+  // Routed through circle-proxy for the same reason swapViaKit is: Circle API
+  // calls from the browser are blocked by CORS on custom domains, and the real
+  // kit key only exists server-side.
+  const doSend = () => kit.send({
     from: { adapter, chain },
     to: TREASURY_ADDRESS,
     amount,
     token: "USDC",
   } as Parameters<typeof kit.send>[0]);
+  const result = await withCircleProxy(doSend);
   const txHash = extractTxHash(result);
   return { txHash, explorerUrl: getExplorerUrl(chainId, txHash) };
 }

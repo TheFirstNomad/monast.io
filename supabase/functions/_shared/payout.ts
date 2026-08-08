@@ -106,17 +106,23 @@ export async function runPayout(
   }
 
   if (!(await claimPayout(admin, escrow.id))) {
+    // Attempted double payout: worth a greppable line, since a legitimate flow
+    // should never reach here twice for the same escrow.
+    console.error("PAYOUT_BLOCKED", JSON.stringify({ escrowId: escrow.id, kind }));
     return { ok: false, error: "A payout for this escrow is already in progress or complete." };
   }
 
   try {
     const mainKey = `escrow:${escrow.id}:${kind}`;
+    const feeKey = `escrow:${escrow.id}:fee`;
     const tx = await treasuryTransfer({
       walletId: escrowWallet.circle_wallet_id,
       destinationAddress: destination,
       amountUsdc: split.sellerNet,
       chainId,
-      idempotencyKey: crypto.randomUUID(),
+      // Deterministic: a retry after a timeout reuses the same key so Circle
+      // rejects it as a duplicate instead of sending a second real transfer.
+      idempotencyKey: mainKey,
     });
 
     await writeLedger(admin, {
@@ -143,7 +149,7 @@ export async function runPayout(
           destinationAddress: revenue.address,
           amountUsdc: split.fee,
           chainId,
-          idempotencyKey: crypto.randomUUID(),
+          idempotencyKey: feeKey,
         });
         await writeLedger(admin, {
           kind: "platform_fee",
@@ -155,7 +161,7 @@ export async function runPayout(
           amountUsdc: split.fee,
           circleTransactionId: feeTx.id,
           status: "pending",
-          idempotencyKey: `escrow:${escrow.id}:fee`,
+          idempotencyKey: feeKey,
           notes: `platform fee ${feeBps}bps to revenue wallet`,
         });
       } catch (e) {
