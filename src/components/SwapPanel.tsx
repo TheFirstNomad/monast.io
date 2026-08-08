@@ -66,9 +66,10 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
 
   const runSwap = async () => {
     if (!address) {
-      await connect();
+      setSignInOpen(true);
       return;
     }
+
     setBusy(true);
     setTxHash(null);
     try {
