@@ -40,7 +40,7 @@ const Browse = () => {
     else if (sort === "price_desc") q = q.order("price_usdc", { ascending: false });
     else q = q.order("created_at", { ascending: false });
 
-    if (category) q = q.eq("category", category);
+    if (category) q = q.in("category", categoryQueryValues(category));
     if (condition) q = q.eq("condition", condition);
     if (search) q = q.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     if (location) q = q.ilike("location", `%${location}%`);
