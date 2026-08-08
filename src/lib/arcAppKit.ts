@@ -99,7 +99,14 @@ export async function payListingFee(
 const CIRCLE_API_ORIGIN = "https://api.circle.com";
 const PROXY_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/circle-proxy`;
 
-function withCircleProxy<T>(fn: () => Promise<T>): Promise<T> {
+async function withCircleProxy<T>(fn: () => Promise<T>): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) {
+    throw new Error("Sign in required before swapping.");
+  }
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
@@ -112,14 +119,23 @@ function withCircleProxy<T>(fn: () => Promise<T>): Promise<T> {
       }
       return originalFetch(PROXY_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          apikey: anonKey,
+        },
         body: JSON.stringify({ method, path, body }),
       });
     }
     return originalFetch(input, init);
   };
-  return fn().finally(() => { globalThis.fetch = originalFetch; });
+  try {
+    return await fn();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 }
+
 
 export async function swapViaKit(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
