@@ -39,6 +39,17 @@ async function circle(path: string, init: RequestInit = {}) {
   return body;
 }
 
+/** Deterministic UUID (v4-shaped) derived from a stable string, because Circle
+ *  requires idempotencyKey to be a UUID. */
+async function stableUuid(seed: string): Promise<string> {
+  const buf = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(seed)));
+  const b = buf.slice(0, 16);
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -102,7 +113,9 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: { "X-User-Token": userToken },
       body: JSON.stringify({
-        idempotencyKey: crypto.randomUUID(),
+        // Stable per escrow+user: a double-tap or a refresh mid-flow reuses the
+        // same key instead of spawning a second PIN challenge.
+        idempotencyKey: await stableUuid(`escrow_fund:${escrowId}:${userId}`),
         walletId: wallet.id,
         destinationAddress: treasury.address,
         tokenAddress: chainConf.usdc,

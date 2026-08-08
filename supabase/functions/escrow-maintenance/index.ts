@@ -16,6 +16,7 @@ import { notify } from "../_shared/notify.ts";
 import { runPayout } from "../_shared/payout.ts";
 import { loadFeeSettings } from "../_shared/fees.ts";
 import { reconcilePayouts } from "../_shared/reconcile.ts";
+import { timingSafeEqual } from "../_shared/timing-safe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +39,7 @@ Deno.serve(async (req) => {
       .select("value")
       .eq("key", "cron_token")
       .maybeSingle();
-    if (!cfg?.value || token.length !== cfg.value.length || token !== cfg.value) {
+    if (!cfg?.value || !(await timingSafeEqual(token, cfg.value))) {
       return json({ error: "Forbidden" }, 403);
     }
 

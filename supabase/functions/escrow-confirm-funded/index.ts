@@ -58,7 +58,22 @@ Deno.serve(async (req) => {
       expectedTo: treasury.address,
       expectedAmountUsdc: Number(esc.amount_usdc),
     });
-    if (!verify.ok) return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
+    if (!verify.ok) {
+      // "Not deep enough yet" is a wait state, not a rejection: 202 lets the
+      // client keep polling instead of showing a hard failure.
+      if (verify.pending) {
+        return json(
+          {
+            error: "Your deposit is still confirming on Arc. This usually takes a few seconds.",
+            status: "confirming",
+            confirmations: verify.confirmations ?? 0,
+            required_confirmations: verify.requiredConfirmations ?? null,
+          },
+          202,
+        );
+      }
+      return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
+    }
 
     const nextHashes = Array.isArray(esc.tx_hashes) ? [...esc.tx_hashes, { kind: "deposit", hash: txHash }] : [{ kind: "deposit", hash: txHash }];
     const { data: updated, error } = await admin
