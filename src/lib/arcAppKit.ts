@@ -6,14 +6,16 @@
 
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
+import { supabase } from "@/integrations/supabase/client";
 
-export const ARC_KIT_KEY: string = import.meta.env.VITE_ARC_KIT_KEY ?? "";
+/**
+ * The real Circle Kit Key is a server-side secret (ARC_KIT_KEY) held only by
+ * the circle-proxy edge function, which injects it into every Circle API
+ * request. The browser never sees it — App Kit is constructed with this
+ * non-secret placeholder and all traffic is relayed through the proxy.
+ */
+export const ARC_KIT_KEY = "KIT_KEY:proxy";
 
-if (!ARC_KIT_KEY || !ARC_KIT_KEY.startsWith("KIT_KEY:")) {
-  console.error(
-    "❌ VITE_ARC_KIT_KEY is missing or invalid. Circle App Kit operations will fail."
-  );
-}
 
 // Treasury / admin wallet for monast.io
 export const TREASURY_ADDRESS: `0x${string}` =
@@ -97,7 +99,14 @@ export async function payListingFee(
 const CIRCLE_API_ORIGIN = "https://api.circle.com";
 const PROXY_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/circle-proxy`;
 
-function withCircleProxy<T>(fn: () => Promise<T>): Promise<T> {
+async function withCircleProxy<T>(fn: () => Promise<T>): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const accessToken = data.session?.access_token;
+  if (!accessToken) {
+    throw new Error("Sign in required before swapping.");
+  }
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : (input as Request).url;
@@ -110,14 +119,23 @@ function withCircleProxy<T>(fn: () => Promise<T>): Promise<T> {
       }
       return originalFetch(PROXY_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          apikey: anonKey,
+        },
         body: JSON.stringify({ method, path, body }),
       });
     }
     return originalFetch(input, init);
   };
-  return fn().finally(() => { globalThis.fetch = originalFetch; });
+  try {
+    return await fn();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 }
+
 
 export async function swapViaKit(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
