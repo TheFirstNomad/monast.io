@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
  * request. The browser never sees it — App Kit is constructed with this
  * non-secret placeholder and all traffic is relayed through the proxy.
  */
-export const ARC_KIT_KEY = "KIT_KEY:proxy";
+export const ARC_KIT_KEY = "KIT_KEY:proxy:proxy";
 
 
 // Treasury / admin wallet for monast.io
