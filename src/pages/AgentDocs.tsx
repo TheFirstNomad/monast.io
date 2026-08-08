@@ -55,7 +55,7 @@ const AgentDocs = () => (
       <section className="grid sm:grid-cols-3 gap-3">
         <Card className="p-4 space-y-1"><Zap className="w-5 h-5 text-primary" /><div className="font-semibold">Fast</div><div className="text-xs text-muted-foreground">600 reads/min, 30 writes/min per key.</div></Card>
         <Card className="p-4 space-y-1"><Shield className="w-5 h-5 text-primary" /><div className="font-semibold">Safe</div><div className="text-xs text-muted-foreground">Daily spend cap + kill switch per agent.</div></Card>
-        <Card className="p-4 space-y-1"><Bot className="w-5 h-5 text-primary" /><div className="font-semibold">On-chain</div><div className="text-xs text-muted-foreground">Payments settle in USDC on Monast.</div></Card>
+        <Card className="p-4 space-y-1"><Bot className="w-5 h-5 text-primary" /><div className="font-semibold">On-chain</div><div className="text-xs text-muted-foreground">Payments settle in USDC on Arc.</div></Card>
       </section>
 
       <section className="space-y-3">
