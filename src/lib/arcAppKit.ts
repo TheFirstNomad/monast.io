@@ -19,24 +19,25 @@ if (!ARC_KIT_KEY || !ARC_KIT_KEY.startsWith("KIT_KEY:")) {
 export const TREASURY_ADDRESS: `0x${string}` =
   "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
 
-export type PaymentChainId = 8453 | 5042002;
+// Arc-native: Arc Testnet today, Arc Mainnet once it launches.
+export type PaymentChainId = 5042002 | 5042001;
 
 function chainString(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "Base" : "Arc_Testnet";
+  return chainId === 5042001 ? "Arc" : "Arc_Testnet";
 }
 
 export function getChainLabel(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "Base Mainnet" : "Arc Testnet";
+  return chainId === 5042001 ? "Arc Mainnet" : "Arc Testnet";
 }
 
 export function getExplorerUrl(chainId: PaymentChainId, txHash: string): string {
-  return chainId === 8453
-    ? `https://basescan.org/tx/${txHash}`
+  return chainId === 5042001
+    ? `https://arcscan.app/tx/${txHash}`
     : `https://testnet.arcscan.app/tx/${txHash}`;
 }
 
 export function getExplorerName(chainId: PaymentChainId): string {
-  return chainId === 8453 ? "BaseScan" : "ArcScan";
+  return "ArcScan";
 }
 
 function extractTxHash(result: unknown): string {

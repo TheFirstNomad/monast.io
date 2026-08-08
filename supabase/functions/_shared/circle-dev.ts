@@ -103,10 +103,6 @@ export function circleBlockchain(chainId: number): string {
   const map: Record<number, string> = {
     5042002: arcTestnet,
     5042001: arcMainnet,
-    8453: "BASE",
-    84532: "BASE-SEPOLIA",
-    11155111: "ETH-SEPOLIA",
-    421614: "ARB-SEPOLIA",
   };
   const b = map[chainId];
   if (!b) throw new Error(`No Circle blockchain mapping for chain ${chainId}`);
@@ -116,10 +112,6 @@ export function circleBlockchain(chainId: number): string {
 /** USDC token contract per chain, lowercase. Mirrors _shared/tx-verify.ts. */
 export const USDC_ADDRESS: Record<number, string> = {
   5042002: "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d",
-  8453: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-  84532: "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
-  11155111: "0x1c7d4b196cb0c7b01d743fbc6116a902379c7238",
-  421614: "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d",
 };
 
 export function usdcAddress(chainId: number): string {

@@ -2,42 +2,25 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { createAppKit } from "@reown/appkit/react";
-import { base, sepolia } from "@reown/appkit/networks";
 import { type ReactNode } from "react";
+import { CHAINS } from "@/lib/chains";
 
 const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "3592c16759a9b6907bc4eb5afd455b15";
 
-// Arc Testnet — USDC is native gas (18 dec for msg.value)
+// monast.io is Arc-native — Arc Testnet is the only wallet network offered.
+// USDC is the native gas token on Arc (18 decimals for msg.value).
+const ARC = CHAINS["arc-testnet"];
+
 const arcTestnet = {
-  id: 5042002,
-  name: "Arc Testnet",
+  id: ARC.id,
+  name: ARC.label,
   nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.testnet.arc.network"] } },
-  blockExplorers: { default: { name: "ArcScan", url: "https://testnet.arcscan.app" } },
+  rpcUrls: { default: { http: [ARC.rpc] } },
+  blockExplorers: { default: { name: "ArcScan", url: ARC.explorer } },
   testnet: true,
 } as any;
 
-// Tempo Mainnet — USDC native gas (placeholder until Tempo finalizes USDC contract)
-const tempoMainnet = {
-  id: 4217,
-  name: "Tempo Mainnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.tempo.xyz"] } },
-  blockExplorers: { default: { name: "Tempo Explorer", url: "https://explorer.tempo.xyz" } },
-  testnet: false,
-} as any;
-
-// Tempo Moderato Testnet
-const tempoModerato = {
-  id: 42431,
-  name: "Tempo Moderato Testnet",
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.moderato.tempo.xyz"] } },
-  blockExplorers: { default: { name: "Tempo Moderato Explorer", url: "https://explorer.moderato.tempo.xyz" } },
-  testnet: true,
-} as any;
-
-const networks = [base, arcTestnet, sepolia, tempoMainnet, tempoModerato] as const;
+const networks = [arcTestnet] as const;
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,
