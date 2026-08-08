@@ -43,6 +43,9 @@ verify_jwt = true
 [functions.escrow-maintenance]
 verify_jwt = false
 
+[functions.payout-reconcile]
+verify_jwt = false
+
 [functions.admin-disputes]
 verify_jwt = false
 

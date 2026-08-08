@@ -133,10 +133,13 @@ const AdminTreasury = () => {
     if (!Number.isFinite(value) || value <= 0) return toast.error("Enter an amount greater than zero");
     setWithdrawing(true);
     try {
+      // One id per button press: a network retry of this same attempt reuses it
+      // so the backend and Circle both treat it as a duplicate, not a new payout.
       await callAdmin("treasury-withdraw", {
         chain_id: ARC_CHAIN_ID,
         destination_address: dest,
         amount_usdc: value,
+        client_request_id: crypto.randomUUID(),
       });
       toast.success("Withdrawal submitted");
       setAmount("");

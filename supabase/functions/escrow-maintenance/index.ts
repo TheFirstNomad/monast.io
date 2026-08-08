@@ -15,6 +15,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
 import { runPayout } from "../_shared/payout.ts";
 import { loadFeeSettings } from "../_shared/fees.ts";
+import { reconcilePayouts } from "../_shared/reconcile.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -149,8 +150,18 @@ Deno.serve(async (req) => {
       refunded.push(esc.id);
     }
 
+    // ---- 3. Reconcile in-flight payouts against Circle ---------------------
+    // "Circle accepted the transfer" is not "the money landed"; this pass turns
+    // sent -> confirmed/failed and raises an alert on failures.
+    let reconcile: unknown = null;
+    try {
+      reconcile = await reconcilePayouts(admin);
+    } catch (e) {
+      console.error("reconcile pass failed", (e as Error).message);
+    }
+
     if (failures.length) console.error("escrow-maintenance failures", failures);
-    return json({ released, refunded, failures, ran_at: nowIso });
+    return json({ released, refunded, failures, reconcile, ran_at: nowIso });
   } catch (e) {
     console.error("escrow-maintenance", e);
     return json({ error: (e as Error).message }, 500);
