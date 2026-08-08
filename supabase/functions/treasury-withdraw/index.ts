@@ -7,6 +7,7 @@ import { verifyAdmin } from "../_shared/admin-auth.ts";
 import { getTreasury } from "../_shared/treasury.ts";
 import { treasuryTransfer, walletBalance } from "../_shared/circle-dev.ts";
 import { writeLedger } from "../_shared/ledger.ts";
+import { formatUsdc, toBaseUnits } from "../_shared/fees.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
@@ -94,7 +95,8 @@ Deno.serve(async (req) => {
       tx = await treasuryTransfer({
         walletId: revenue.circle_wallet_id,
         destinationAddress: to,
-        amountUsdc: amount,
+        // Exact decimal from integer micro-USDC.
+        amountUsdc: formatUsdc(toBaseUnits(amount)),
         chainId,
         idempotencyKey,
       });

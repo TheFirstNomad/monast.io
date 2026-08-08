@@ -10,7 +10,7 @@
 import { getTreasury } from "./treasury.ts";
 import { treasuryTransfer } from "./circle-dev.ts";
 import { writeLedger } from "./ledger.ts";
-import { splitSale } from "./fees.ts";
+import { formatUsdc, splitSale, toBaseUnits } from "./fees.ts";
 
 export type PayoutKind = "release" | "refund";
 
@@ -93,7 +93,12 @@ export async function runPayout(
     };
   }
 
-  const split = kind === "release" ? splitSale(gross, feeBps) : { gross, fee: 0, sellerNet: gross };
+  const split = kind === "release"
+    ? splitSale(gross, feeBps)
+    : (() => {
+        const m = toBaseUnits(gross);
+        return { gross, fee: 0, sellerNet: gross, grossMicros: m, feeMicros: 0n, sellerNetMicros: m };
+      })();
 
   let escrowWallet;
   try {
@@ -118,7 +123,8 @@ export async function runPayout(
     const tx = await treasuryTransfer({
       walletId: escrowWallet.circle_wallet_id,
       destinationAddress: destination,
-      amountUsdc: split.sellerNet,
+      // Exact decimal from integer micro-USDC: no float ever reaches Circle.
+      amountUsdc: formatUsdc(split.sellerNetMicros),
       chainId,
       // Deterministic: a retry after a timeout reuses the same key so Circle
       // rejects it as a duplicate instead of sending a second real transfer.
@@ -141,13 +147,13 @@ export async function runPayout(
 
     // Sweep the platform fee into the revenue wallet, keeping user funds and
     // platform earnings in separate wallets.
-    if (split.fee > 0) {
+    if (split.feeMicros > 0n) {
       try {
         const revenue = await getTreasury(admin, "revenue", chainId);
         const feeTx = await treasuryTransfer({
           walletId: escrowWallet.circle_wallet_id,
           destinationAddress: revenue.address,
-          amountUsdc: split.fee,
+          amountUsdc: formatUsdc(split.feeMicros),
           chainId,
           idempotencyKey: feeKey,
         });
