@@ -36,7 +36,11 @@ const SellerProfile = () => {
     if (!id) return;
     (async () => {
       const [{ data: p }, { data: a }, { data: r }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, display_name, avatar_url, bio, rating, total_ads, created_at")
+          .eq("id", id)
+          .maybeSingle(),
         supabase.from("ads").select("*").eq("seller_id", id).eq("status", "active").order("created_at", { ascending: false }),
         supabase
           .from("reviews")

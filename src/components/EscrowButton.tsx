@@ -39,12 +39,8 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
   useEffect(() => {
     if (!user) { setHasCircleWallet(false); return; }
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("circle_user_id")
-        .eq("id", user.id)
-        .maybeSingle();
-      setHasCircleWallet(!!data?.circle_user_id);
+      const { data } = await supabase.rpc("my_circle_user_id");
+      setHasCircleWallet(!!data);
     })();
   }, [user]);
 

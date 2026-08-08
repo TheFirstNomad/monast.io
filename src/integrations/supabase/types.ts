@@ -925,6 +925,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      my_circle_user_id: { Args: never; Returns: string }
       run_escrow_maintenance: { Args: never; Returns: undefined }
     }
     Enums: {
