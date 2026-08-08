@@ -6,14 +6,16 @@
 
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
+import { supabase } from "@/integrations/supabase/client";
 
-export const ARC_KIT_KEY: string = import.meta.env.VITE_ARC_KIT_KEY ?? "";
+/**
+ * The real Circle Kit Key is a server-side secret (ARC_KIT_KEY) held only by
+ * the circle-proxy edge function, which injects it into every Circle API
+ * request. The browser never sees it — App Kit is constructed with this
+ * non-secret placeholder and all traffic is relayed through the proxy.
+ */
+export const ARC_KIT_KEY = "KIT_KEY:proxy";
 
-if (!ARC_KIT_KEY || !ARC_KIT_KEY.startsWith("KIT_KEY:")) {
-  console.error(
-    "❌ VITE_ARC_KIT_KEY is missing or invalid. Circle App Kit operations will fail."
-  );
-}
 
 // Treasury / admin wallet for monast.io
 export const TREASURY_ADDRESS: `0x${string}` =
