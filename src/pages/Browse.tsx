@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
-import { DbAd, categories, conditions } from "@/lib/types";
+import { DbAd, categories, conditions, categoryQueryValues } from "@/lib/types";
 import { Search, SlidersHorizontal, X, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/hooks/useSeo";
@@ -40,7 +40,7 @@ const Browse = () => {
     else if (sort === "price_desc") q = q.order("price_usdc", { ascending: false });
     else q = q.order("created_at", { ascending: false });
 
-    if (category) q = q.eq("category", category);
+    if (category) q = q.in("category", categoryQueryValues(category));
     if (condition) q = q.eq("condition", condition);
     if (search) q = q.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
     if (location) q = q.ilike("location", `%${location}%`);

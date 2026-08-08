@@ -5,20 +5,41 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Menu, X, Wallet, User, MessageCircle, Receipt, LogOut, LayoutDashboard, Bot, Heart, Banknote, Gavel, Flag, ShieldCheck } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Menu,
+  X,
+  Wallet,
+  User,
+  MessageCircle,
+  Receipt,
+  LogOut,
+  LayoutDashboard,
+  Bot,
+  Heart,
+  Banknote,
+  Gavel,
+  Flag,
+  ShieldCheck,
+  ChevronDown,
+  ArrowLeftRight,
+  Mail,
+  Tag,
+  Store,
+} from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { SwapDialog } from "@/components/SwapDialog";
 
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRoles } from "@/hooks/useRoles";
 import { isOwnerWallet } from "@/lib/owner";
-
 
 export const Navbar = () => {
   const location = useLocation();
@@ -40,7 +61,20 @@ export const Navbar = () => {
   ];
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
+  const signedIn = Boolean(address || user);
 
+  const accountLinks = [
+    { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+    { to: "/settings", label: "Profile settings", Icon: User },
+    { to: "/favorites", label: "Saved items", Icon: Heart },
+    { to: "/messages", label: "Messages", Icon: MessageCircle },
+    { to: "/transactions", label: "Transactions", Icon: Receipt },
+  ];
+
+  const buildLinks = [
+    { to: "/dashboard/agents", label: "Agents", Icon: Bot },
+    { to: "/agents", label: "Agent API docs", Icon: Bot },
+  ];
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,83 +111,101 @@ export const Navbar = () => {
             <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground px-2">
               Pricing
             </Link>
-            {address ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors">
-                    <Wallet className="w-4 h-4 text-primary" />
-                    <span className="font-medium text-foreground">{short}</span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                    <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/settings")}>
-                    <User className="w-4 h-4 mr-2" /> Profile settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/dashboard/agents")}>
-                    <Bot className="w-4 h-4 mr-2" /> Agents
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/agents")}>
-                    <Bot className="w-4 h-4 mr-2" /> Agent API docs
-                  </DropdownMenuItem>
-                  {showAdmin && adminLinks.length > 0 && (
+
+            <SwapDialog>
+              <Button variant="outline" size="sm" className="gap-2 font-semibold">
+                <ArrowLeftRight className="w-4 h-4 text-primary" />
+                Swap
+              </Button>
+            </SwapDialog>
+
+            {user && <NotificationsBell />}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors">
+                  {address ? (
                     <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">Admin</DropdownMenuLabel>
-                      {adminLinks.map(({ to, label, Icon }) => (
-                        <DropdownMenuItem key={to} onClick={() => navigate(to)}>
-                          <Icon className="w-4 h-4 mr-2" /> {label}
-                        </DropdownMenuItem>
-                      ))}
+                      <Wallet className="w-4 h-4 text-primary" />
+                      <span className="font-medium text-foreground">{short}</span>
                     </>
+                  ) : (
+                    <User className="w-4 h-4 text-foreground" />
                   )}
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem onClick={disconnect}>
-                    <LogOut className="w-4 h-4 mr-2" /> Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="gap-2">
-                <Wallet className="w-4 h-4" />
-                {connecting ? "Signing in..." : "Connect Wallet"}
-              </Button>
-            )}
-            {user && (
-              <>
-                <NotificationsBell />
-                <Link to="/favorites">
-                  <Button variant="ghost" size="icon" className="rounded-lg relative">
-                    <Heart className="w-5 h-5" />
-                    {favCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                        {favCount > 99 ? "99+" : favCount}
-                      </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {signedIn ? (
+                  <>
+                    {address && (
+                      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                        Connected wallet
+                        <div className="text-sm font-semibold text-foreground">{short}</div>
+                      </DropdownMenuLabel>
                     )}
-                  </Button>
-                </Link>
-                <Link to="/messages">
-                  <Button variant="ghost" size="icon" className="rounded-lg">
-                    <MessageCircle className="w-5 h-5" />
-                  </Button>
-                </Link>
-                <Link to="/transactions">
-                  <Button variant="ghost" size="icon" className="rounded-lg">
-                    <Receipt className="w-5 h-5" />
-                  </Button>
-                </Link>
-              </>
-            )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Account</DropdownMenuLabel>
+                    {accountLinks.map(({ to, label, Icon }) => (
+                      <DropdownMenuItem key={to} onClick={() => navigate(to)}>
+                        <Icon className="w-4 h-4 mr-2" /> {label}
+                        {to === "/favorites" && favCount > 0 && (
+                          <span className="ml-auto text-xs font-bold text-primary">{favCount > 99 ? "99+" : favCount}</span>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Build</DropdownMenuLabel>
+                    {buildLinks.map(({ to, label, Icon }) => (
+                      <DropdownMenuItem key={to} onClick={() => navigate(to)}>
+                        <Icon className="w-4 h-4 mr-2" /> {label}
+                      </DropdownMenuItem>
+                    ))}
+                    {showAdmin && adminLinks.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">Admin</DropdownMenuLabel>
+                        {adminLinks.map(({ to, label, Icon }) => (
+                          <DropdownMenuItem key={to} onClick={() => navigate(to)}>
+                            <Icon className="w-4 h-4 mr-2" /> {label}
+                          </DropdownMenuItem>
+                        ))}
+                      </>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={disconnect}>
+                      <LogOut className="w-4 h-4 mr-2" /> Sign out
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Sign in</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={connect} disabled={connecting}>
+                      <Wallet className="w-4 h-4 mr-2" />
+                      {connecting ? "Signing in…" : "Connect wallet"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/auth")}>
+                      <Mail className="w-4 h-4 mr-2" /> Sign in with email
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Explore</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => navigate("/browse")}>
+                      <Store className="w-4 h-4 mr-2" /> Browse listings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/swap")}>
+                      <ArrowLeftRight className="w-4 h-4 mr-2" /> Swap
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/pricing")}>
+                      <Tag className="w-4 h-4 mr-2" /> Pricing
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/agents")}>
+                      <Bot className="w-4 h-4 mr-2" /> Agent API docs
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-
-            <Link to={user ? "/dashboard" : "/auth"}>
-              <Button variant="ghost" size="icon" className="rounded-lg">
-                <User className="w-5 h-5" />
-              </Button>
-            </Link>
             <Link to="/post-ad">
               <Button size="sm" className="gap-2 font-semibold">
                 <Plus className="w-4 h-4" />
@@ -169,7 +221,7 @@ export const Navbar = () => {
                 Post Ad
               </Button>
             </Link>
-            <button onClick={() => setMobileOpen(!mobileOpen)}>
+            <button onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">
               {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
@@ -177,7 +229,7 @@ export const Navbar = () => {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-border bg-card px-4 py-4 space-y-3">
+        <div className="md:hidden border-t border-border bg-card px-4 py-4 space-y-4">
           <form onSubmit={submitSearch} className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -188,32 +240,46 @@ export const Navbar = () => {
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </form>
-          <div className="flex flex-col gap-1">
-            {[
-              { to: "/", label: "Home" },
-              { to: "/browse", label: "Browse" },
-              { to: "/pricing", label: "Pricing" },
-              { to: "/favorites", label: "Saved items" },
-              { to: "/messages", label: "Messages" },
 
-              { to: "/transactions", label: "Transactions" },
-              { to: "/settings", label: "Profile settings" },
-              { to: user ? "/dashboard" : "/auth", label: user ? "Dashboard" : "Sign in" },
-              ...(showAdmin ? adminLinks.map((l) => ({ to: l.to, label: `Admin · ${l.label}` })) : []),
+          {[
+            {
+              group: "Marketplace",
+              links: [
+                { to: "/", label: "Home" },
+                { to: "/browse", label: "Browse" },
+                { to: "/swap", label: "Swap" },
+                { to: "/pricing", label: "Pricing" },
+              ],
+            },
+            ...(signedIn
+              ? [
+                  { group: "Account", links: accountLinks.map((l) => ({ to: l.to, label: l.label })) },
+                  { group: "Build", links: buildLinks.map((l) => ({ to: l.to, label: l.label })) },
+                ]
+              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in with email" }, { to: "/agents", label: "Agent API docs" }] }]),
+            ...(showAdmin && adminLinks.length > 0
+              ? [{ group: "Admin", links: adminLinks.map((l) => ({ to: l.to, label: l.label })) }]
+              : []),
+          ].map(({ group, links }) => (
+            <div key={group} className="space-y-1">
+              <div className="px-3 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {group}
+              </div>
+              {links.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                    location.pathname === link.to ? "bg-accent text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          ))}
 
-            ].map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileOpen(false)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                  location.pathname === link.to ? "bg-accent text-foreground" : "text-muted-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
           {address ? (
             <Button variant="outline" size="sm" onClick={disconnect} className="w-full gap-2">
               <LogOut className="w-4 h-4" />

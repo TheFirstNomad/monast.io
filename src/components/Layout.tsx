@@ -8,6 +8,8 @@ const FOOTER_LINKS: { heading: string; links: { to: string; label: string }[] }[
     heading: "Marketplace",
     links: [
       { to: "/browse", label: "Browse listings" },
+      { to: "/swap", label: "Swap USDC & EURC" },
+
       { to: "/post-ad", label: "Post a free ad" },
       { to: "/favorites", label: "Saved items" },
     ],

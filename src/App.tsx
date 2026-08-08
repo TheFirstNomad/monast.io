@@ -9,6 +9,8 @@ import Index from "./pages/Index";
 import PostAd from "./pages/PostAd";
 import AdDetail from "./pages/AdDetail";
 import Browse from "./pages/Browse";
+import Swap from "./pages/Swap";
+
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Messages from "./pages/Messages";
@@ -44,6 +46,8 @@ const App = () => (
               <Route path="/post-ad" element={<PostAd />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/browse" element={<Browse />} />
+              <Route path="/swap" element={<Swap />} />
+
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/settings" element={<Settings />} />
