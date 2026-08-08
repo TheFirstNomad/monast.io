@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { writeLedger } from "../_shared/ledger.ts";
+import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +67,10 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(url, service, { auth: { persistSession: false } });
+  // Abuse ceiling: these endpoints make live RPC/Circle calls, so an
+  // unbounded client retry loop is both costly and a probing vector.
+  const rl = await checkUserRateLimit(admin, userId, "promote-checkout");
+  if (!rl.ok) return json(rateLimitBody(rl), 429);
 
   // Ownership check.
   const { data: ad, error: adErr } = await admin

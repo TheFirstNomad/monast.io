@@ -6,6 +6,7 @@ import { notify } from "../_shared/notify.ts";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { writeLedger } from "../_shared/ledger.ts";
+import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,6 +36,10 @@ Deno.serve(async (req) => {
     if (!escrowId || !txHash) return json({ error: "escrow_id and tx_hash required" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // Abuse ceiling: these endpoints make live RPC/Circle calls, so an
+    // unbounded client retry loop is both costly and a probing vector.
+    const rl = await checkUserRateLimit(admin, buyerId, "escrow-confirm-funded");
+    if (!rl.ok) return json(rateLimitBody(rl), 429);
     const { data: esc } = await admin
       .from("escrows")
       .select("*")

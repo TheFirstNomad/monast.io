@@ -6,6 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
 import { runPayout } from "../_shared/payout.ts";
 import { loadFeeSettings } from "../_shared/fees.ts";
+import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +33,10 @@ Deno.serve(async (req) => {
     if (!escrowId) return json({ error: "escrow_id required" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // Abuse ceiling: these endpoints make live RPC/Circle calls, so an
+    // unbounded client retry loop is both costly and a probing vector.
+    const rl = await checkUserRateLimit(admin, userId, "escrow-refund");
+    if (!rl.ok) return json(rateLimitBody(rl), 429);
     const { data: esc } = await admin.from("escrows").select("*").eq("id", escrowId).maybeSingle();
     if (!esc) return json({ error: "Escrow not found" }, 404);
     if (!["funded", "disputed"].includes(esc.status))

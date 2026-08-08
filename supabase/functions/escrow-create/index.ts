@@ -3,6 +3,7 @@
 // existing row instead of creating a duplicate.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,10 @@ Deno.serve(async (req) => {
     if (!adId) return json({ error: "ad_id required" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // Abuse ceiling: these endpoints make live RPC/Circle calls, so an
+    // unbounded client retry loop is both costly and a probing vector.
+    const rl = await checkUserRateLimit(admin, buyerId, "escrow-create");
+    if (!rl.ok) return json(rateLimitBody(rl), 429);
 
     const { data: ad, error: adErr } = await admin
       .from("ads")
