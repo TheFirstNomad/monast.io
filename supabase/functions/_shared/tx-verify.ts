@@ -17,6 +17,14 @@ const CHAINS: Record<number, ChainConf> = {
 
 
 
+// Arc has no reorg history yet, so funding is held to a conservative
+// confirmation depth rather than trusting the first successful receipt.
+// Tunable per network once Arc's finality profile is better understood.
+const MIN_CONFIRMATIONS: Record<number, number> = {
+  5042002: 3, // Arc Testnet
+};
+const DEFAULT_MIN_CONFIRMATIONS = 12;
+
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const USDC_DECIMALS = 6;
 
@@ -52,6 +60,11 @@ export interface VerifyArgs {
 export interface VerifyResult {
   ok: boolean;
   error?: string;
+  /** True when the transfer looks valid but is not deep enough yet. The caller
+   *  should ask the user to wait rather than treating this as a failure. */
+  pending?: boolean;
+  confirmations?: number;
+  requiredConfirmations?: number;
   from?: string;
   to?: string;
   amountUsdc?: number;
@@ -68,8 +81,30 @@ export async function verifyUsdcTransfer(args: VerifyArgs): Promise<VerifyResult
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
-  if (!receipt) return { ok: false, error: "transaction not found or not yet mined" };
+  if (!receipt) {
+    return { ok: false, pending: true, error: "transaction not found or not yet mined" };
+  }
   if (receipt.status !== "0x1") return { ok: false, error: "transaction failed on-chain" };
+
+  // Confirmation depth: a receipt only proves the tx was included in *a* block.
+  const required = MIN_CONFIRMATIONS[args.chainId] ?? DEFAULT_MIN_CONFIRMATIONS;
+  let confirmations = 0;
+  try {
+    const head = BigInt(await rpc(chain.rpc, "eth_blockNumber", []));
+    const mined = BigInt(receipt.blockNumber);
+    confirmations = head >= mined ? Number(head - mined) + 1 : 0;
+  } catch (e) {
+    return { ok: false, error: `could not read chain head: ${(e as Error).message}` };
+  }
+  if (confirmations < required) {
+    return {
+      ok: false,
+      pending: true,
+      confirmations,
+      requiredConfirmations: required,
+      error: `waiting for confirmations (${confirmations}/${required})`,
+    };
+  }
 
   const expectedToLower = args.expectedTo.toLowerCase();
   const expectedFromLower = args.expectedFrom?.toLowerCase();
@@ -84,7 +119,14 @@ export async function verifyUsdcTransfer(args: VerifyArgs): Promise<VerifyResult
     if (expectedFromLower && from !== expectedFromLower) continue;
     const value = BigInt(log.data);
     if (value < expectedRaw) continue;
-    return { ok: true, from, to, amountUsdc: Number(value) / 10 ** USDC_DECIMALS };
+    return {
+      ok: true,
+      from,
+      to,
+      amountUsdc: Number(value) / 10 ** USDC_DECIMALS,
+      confirmations,
+      requiredConfirmations: required,
+    };
   }
 
   return { ok: false, error: "no matching USDC Transfer found in transaction logs" };

@@ -1,6 +1,7 @@
 // Verifies a USDC payment on-chain, records it, and marks the ad sold.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +45,10 @@ Deno.serve(async (req) => {
   if (!Number.isFinite(chainId)) return json({ error: "Invalid chain_id" }, 400);
 
   const admin = createClient(url, service, { auth: { persistSession: false } });
+  // Abuse ceiling: these endpoints make live RPC/Circle calls, so an
+  // unbounded client retry loop is both costly and a probing vector.
+  const rl = await checkUserRateLimit(admin, buyerId, "record-payment");
+  if (!rl.ok) return json(rateLimitBody(rl), 429);
 
   // Load ad + seller wallet.
   const { data: ad, error: adErr } = await admin

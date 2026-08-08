@@ -5,6 +5,8 @@
 // secret, RSA-OAEP(SHA-256) encrypted with Circle's entity public key, base64.
 // The entity secret itself never leaves the edge function environment.
 
+import { formatUsdc, toBaseUnits } from "./fees.ts";
+
 const CIRCLE_BASE = "https://api.circle.com/v1/w3s";
 
 function apiKey(): string {
@@ -157,7 +159,9 @@ export async function createWallets(
 export interface TreasuryTransferArgs {
   walletId: string;
   destinationAddress: string;
-  amountUsdc: number;
+  /** Number or exact decimal string. Strings are preferred: they come straight
+   *  from integer micro-USDC math and cannot carry float error. */
+  amountUsdc: number | string;
   chainId: number;
   /** Stable key so a retried payout cannot double-send. */
   idempotencyKey: string;
@@ -173,7 +177,11 @@ export async function treasuryTransfer(args: TreasuryTransferArgs) {
       destinationAddress: args.destinationAddress,
       tokenAddress: usdcAddress(args.chainId),
       blockchain: circleBlockchain(args.chainId),
-      amounts: [args.amountUsdc.toString()],
+      amounts: [
+        typeof args.amountUsdc === "string"
+          ? args.amountUsdc
+          : formatUsdc(toBaseUnits(args.amountUsdc)),
+      ],
       feeLevel: "MEDIUM",
     }),
   });

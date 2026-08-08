@@ -8,6 +8,7 @@ import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { loadFeeSettings } from "../_shared/fees.ts";
 import { writeLedger } from "../_shared/ledger.ts";
+import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +40,10 @@ Deno.serve(async (req) => {
     if (!Number.isInteger(chainId) || chainId <= 0) return json({ error: "chain_id invalid" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // Abuse ceiling: these endpoints make live RPC/Circle calls, so an
+    // unbounded client retry loop is both costly and a probing vector.
+    const rl = await checkUserRateLimit(admin, userId, "ad-listing-fee");
+    if (!rl.ok) return json(rateLimitBody(rl), 429);
     const { data: ad } = await admin
       .from("ads")
       .select("id, seller_id, status, listing_fee_paid_at")
