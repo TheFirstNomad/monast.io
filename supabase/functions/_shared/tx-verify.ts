@@ -8,13 +8,13 @@ interface ChainConf {
   usdc: string; // lowercase
 }
 
+// monast.io is Arc-native. Only Arc chains are accepted here, so a payment
+// claimed on any other network is rejected rather than silently trusted.
+// Arc Mainnet stays commented out until its USDC contract is published.
 const CHAINS: Record<number, ChainConf> = {
-  5042002: { rpc: "https://rpc.testnet.arc.network",       usdc: "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d" },
-  8453:    { rpc: "https://mainnet.base.org",              usdc: "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913" },
-  84532:   { rpc: "https://sepolia.base.org",              usdc: "0x036cbd53842c5426634e7929541ec2318f3dcf7e" },
-  421614:  { rpc: "https://sepolia-rollup.arbitrum.io/rpc", usdc: "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d" },
-  11155111:{ rpc: "https://ethereum-sepolia-rpc.publicnode.com", usdc: "0x1c7d4b196cb0c7b01d743fbc6116a902379c7238" },
+  5042002: { rpc: "https://rpc.testnet.arc.network", usdc: "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d" },
 };
+
 
 
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";

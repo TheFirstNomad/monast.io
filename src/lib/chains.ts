@@ -1,15 +1,10 @@
 /**
  * Chain registry — single source of truth for supported networks.
- * monast.io supports Base, Arc Testnet, Ethereum Sepolia, Tempo Mainnet,
- * and Tempo Moderato Testnet. Arc Mainnet ships disabled.
+ * monast.io is Arc-native: Arc Testnet is the only live network, and Arc
+ * Mainnet ships disabled until its launch (and until its USDC contract is
+ * published — a zero address here must never be selectable).
  */
-export type ChainKey =
-  | "base"
-  | "arc-testnet"
-  | "arc-mainnet"
-  | "sepolia"
-  | "tempo-mainnet"
-  | "tempo-moderato";
+export type ChainKey = "arc-testnet" | "arc-mainnet";
 
 export interface ChainEntry {
   id: number;
@@ -23,61 +18,32 @@ export interface ChainEntry {
   appKitChain?: string;
 }
 
-const ARC_MAINNET_PLACEHOLDER: ChainEntry = {
-  id: 5042001,
-  key: "arc-mainnet",
-  label: "Arc Mainnet",
-  network: "arc",
-  rpc: "https://rpc.arc.network",
-  usdc: "0x0000000000000000000000000000000000000000",
-  explorer: "https://arcscan.app",
-  enabled: false,
-  appKitChain: "Arc",
-};
-
 export const CHAINS: Record<ChainKey, ChainEntry> = {
-  base: {
-    id: 8453, key: "base", label: "Base Mainnet", network: "base",
-    rpc: "https://mainnet.base.org",
-    usdc: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    explorer: "https://basescan.org",
-    enabled: true,
-    appKitChain: "Base",
-  },
   "arc-testnet": {
-    id: 5042002, key: "arc-testnet", label: "Arc Testnet", network: "arc-testnet",
+    id: 5042002,
+    key: "arc-testnet",
+    label: "Arc Testnet",
+    network: "arc-testnet",
     rpc: "https://rpc.testnet.arc.network",
     usdc: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d",
     explorer: "https://testnet.arcscan.app",
     enabled: true,
     appKitChain: "Arc_Testnet",
   },
-  "arc-mainnet": ARC_MAINNET_PLACEHOLDER,
-  sepolia: {
-    id: 11155111, key: "sepolia", label: "Ethereum Sepolia", network: "sepolia",
-    rpc: "https://ethereum-sepolia-rpc.publicnode.com",
-    usdc: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-    explorer: "https://sepolia.etherscan.io",
-    enabled: true,
-  },
-  // Tempo — USDC-native gas, like Arc. Kept disabled until Tempo publishes its
-  // official USDC contract address: a zero token address would silently send a
-  // payment nowhere, so these must never be selectable with 0x000...0 here.
-  "tempo-mainnet": {
-    id: 4217, key: "tempo-mainnet", label: "Tempo Mainnet", network: "tempo",
-    rpc: "https://rpc.tempo.xyz",
+  "arc-mainnet": {
+    id: 5042001,
+    key: "arc-mainnet",
+    label: "Arc Mainnet",
+    network: "arc",
+    rpc: "https://rpc.arc.network",
     usdc: "0x0000000000000000000000000000000000000000", // unpublished
-    explorer: "https://explorer.tempo.xyz", // unconfirmed
+    explorer: "https://arcscan.app",
     enabled: false,
-  },
-  "tempo-moderato": {
-    id: 42431, key: "tempo-moderato", label: "Tempo Moderato Testnet", network: "tempo-moderato",
-    rpc: "https://rpc.moderato.tempo.xyz",
-    usdc: "0x0000000000000000000000000000000000000000", // unpublished
-    explorer: "https://explorer.moderato.tempo.xyz", // unconfirmed
-    enabled: false,
+    appKitChain: "Arc",
   },
 };
 
 export const ENABLED_CHAINS = Object.values(CHAINS).filter((c) => c.enabled);
+export const ARC_CHAIN_IDS = Object.values(CHAINS).map((c) => c.id);
+export const isArcChainId = (id: number) => ARC_CHAIN_IDS.includes(id);
 export const isArcMainnetLive = () => CHAINS["arc-mainnet"].enabled;

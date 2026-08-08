@@ -165,6 +165,19 @@ const EscrowDetail = () => {
           </Note>
         )}
 
+        {/* Buyers rarely know what escrow implies — spell out the three steps. */}
+        {(escrow.status === "created" || escrow.status === "funded") && (
+          <Note icon={<Shield className="w-4 h-4" />}>
+            <span className="block font-medium text-foreground">How this escrow works</span>
+            <span className="block text-muted-foreground mt-1">
+              1. Buyer funds the escrow in USDC on Arc. 2. Seller ships and marks the item
+              delivered. 3. Buyer confirms and the funds release to the seller, minus the{" "}
+              {SALE_FEE_LABEL} platform fee. If something goes wrong, either side can cancel or
+              open a dispute before release.
+            </span>
+          </Note>
+        )}
+
         <div className="space-y-2">
           {isBuyer && escrow.status === "created" && (
             <>
@@ -282,7 +295,14 @@ const Row = ({ k, v }: { k: string; v: React.ReactNode }) => (
 );
 
 const Hash = ({ value }: { value: string }) => (
-  <span className="font-mono text-xs break-all">{value}</span>
+  <a
+    href={`https://testnet.arcscan.app/tx/${value}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="font-mono text-xs break-all text-primary hover:underline"
+  >
+    {value}
+  </a>
 );
 
 const Note = ({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) => (

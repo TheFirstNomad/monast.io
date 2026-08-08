@@ -19,10 +19,10 @@ const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // Circle blockchain id -> { evm chain id, USDC token contract }
+// Arc-native: only Arc networks are fundable.
+const ARC_TESTNET_BLOCKCHAIN = Deno.env.get("CIRCLE_ARC_TESTNET_BLOCKCHAIN") ?? "ARC-TESTNET";
 const CIRCLE_CHAINS: Record<string, { chainId: number; usdc: string }> = {
-  "BASE-SEPOLIA": { chainId: 84532, usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" },
-  "ETH-SEPOLIA": { chainId: 11155111, usdc: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" },
-  "ARB-SEPOLIA": { chainId: 421614, usdc: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d" },
+  [ARC_TESTNET_BLOCKCHAIN]: { chainId: 5042002, usdc: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d" },
 };
 
 async function circle(path: string, init: RequestInit = {}) {
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const escrowId = String(body.escrow_id ?? "");
-    const blockchain = String(body.blockchain ?? "BASE-SEPOLIA").toUpperCase();
+    const blockchain = String(body.blockchain ?? ARC_TESTNET_BLOCKCHAIN).toUpperCase();
     if (!escrowId) return json({ error: "escrow_id required" }, 400);
     const chainConf = CIRCLE_CHAINS[blockchain];
     if (!chainConf) return json({ error: `Unsupported blockchain ${blockchain}` }, 400);

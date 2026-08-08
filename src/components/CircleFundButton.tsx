@@ -39,7 +39,7 @@ export const CircleFundButton = ({ escrowId, amount, onFunded }: Props) => {
     try {
       setPhase("preparing");
       const { data, error } = await supabase.functions.invoke("circle-escrow-fund", {
-        body: { escrow_id: escrowId, blockchain: "BASE-SEPOLIA" },
+        body: { escrow_id: escrowId },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
