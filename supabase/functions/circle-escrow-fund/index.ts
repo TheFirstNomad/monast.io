@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const escrowId = String(body.escrow_id ?? "");
-    const blockchain = String(body.blockchain ?? "BASE-SEPOLIA").toUpperCase();
+    const blockchain = String(body.blockchain ?? ARC_TESTNET_BLOCKCHAIN).toUpperCase();
     if (!escrowId) return json({ error: "escrow_id required" }, 400);
     const chainConf = CIRCLE_CHAINS[blockchain];
     if (!chainConf) return json({ error: `Unsupported blockchain ${blockchain}` }, 400);

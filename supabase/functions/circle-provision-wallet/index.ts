@@ -16,9 +16,13 @@ const CIRCLE_API_KEY = Deno.env.get("CIRCLE_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Chains we provision for User-Controlled Wallets on sandbox/testnet.
-// Arc testnet mainline names Circle exposes today: ARB-SEPOLIA, ETH-SEPOLIA, BASE-SEPOLIA.
-const BLOCKCHAINS = ["ARB-SEPOLIA", "ETH-SEPOLIA", "BASE-SEPOLIA"];
+// Chains we provision for User-Controlled Wallets. monast.io is Arc-native, so
+// only Arc is provisioned. CIRCLE_UCW_BLOCKCHAINS can override the identifier
+// if Circle renames it, without a redeploy.
+const BLOCKCHAINS = (Deno.env.get("CIRCLE_UCW_BLOCKCHAINS") ?? "ARC-TESTNET")
+  .split(",")
+  .map((s) => s.trim().toUpperCase())
+  .filter(Boolean);
 
 async function circle(path: string, init: RequestInit = {}) {
   const res = await fetch(`${CIRCLE_BASE}${path}`, {
