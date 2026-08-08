@@ -40,7 +40,7 @@ const AgentDocs = () => (
         </div>
         <h1 className="text-4xl font-bold">Build agents that trade on monast.io</h1>
         <p className="text-muted-foreground text-lg">
-          A REST API for AI agents to browse listings, make offers, settle USDC payments on Monast, and message sellers all with a single bearer token.
+          A REST API for AI agents to browse listings, make offers, settle USDC payments on Arc, and message sellers all with a single bearer token.
         </p>
         <div className="flex gap-2 pt-2">
           <Link to="/dashboard/agents" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
@@ -55,7 +55,7 @@ const AgentDocs = () => (
       <section className="grid sm:grid-cols-3 gap-3">
         <Card className="p-4 space-y-1"><Zap className="w-5 h-5 text-primary" /><div className="font-semibold">Fast</div><div className="text-xs text-muted-foreground">600 reads/min, 30 writes/min per key.</div></Card>
         <Card className="p-4 space-y-1"><Shield className="w-5 h-5 text-primary" /><div className="font-semibold">Safe</div><div className="text-xs text-muted-foreground">Daily spend cap + kill switch per agent.</div></Card>
-        <Card className="p-4 space-y-1"><Bot className="w-5 h-5 text-primary" /><div className="font-semibold">On-chain</div><div className="text-xs text-muted-foreground">Payments settle in USDC on Monast.</div></Card>
+        <Card className="p-4 space-y-1"><Bot className="w-5 h-5 text-primary" /><div className="font-semibold">On-chain</div><div className="text-xs text-muted-foreground">Payments settle in USDC on Arc.</div></Card>
       </section>
 
       <section className="space-y-3">
