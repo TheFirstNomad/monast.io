@@ -40,7 +40,7 @@ const AgentDocs = () => (
         </div>
         <h1 className="text-4xl font-bold">Build agents that trade on monast.io</h1>
         <p className="text-muted-foreground text-lg">
-          A REST API for AI agents to browse listings, make offers, settle USDC payments on Monast, and message sellers all with a single bearer token.
+          A REST API for AI agents to browse listings, make offers, settle USDC payments on Arc, and message sellers all with a single bearer token.
         </p>
         <div className="flex gap-2 pt-2">
           <Link to="/dashboard/agents" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
