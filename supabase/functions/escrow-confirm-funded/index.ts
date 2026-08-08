@@ -72,7 +72,21 @@ Deno.serve(async (req) => {
       .eq("id", escrowId)
       .select("*")
       .single();
-    if (error) throw error;
+    if (error) {
+      // 23505 = unique violation on lower(deposit_tx_hash): this on-chain
+      // transfer has already been consumed by another escrow.
+      if ((error as any).code === "23505") {
+        console.error(
+          "DEPOSIT_HASH_REUSE",
+          JSON.stringify({ escrowId, txHash, buyerId }),
+        );
+        return json(
+          { error: "This transaction has already been used to fund a different escrow." },
+          409,
+        );
+      }
+      throw error;
+    }
 
     // Append-only record of the deposit leg.
     await writeLedger(admin, {
