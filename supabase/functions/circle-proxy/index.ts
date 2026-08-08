@@ -59,18 +59,48 @@ Deno.serve(async (req) => {
       });
     }
 
+    const allowedMethods = ["GET", "POST", "PUT", "PATCH"];
+    const httpMethod = String(method).toUpperCase();
+    if (!allowedMethods.includes(httpMethod)) {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+        status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Never let the browser supply auth or a kit key — the server owns both.
+    const safeHeaders: Record<string, string> = {};
+    for (const [k, v] of Object.entries(extraHeaders ?? {})) {
+      const lower = k.toLowerCase();
+      if (lower === "authorization" || lower === "apikey" || lower.includes("kit")) continue;
+      if (typeof v === "string") safeHeaders[k] = v;
+    }
+
+    // Strip any kitKey the client tried to embed in the request body.
+    let safeBody = body;
+    if (safeBody && typeof safeBody === "object" && !Array.isArray(safeBody)) {
+      const clone = { ...(safeBody as Record<string, unknown>) };
+      delete clone.kitKey;
+      if (clone.config && typeof clone.config === "object" && !Array.isArray(clone.config)) {
+        const cfg = { ...(clone.config as Record<string, unknown>) };
+        delete cfg.kitKey;
+        clone.config = cfg;
+      }
+      safeBody = clone;
+    }
+
     const targetUrl = `${CIRCLE_BASE}${path}`;
     const fetchInit: RequestInit = {
-      method: method.toUpperCase(),
+      method: httpMethod,
       headers: {
+        ...safeHeaders,
         "Content-Type": "application/json",
         Authorization: `Bearer ${kitKey}`,
-        ...(extraHeaders ?? {}),
       },
     };
-    if (method.toUpperCase() !== "GET" && body !== undefined) {
-      fetchInit.body = JSON.stringify(body);
+    if (httpMethod !== "GET" && safeBody !== undefined) {
+      fetchInit.body = JSON.stringify(safeBody);
     }
+
 
     const ac = new AbortController();
     const timer = setTimeout(() => ac.abort(), 15_000);
