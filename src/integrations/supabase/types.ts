@@ -621,6 +621,53 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_alerts: {
+        Row: {
+          amount_usdc: number | null
+          circle_transaction_id: string | null
+          created_at: string
+          detail: string | null
+          escrow_id: string | null
+          id: string
+          idempotency_key: string | null
+          kind: string
+          resolved: boolean
+          updated_at: string
+        }
+        Insert: {
+          amount_usdc?: number | null
+          circle_transaction_id?: string | null
+          created_at?: string
+          detail?: string | null
+          escrow_id?: string | null
+          id?: string
+          idempotency_key?: string | null
+          kind: string
+          resolved?: boolean
+          updated_at?: string
+        }
+        Update: {
+          amount_usdc?: number | null
+          circle_transaction_id?: string | null
+          created_at?: string
+          detail?: string | null
+          escrow_id?: string | null
+          id?: string
+          idempotency_key?: string | null
+          kind?: string
+          resolved?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_alerts_escrow_id_fkey"
+            columns: ["escrow_id"]
+            isOneToOne: false
+            referencedRelation: "escrows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -847,6 +894,45 @@ export type Database = {
           id?: string
           is_active?: boolean
           purpose?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      treasury_withdrawal_claims: {
+        Row: {
+          amount_usdc: number
+          chain_id: number
+          circle_transaction_id: string | null
+          created_at: string
+          destination_address: string
+          error: string | null
+          id: string
+          idempotency_key: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_usdc: number
+          chain_id: number
+          circle_transaction_id?: string | null
+          created_at?: string
+          destination_address: string
+          error?: string | null
+          id?: string
+          idempotency_key: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_usdc?: number
+          chain_id?: number
+          circle_transaction_id?: string | null
+          created_at?: string
+          destination_address?: string
+          error?: string | null
+          id?: string
+          idempotency_key?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
