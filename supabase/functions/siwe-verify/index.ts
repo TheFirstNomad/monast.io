@@ -9,22 +9,55 @@ const corsHeaders = {
 
 const WALLET_EMAIL_DOMAIN = "wallet.monast.io";
 
+// Only these hosts may request a monast.io wallet sign-in.
+const ALLOWED_HOSTS = new Set([
+  "monast.io",
+  "www.monast.io",
+  "monast-secure-swap.lovable.app",
+  "localhost",
+  "localhost:8080",
+  "127.0.0.1:8080",
+]);
+
+function hostAllowed(host: string): boolean {
+  const h = host.toLowerCase();
+  if (ALLOWED_HOSTS.has(h)) return true;
+  const bare = h.split(":")[0];
+  if (ALLOWED_HOSTS.has(bare)) return true;
+  // Lovable preview/sandbox hosts for this project
+  return /^[a-z0-9-]*--[a-z0-9-]+\.lovable\.app$/.test(bare) ||
+    bare.endsWith(".lovableproject.com");
+}
+
 function parseSiwe(message: string) {
   // Minimal EIP-4361 parsing — pulls out the fields we need to validate.
   const addressMatch = message.match(/\n([0-9a-fA-FxX]{42})\n\n/);
   const nonceMatch = message.match(/\nNonce: ([A-Za-z0-9]+)/);
   const issuedAtMatch = message.match(/\nIssued At: (\S+)/);
   const domainMatch = message.match(/^(\S+) wants you to sign in/);
-  if (!addressMatch || !nonceMatch || !issuedAtMatch || !domainMatch) {
+  const uriMatch = message.match(/\nURI: (\S+)/);
+  if (!addressMatch || !nonceMatch || !issuedAtMatch || !domainMatch || !uriMatch) {
     throw new Error("Malformed SIWE message");
+  }
+  const domain = domainMatch[1];
+  let uriHost: string;
+  try {
+    uriHost = new URL(uriMatch[1]).host;
+  } catch {
+    throw new Error("Malformed SIWE URI");
+  }
+  // Domain binding: the signed domain must be one of ours and match the URI host.
+  if (!hostAllowed(domain) || domain.toLowerCase() !== uriHost.toLowerCase()) {
+    throw new Error("SIWE domain not allowed");
   }
   return {
     address: getAddress(addressMatch[1]),
     nonce: nonceMatch[1],
     issuedAt: new Date(issuedAtMatch[1]),
-    domain: domainMatch[1],
+    domain,
   };
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
