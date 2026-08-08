@@ -14,7 +14,7 @@ const Index = () => {
   useSeo({
     title: "monast.io — Buy & Sell Anything Worldwide with USDC",
     description:
-      "Global peer-to-peer marketplace. Post free ads and trade anything worldwide with USDC escrow on Arc, Base and Tempo.",
+      "Global peer-to-peer marketplace. Post free ads and trade anything worldwide with USDC escrow on Arc.",
     canonicalPath: "/",
   });
 

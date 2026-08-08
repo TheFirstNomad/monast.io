@@ -106,18 +106,18 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-primary" />
-            Set up your multichain wallet
+            Set up your Arc wallet
           </DialogTitle>
           <DialogDescription>
-            Circle mints you a non-custodial wallet across Arc, Ethereum and Base.
-            You pick the PIN — we never see it.
+            Circle mints you a non-custodial wallet on Arc, where every monast.io trade
+            settles in USDC. You pick the PIN — we never see it.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <FeatureRow icon={<Sparkles className="w-4 h-4" />} text="Auto-provisioned in seconds" />
           <FeatureRow icon={<ShieldCheck className="w-4 h-4" />} text="PIN + recovery questions, held by Circle's secure enclave" />
-          <FeatureRow icon={<Wallet className="w-4 h-4" />} text="One address per chain, ready to receive USDC" />
+          <FeatureRow icon={<Wallet className="w-4 h-4" />} text="An Arc address ready to receive USDC" />
         </div>
 
         {phase === "provisioning" && (

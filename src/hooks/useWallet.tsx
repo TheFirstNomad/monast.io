@@ -3,6 +3,7 @@ import { useAccount, useDisconnect, useSignMessage } from "wagmi";
 import { useAppKit } from "@reown/appkit/react";
 import { getAddress, isAddress } from "viem";
 import { supabase } from "@/integrations/supabase/client";
+import { ARC_CHAIN_ID } from "@/lib/usdc";
 import { toast } from "sonner";
 
 /**
@@ -65,7 +66,7 @@ function buildSiweMessage(address: string, nonce: string) {
     `Sign in to monast.io\n\n` +
     `URI: ${uri}\n` +
     `Version: 1\n` +
-    `Chain ID: 1\n` +
+    `Chain ID: ${ARC_CHAIN_ID}\n` +
     `Nonce: ${nonce}\n` +
     `Issued At: ${issuedAt}`
   );
