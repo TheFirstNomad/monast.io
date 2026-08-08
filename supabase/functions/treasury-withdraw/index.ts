@@ -7,6 +7,7 @@ import { verifyAdmin } from "../_shared/admin-auth.ts";
 import { getTreasury } from "../_shared/treasury.ts";
 import { treasuryTransfer, walletBalance } from "../_shared/circle-dev.ts";
 import { writeLedger } from "../_shared/ledger.ts";
+import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +25,12 @@ Deno.serve(async (req) => {
   try {
     if (!(await verifyAdmin(req, admin))) return json({ error: "Forbidden" }, 403);
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+    // Keyed by the admin wallet that signed the request, so even a UI bug or a
+    // stolen signature window cannot fire withdrawals in a loop.
+    const adminAddr = (req.headers.get("x-admin-address") ?? "unknown").toLowerCase();
+    const rl = await checkUserRateLimit(admin, adminAddr, "treasury-withdraw");
+    if (!rl.ok) return json(rateLimitBody(rl), 429);
 
     const body = await req.json().catch(() => ({}));
     const chainId = Number(body.chain_id ?? 5042002);
