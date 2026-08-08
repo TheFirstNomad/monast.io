@@ -106,6 +106,9 @@ export async function runPayout(
   }
 
   if (!(await claimPayout(admin, escrow.id))) {
+    // Attempted double payout: worth a greppable line, since a legitimate flow
+    // should never reach here twice for the same escrow.
+    console.error("PAYOUT_BLOCKED", JSON.stringify({ escrowId: escrow.id, kind }));
     return { ok: false, error: "A payout for this escrow is already in progress or complete." };
   }
 
