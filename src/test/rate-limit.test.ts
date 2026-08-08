@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { checkUserRateLimit } from "../dev-server/supabase/functions/_shared/user-rate-limit.ts";
+import { checkUserRateLimit } from "../../supabase/functions/_shared/user-rate-limit.ts";
 
 function stubAdmin(count: number, fail = false) {
   const inserted: any[] = [];
