@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowDownUp, Loader2, ExternalLink, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
+import { useAuth } from "@/hooks/useAuth";
+import { SignInChoiceDialog } from "@/components/SignInChoice";
 import { ARC_TESTNET_TOKENS, findToken } from "@/lib/swapTokens";
 import {
   createViemAdapterFromWallet,
@@ -21,7 +23,8 @@ const CHAIN_ID: PaymentChainId = 5042002;
  * No monast.io DEX contracts or liquidity pools — routing is Circle's.
  */
 export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
-  const { address, connect, connecting } = useWallet();
+  const { address, connecting } = useWallet();
+  const { user } = useAuth();
   const { address: wagmiAddress } = useAccount();
   const { walletProvider } = useAppKitProvider("eip155");
 
@@ -30,6 +33,11 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [signInOpen, setSignInOpen] = useState(false);
+
+  // Signed in by email (Circle wallet) but no EIP-1193 signer available.
+  const circleOnly = Boolean(user) && !address;
+
 
   const fromToken = findToken(fromSymbol);
 
@@ -58,9 +66,10 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
 
   const runSwap = async () => {
     if (!address) {
-      await connect();
+      setSignInOpen(true);
       return;
     }
+
     setBusy(true);
     setTxHash(null);
     try {
@@ -152,7 +161,7 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
 
       <Button
         onClick={runSwap}
-        disabled={!address ? connecting : !canSwap}
+        disabled={busy || (Boolean(address) && !canSwap)}
         className="w-full py-6 font-bold gap-2"
       >
         {busy ? (
@@ -161,12 +170,23 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
           </>
         ) : !address ? (
           <>
-            <Wallet className="w-4 h-4" /> {connecting ? "Signing in…" : "Connect wallet to swap"}
+            <Wallet className="w-4 h-4" />{" "}
+            {connecting ? "Signing in…" : circleOnly ? "Connect a wallet to swap" : "Sign in to swap"}
           </>
         ) : (
           `Swap ${fromSymbol} → ${toSymbol}`
         )}
       </Button>
+
+      {circleOnly && (
+        <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+          Your email (Circle) wallet works for buying, selling and escrow. Swapping on Arc Testnet
+          needs a self-custody wallet signer — connect one above to trade.
+        </p>
+      )}
+
+      <SignInChoiceDialog open={signInOpen} onOpenChange={setSignInOpen} />
+
 
       {txHash && (
         <a
