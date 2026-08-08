@@ -1,16 +1,23 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/hooks/useAuth";
 import { SignInChoice } from "@/components/SignInChoice";
 
 const Auth = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const checked = useRef(false);
 
+  // Only bounce visitors who arrive already signed in — a session created
+  // during this visit is handled by the sign-in flow itself (Circle wallet
+  // setup must finish first).
   useEffect(() => {
+    if (loading || checked.current) return;
+    checked.current = true;
     if (user) navigate("/dashboard", { replace: true });
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
+
 
   return (
     <Layout>
