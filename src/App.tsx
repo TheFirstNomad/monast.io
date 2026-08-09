@@ -9,7 +9,7 @@ import Index from "./pages/Index";
 import PostAd from "./pages/PostAd";
 import AdDetail from "./pages/AdDetail";
 import Browse from "./pages/Browse";
-import Swap from "./pages/Swap";
+
 
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
