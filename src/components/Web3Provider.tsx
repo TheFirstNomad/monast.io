@@ -2,6 +2,7 @@ import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import { createAppKit } from "@reown/appkit/react";
+import { ConnectorController } from "@reown/appkit-controllers";
 import { type ReactNode } from "react";
 import { CHAINS } from "@/lib/chains";
 
