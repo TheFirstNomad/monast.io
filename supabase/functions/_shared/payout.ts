@@ -64,7 +64,8 @@ async function walletAddressFor(
     .select("wallet_address, circle_wallet_address")
     .eq("id", userId)
     .maybeSingle();
-  return profile?.circle_wallet_address ?? profile?.wallet_address ?? null;
+  // Self-custody address wins: it is the wallet the user signed in with.
+  return profile?.wallet_address ?? profile?.circle_wallet_address ?? null;
 }
 
 /**

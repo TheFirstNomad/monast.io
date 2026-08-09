@@ -18,7 +18,7 @@ import {
   Truck,
   Clock,
 } from "lucide-react";
-import { CircleFundButton } from "@/components/CircleFundButton";
+import { EscrowFundButton } from "@/components/EscrowFundButton";
 
 interface EscrowRow {
   id: string;
@@ -184,7 +184,7 @@ const EscrowDetail = () => {
               <p className="text-sm text-muted-foreground mb-1">
                 This escrow is waiting for your payment.
               </p>
-              <CircleFundButton
+              <EscrowFundButton
                 escrowId={escrow.id}
                 amount={amount}
                 onFunded={load}
