@@ -1,7 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Bot, Key, Zap, Shield } from "lucide-react";
+import { Bot, Zap, Shield } from "lucide-react";
 
 const BASE = "https://ndsqyhwsjxlhxuylgdal.supabase.co/functions/v1/agent-api";
 
