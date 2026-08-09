@@ -17,9 +17,14 @@ removes those walls:
 - **One marketplace** swaps, goods, and services under a single protocol
   and UI, instead of separate platforms for each.
 
-## What you can do on Monast
+## What you can do on Monast now
 
-- **Swap** secure, non-custodial token swaps settled in USDC on Arc.
 - **Sell goods** list physical products, get paid in USDC, ship anywhere.
 - **Offer services**  freelancers and service providers can list, get hired,
   and get paid in USDC without banking rails or cross-border fees.
+  
+ ## Whats not active but coming soon
+ 
+  - **Swaps with arc appkits
+  - circle user controlled wallets integration 
+  - agentic finance 
