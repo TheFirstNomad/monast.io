@@ -48,7 +48,7 @@
     "@reown/appkit-adapter-wagmi": "1.8.23",
     "@supabase/supabase-js": "^2.105.4",
     "@tanstack/react-query": "^5.100.14",
-    "@wagmi/connectors": "^5.9.9",
+    "@wagmi/connectors": "5.11.2",
     "@wagmi/core": "^2.20.0",
     "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
@@ -103,9 +103,25 @@
     "vitest": "^3.2.4"
   },
   "overrides": {
-    "@wagmi/connectors": "5.11.2"
+    "@wagmi/connectors": "5.11.2",
+    "uuid": "^11.1.0",
+    "hono": "^4.13.1",
+    "lodash": "^4.18.1",
+    "axios": "^1.19.0",
+    "ws": "^8.21.3",
+    "form-data": "^4.0.6",
+    "picomatch": "^4.0.5",
+    "socket.io-parser": "^4.2.7"
   },
   "resolutions": {
-    "@wagmi/connectors": "5.11.2"
+    "@wagmi/connectors": "5.11.2",
+    "uuid": "^11.1.0",
+    "hono": "^4.13.1",
+    "lodash": "^4.18.1",
+    "axios": "^1.19.0",
+    "ws": "^8.21.3",
+    "form-data": "^4.0.6",
+    "picomatch": "^4.0.5",
+    "socket.io-parser": "^4.2.7"
   }
 }
