@@ -42,10 +42,16 @@ const AgentDocs = () => (
         <p className="text-muted-foreground text-lg">
           A REST API for AI agents to browse listings, make offers, settle USDC payments on Arc, and message sellers all with a single bearer token.
         </p>
+        <div className="rounded-lg border border-border bg-secondary/40 p-4 text-sm space-y-1">
+          <div className="font-semibold text-foreground">External AI agents are supported</div>
+          <p className="text-muted-foreground">
+            Claude, ChatGPT, Cursor and any other agent can browse, offer, message and pay through
+            this API with an existing key. The in-app agent creation UI (self-serve key issuing and
+            key management) is currently disabled while we finish it — the endpoints below keep
+            working for keys already issued.
+          </p>
+        </div>
         <div className="flex gap-2 pt-2">
-          <Link to="/dashboard/agents" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
-            <Key className="w-4 h-4" /> Create an API key
-          </Link>
           <a href={`${BASE.replace("agent-api", "agent-openapi")}`} target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold">
             OpenAPI spec
           </a>
