@@ -18,13 +18,27 @@ export interface TreasuryInfo {
  * provisioned the hook returns an error and payment UI must stay disabled,
  * rather than risk sending real USDC somewhere unrecoverable.
  */
-export function useTreasuryAddress(purpose: TreasuryPurpose, chainId?: number) {
+export function useTreasuryAddress(
+  purpose: TreasuryPurpose,
+  chainId?: number,
+  enabled = true,
+) {
   const [data, setData] = useState<TreasuryInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
 
   useEffect(() => {
     let cancelled = false;
+
+    // The backend requires a session, so skip the lookup entirely when the
+    // caller is not ready (e.g. an anonymous visitor browsing a listing).
+    if (!enabled) {
+      setData(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -32,6 +46,7 @@ export function useTreasuryAddress(purpose: TreasuryPurpose, chainId?: number) {
       const { data: res, error: fnError } = await supabase.functions.invoke("treasury-address", {
         body: { purpose, chain_id: chainId },
       });
+
       if (cancelled) return;
 
       if (fnError || !res?.address) {
@@ -56,7 +71,7 @@ export function useTreasuryAddress(purpose: TreasuryPurpose, chainId?: number) {
     return () => {
       cancelled = true;
     };
-  }, [purpose, chainId]);
+  }, [purpose, chainId, enabled]);
 
   return { treasury: data, error, loading };
 }
