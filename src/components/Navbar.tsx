@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
-import { SwapDialog } from "@/components/SwapDialog";
+
 
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
@@ -112,12 +112,7 @@ export const Navbar = () => {
               Pricing
             </Link>
 
-            <SwapDialog>
-              <Button variant="outline" size="sm" className="gap-2 font-semibold">
-                <ArrowLeftRight className="w-4 h-4 text-primary" />
-                Swap
-              </Button>
-            </SwapDialog>
+
 
             {user && <NotificationsBell />}
 
@@ -184,17 +179,12 @@ export const Navbar = () => {
                       <Wallet className="w-4 h-4 mr-2" />
                       {connecting ? "Signing in…" : "Connect wallet"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/auth")}>
-                      <Mail className="w-4 h-4 mr-2" /> Sign in with email
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Explore</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => navigate("/browse")}>
                       <Store className="w-4 h-4 mr-2" /> Browse listings
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/swap")}>
-                      <ArrowLeftRight className="w-4 h-4 mr-2" /> Swap
-                    </DropdownMenuItem>
+
                     <DropdownMenuItem onClick={() => navigate("/pricing")}>
                       <Tag className="w-4 h-4 mr-2" /> Pricing
                     </DropdownMenuItem>
