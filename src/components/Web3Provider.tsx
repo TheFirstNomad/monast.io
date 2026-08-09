@@ -81,6 +81,26 @@ createAppKit({
   },
 });
 
+/**
+ * AppKit still registers an internal "WalletConnect (QR CODE)" connector even with
+ * enableWalletConnect: false. monast.io is direct-connect only, so we strip that
+ * connector out of the modal list whenever it reappears.
+ */
+const stripWalletConnectRow = () => {
+  const isWc = (c: any) => c?.id === "walletConnect" || c?.type === "WALLET_CONNECT";
+  const all = ConnectorController.state.allConnectors;
+  if (all?.some(isWc)) {
+    ConnectorController.state.allConnectors = all.filter((c: any) => !isWc(c));
+  }
+  const list = ConnectorController.state.connectors;
+  if (list?.some(isWc)) {
+    ConnectorController.setConnectors(list.filter((c: any) => !isWc(c)) as any);
+  }
+};
+
+stripWalletConnectRow();
+ConnectorController.subscribeKey("connectors", stripWalletConnectRow);
+
 const queryClient = new QueryClient();
 
 export function Web3Provider({ children }: { children: ReactNode }) {
