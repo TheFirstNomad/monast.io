@@ -27,6 +27,20 @@ const wagmiAdapter = new WagmiAdapter({
   networks: networks as any,
 });
 
+// Wallet list order shown in the connect modal (Reown wallet registry IDs).
+const FEATURED_WALLETS = [
+  // MetaMask
+  "c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96",
+  // OKX Wallet
+  "971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709",
+  // Trust Wallet
+  "4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0",
+  // Coinbase / Base App wallet
+  "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa",
+  // Binance Wallet
+  "8a0ee50d1f22f6651afcae7eb4253e52a3310b32df22797c96c4b39b1f2c8f7d",
+];
+
 createAppKit({
   adapters: [wagmiAdapter],
   networks: networks as any,
@@ -42,6 +56,9 @@ createAppKit({
     "--w3m-accent": "hsl(210, 79%, 55%)",
     "--w3m-border-radius-master": "2px",
   },
+  // Hide the generic "WalletConnect / QR CODE" row at the top of the list.
+  enableWalletConnect: false,
+  featuredWalletIds: FEATURED_WALLETS,
   features: {
     email: false,
     socials: false,
