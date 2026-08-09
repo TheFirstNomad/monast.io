@@ -26,7 +26,6 @@ import {
   Flag,
   ShieldCheck,
   ChevronDown,
-  ChevronDown,
 
   Tag,
   Store,
