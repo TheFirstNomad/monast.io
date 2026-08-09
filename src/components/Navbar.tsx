@@ -236,7 +236,7 @@ export const Navbar = () => {
               links: [
                 { to: "/", label: "Home" },
                 { to: "/browse", label: "Browse" },
-                { to: "/swap", label: "Swap" },
+                
                 { to: "/pricing", label: "Pricing" },
               ],
             },
@@ -245,7 +245,7 @@ export const Navbar = () => {
                   { group: "Account", links: accountLinks.map((l) => ({ to: l.to, label: l.label })) },
                   { group: "Build", links: buildLinks.map((l) => ({ to: l.to, label: l.label })) },
                 ]
-              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in with email" }, { to: "/agents", label: "Agent API docs" }] }]),
+              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in with wallet" }, { to: "/agents", label: "Agent API docs" }] }]),
             ...(showAdmin && adminLinks.length > 0
               ? [{ group: "Admin", links: adminLinks.map((l) => ({ to: l.to, label: l.label })) }]
               : []),
