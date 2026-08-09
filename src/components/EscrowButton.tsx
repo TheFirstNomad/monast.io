@@ -30,6 +30,7 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
   const { treasury, error: treasuryError, loading: treasuryLoading } = useTreasuryAddress(
     "escrow",
     ARC_CHAIN_ID,
+    !!user,
   );
   const busy = isPending || mining || confirming;
 
@@ -38,12 +39,13 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
 
   const buy = async () => {
     try {
-      if (!user) { toast.error("Sign in to buy"); return; }
+      if (!user) { navigate("/auth"); return; }
       if (!address) { await connect(); return; }
       if (!treasury) {
         toast.error(treasuryError ?? "Escrow payments are unavailable right now");
         return;
       }
+
 
       const { data: created, error } = await supabase.functions.invoke("escrow-create", {
         body: { ad_id: adId, chain_id: ARC_CHAIN_ID },

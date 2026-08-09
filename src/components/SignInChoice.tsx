@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Wallet, ShieldCheck, Coins } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
+import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Self-custody sign-in. Connecting a wallet and signing the message creates the
@@ -10,11 +12,19 @@ import { useWallet } from "@/hooks/useWallet";
  */
 export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   const { connect, connecting, address } = useWallet();
+  const { user } = useAuth();
+
+  // `connect()` only opens the wallet modal; the session appears later, once
+  // the user picks a wallet and signs. Wait for that before moving on.
+  useEffect(() => {
+    if (user) onDone?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const connectSelfCustody = async () => {
     await connect();
-    onDone?.();
   };
+
 
   return (
     <div className="text-center">
