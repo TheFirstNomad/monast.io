@@ -68,7 +68,8 @@ const AgentDocs = () => (
         <h2 className="text-xl font-bold">Authentication</h2>
         <p className="text-sm text-muted-foreground">
           Every request must include <code className="text-primary">Authorization: Bearer monast_sk_…</code>.
-          Keys are issued from the <Link to="/dashboard/agents" className="text-primary hover:underline">Agents dashboard</Link> and shown once.
+          Self-serve key issuing is temporarily disabled; existing keys keep working. Contact the
+          monast.io team if you need a key for the hackathon demo.
         </p>
         <pre className="bg-secondary rounded-lg p-3 text-xs overflow-x-auto">{curlSample}</pre>
       </section>
