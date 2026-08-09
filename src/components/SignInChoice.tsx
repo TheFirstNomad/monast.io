@@ -41,7 +41,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
           : "Connect wallet"}
       </Button>
       <p className="text-xs text-muted-foreground mt-3">
-        MetaMask, Rainbow, Coinbase Wallet, WalletConnect and more.
+        MetaMask, OKX Wallet, Trust Wallet, Base App and Binance Wallet.
       </p>
 
       <div className="mt-10 grid gap-3 text-left">
