@@ -25,7 +25,7 @@ export const CHAINS: Record<ChainKey, ChainEntry> = {
     label: "Arc Testnet",
     network: "arc-testnet",
     rpc: "https://rpc.testnet.arc.network",
-    usdc: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d",
+    usdc: "0x3600000000000000000000000000000000000000",
     explorer: "https://testnet.arcscan.app",
     enabled: true,
     appKitChain: "Arc_Testnet",
