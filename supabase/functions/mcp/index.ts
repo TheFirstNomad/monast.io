@@ -142,9 +142,16 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
         .select("*, seller:profiles!ads_seller_id_fkey(display_name, wallet_address, rating, total_ads)")
         .eq("id", String(args?.ad_id)).maybeSingle();
       if (error) return toolError(error.message);
-      if (!data) return toolError("not_found");
+      // Match the public RLS visibility rule: only published ads, unless the
+      // caller's own user owns the listing.
+      const visible = data && (
+        ["active", "reserved", "sold"].includes(String((data as any).status)) ||
+        (agent.owner_user_id && (data as any).seller_id === agent.owner_user_id)
+      );
+      if (!visible) return toolError("not_found");
       return toolResult(data);
     }
+
     case "list_offers": {
       if (!agent.owner_user_id) return toolError("standalone agents have no offer history yet");
       const { data, error } = await svc.from("offers")

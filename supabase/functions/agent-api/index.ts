@@ -65,10 +65,17 @@ Deno.serve(async (req) => {
       const { data, error } = await svc.from("ads")
         .select("*, seller:profiles!ads_seller_id_fkey(display_name, wallet_address, rating, total_ads)")
         .eq("id", id).maybeSingle();
+      // Enforce the same visibility rule as the public RLS policy: published
+      // ads only, unless the caller's own user is the seller.
+      const visible = data && (
+        ["active", "reserved", "sold"].includes(String((data as any).status)) ||
+        (agent.owner_user_id && (data as any).seller_id === agent.owner_user_id)
+      );
       if (error) { status = 400; body = { error: error.message }; }
-      else if (!data) { status = 404; body = { error: "not_found" }; }
+      else if (!visible) { status = 404; body = { error: "not_found" }; }
       else body = data;
     }
+
 
     // /offers GET
     else if (route === "/offers" && method === "GET") {
