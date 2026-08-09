@@ -41,6 +41,14 @@ const FEATURED_WALLETS = [
   "8a0ee50d1f22f6651afcae7eb4253e52a3310b32df22797c96c4b39b1f2c8f7d",
 ];
 
+// Wallets we never want in the list (generic QR pairing + browser wallets we don't support).
+const EXCLUDED_WALLETS = [
+  // WalletConnect (generic QR row)
+  "c1cd6b3b1a1d3e0e0b5a1b4b1e4c5b0b7d3e3b8b0c1f6f3e1e2d5a4c8b9e0f11",
+  // Brave Wallet
+  "ecc4036f814562b41a5268adc86270fba1365471402006302e70169465b7ac18",
+];
+
 createAppKit({
   adapters: [wagmiAdapter],
   networks: networks as any,
@@ -56,8 +64,10 @@ createAppKit({
     "--w3m-accent": "hsl(210, 79%, 55%)",
     "--w3m-border-radius-master": "2px",
   },
-  // Hide the generic "WalletConnect / QR CODE" row at the top of the list.
+  // No generic "WalletConnect / QR CODE" row, no "Search Wallet 70+" list.
   enableWalletConnect: false,
+  allWallets: "HIDE",
+  excludeWalletIds: EXCLUDED_WALLETS,
   featuredWalletIds: FEATURED_WALLETS,
   features: {
     email: false,
@@ -67,6 +77,7 @@ createAppKit({
     receive: false,
     onramp: false,
     history: false,
+    allWallets: false,
   },
 });
 
