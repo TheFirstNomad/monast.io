@@ -25,6 +25,6 @@ removes those walls:
   
  ## Whats not active but coming soon
  
-  - **Swaps with arc appkits
+  - Swaps with arc appkits
   - circle user controlled wallets integration 
   - agentic finance 
