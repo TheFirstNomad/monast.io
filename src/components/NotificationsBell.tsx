@@ -37,7 +37,7 @@ export const NotificationsBell = () => {
     if (!user) { setRows([]); return; }
     load();
     const channel = supabase
-      .channel("notifications-feed")
+      .channel(`notifications-feed-${user.id}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
