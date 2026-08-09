@@ -100,14 +100,8 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
     })();
   }, [isSuccess, pendingHash, escrowId, navigate]);
 
-  if (hasCircleWallet && !address) {
-    return (
-      <Button onClick={buyWithCircle} disabled={creating} className="w-full gap-2 font-semibold py-5">
-        {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-        {creating ? "Preparing escrow…" : `Buy with Escrow — ${amount.toLocaleString()} USDC`}
-      </Button>
-    );
-  }
+
+
 
   // No treasury configured means there is nowhere safe to send funds.
   if (treasuryError) {
