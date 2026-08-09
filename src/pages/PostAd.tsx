@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { categories, conditions } from "@/lib/types";
+import { extraFieldsFor } from "@/lib/categoryFields";
 import { Camera, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +26,9 @@ const PostAd = () => {
     condition: "Used" as string,
     location: "",
   });
+  // Category-specific answers (Apps, Crypto & NFTs). Saved on the ad as `attributes`.
+  const [extras, setExtras] = useState<Record<string, string>>({});
+  const extraFields = extraFieldsFor(form.category);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
@@ -80,6 +84,9 @@ const PostAd = () => {
           condition: form.condition,
           location: form.location,
           images,
+          attributes: Object.fromEntries(
+            extraFields.map((f) => [f.key, (extras[f.key] || "").trim()]).filter(([, v]) => v),
+          ),
         })
         .select()
         .single();
@@ -155,7 +162,7 @@ const PostAd = () => {
             <label className="block text-sm font-medium text-foreground mb-1.5">Category</label>
             <select
               value={form.category}
-              onChange={(e) => setForm({ ...form, category: e.target.value })}
+              onChange={(e) => { setForm({ ...form, category: e.target.value }); setExtras({}); }}
               required
               className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
@@ -167,6 +174,35 @@ const PostAd = () => {
               ))}
             </select>
           </div>
+
+          {extraFields.length > 0 && (
+            <div className="space-y-4 rounded-xl border border-border bg-secondary/30 p-4">
+              <p className="text-xs text-muted-foreground">
+                Extra details buyers expect for {form.category}.
+              </p>
+              {extraFields.map((f) => (
+                <div key={f.key}>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">{f.label}</label>
+                  {f.multiline ? (
+                    <Textarea
+                      placeholder={f.placeholder}
+                      rows={4}
+                      required={f.required}
+                      value={extras[f.key] || ""}
+                      onChange={(e) => setExtras({ ...extras, [f.key]: e.target.value })}
+                    />
+                  ) : (
+                    <Input
+                      placeholder={f.placeholder}
+                      required={f.required}
+                      value={extras[f.key] || ""}
+                      onChange={(e) => setExtras({ ...extras, [f.key]: e.target.value })}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Condition</label>
