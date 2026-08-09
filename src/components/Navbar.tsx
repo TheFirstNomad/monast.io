@@ -26,8 +26,8 @@ import {
   Flag,
   ShieldCheck,
   ChevronDown,
-  ArrowLeftRight,
-  Mail,
+  ChevronDown,
+
   Tag,
   Store,
 } from "lucide-react";
