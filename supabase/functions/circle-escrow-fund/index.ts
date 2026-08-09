@@ -23,7 +23,7 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // Arc-native: only Arc networks are fundable.
 const ARC_TESTNET_BLOCKCHAIN = Deno.env.get("CIRCLE_ARC_TESTNET_BLOCKCHAIN") ?? "ARC-TESTNET";
 const CIRCLE_CHAINS: Record<string, { chainId: number; usdc: string }> = {
-  [ARC_TESTNET_BLOCKCHAIN]: { chainId: 5042002, usdc: "0x75faF114eafb1BDbe2F0316DF893fd58CE46AA4d" },
+  [ARC_TESTNET_BLOCKCHAIN]: { chainId: 5042002, usdc: "0x3600000000000000000000000000000000000000" },
 };
 
 async function circle(path: string, init: RequestInit = {}) {

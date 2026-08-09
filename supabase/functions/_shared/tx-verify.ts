@@ -12,7 +12,7 @@ interface ChainConf {
 // claimed on any other network is rejected rather than silently trusted.
 // Arc Mainnet stays commented out until its USDC contract is published.
 const CHAINS: Record<number, ChainConf> = {
-  5042002: { rpc: "https://rpc.testnet.arc.network", usdc: "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d" },
+  5042002: { rpc: "https://rpc.testnet.arc.network", usdc: "0x3600000000000000000000000000000000000000" },
 };
 
 
