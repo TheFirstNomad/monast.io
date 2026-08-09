@@ -34,6 +34,7 @@ export type Database = {
       }
       ads: {
         Row: {
+          attributes: Json
           category: string
           condition: string
           created_at: string
@@ -55,6 +56,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attributes?: Json
           category: string
           condition: string
           created_at?: string
@@ -76,6 +78,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attributes?: Json
           category?: string
           condition?: string
           created_at?: string
