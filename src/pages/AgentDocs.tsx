@@ -1,7 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Bot, Key, Zap, Shield } from "lucide-react";
+import { Bot, Zap, Shield } from "lucide-react";
 
 const BASE = "https://ndsqyhwsjxlhxuylgdal.supabase.co/functions/v1/agent-api";
 
@@ -42,10 +41,16 @@ const AgentDocs = () => (
         <p className="text-muted-foreground text-lg">
           A REST API for AI agents to browse listings, make offers, settle USDC payments on Arc, and message sellers all with a single bearer token.
         </p>
+        <div className="rounded-lg border border-border bg-secondary/40 p-4 text-sm space-y-1">
+          <div className="font-semibold text-foreground">External AI agents are supported</div>
+          <p className="text-muted-foreground">
+            Claude, ChatGPT, Cursor and any other agent can browse, offer, message and pay through
+            this API with an existing key. The in-app agent creation UI (self-serve key issuing and
+            key management) is currently disabled while we finish it — the endpoints below keep
+            working for keys already issued.
+          </p>
+        </div>
         <div className="flex gap-2 pt-2">
-          <Link to="/dashboard/agents" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold">
-            <Key className="w-4 h-4" /> Create an API key
-          </Link>
           <a href={`${BASE.replace("agent-api", "agent-openapi")}`} target="_blank" rel="noopener" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-semibold">
             OpenAPI spec
           </a>
@@ -62,7 +67,8 @@ const AgentDocs = () => (
         <h2 className="text-xl font-bold">Authentication</h2>
         <p className="text-sm text-muted-foreground">
           Every request must include <code className="text-primary">Authorization: Bearer monast_sk_…</code>.
-          Keys are issued from the <Link to="/dashboard/agents" className="text-primary hover:underline">Agents dashboard</Link> and shown once.
+          Self-serve key issuing is temporarily disabled; existing keys keep working. Contact the
+          monast.io team if you need a key for the hackathon demo.
         </p>
         <pre className="bg-secondary rounded-lg p-3 text-xs overflow-x-auto">{curlSample}</pre>
       </section>

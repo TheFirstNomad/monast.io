@@ -19,7 +19,6 @@ import {
   Receipt,
   LogOut,
   LayoutDashboard,
-  Bot,
   Heart,
   Banknote,
   Gavel,
@@ -68,11 +67,6 @@ export const Navbar = () => {
     { to: "/favorites", label: "Saved items", Icon: Heart },
     { to: "/messages", label: "Messages", Icon: MessageCircle },
     { to: "/transactions", label: "Transactions", Icon: Receipt },
-  ];
-
-  const buildLinks = [
-    { to: "/dashboard/agents", label: "Agents", Icon: Bot },
-    { to: "/agents", label: "Agent API docs", Icon: Bot },
   ];
 
   const submitSearch = (e: React.FormEvent) => {
@@ -148,13 +142,6 @@ export const Navbar = () => {
                         )}
                       </DropdownMenuItem>
                     ))}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuLabel className="text-xs text-muted-foreground">Build</DropdownMenuLabel>
-                    {buildLinks.map(({ to, label, Icon }) => (
-                      <DropdownMenuItem key={to} onClick={() => navigate(to)}>
-                        <Icon className="w-4 h-4 mr-2" /> {label}
-                      </DropdownMenuItem>
-                    ))}
                     {showAdmin && adminLinks.length > 0 && (
                       <>
                         <DropdownMenuSeparator />
@@ -186,9 +173,6 @@ export const Navbar = () => {
 
                     <DropdownMenuItem onClick={() => navigate("/pricing")}>
                       <Tag className="w-4 h-4 mr-2" /> Pricing
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/agents")}>
-                      <Bot className="w-4 h-4 mr-2" /> Agent API docs
                     </DropdownMenuItem>
                   </>
                 )}
@@ -243,9 +227,8 @@ export const Navbar = () => {
             ...(signedIn
               ? [
                   { group: "Account", links: accountLinks.map((l) => ({ to: l.to, label: l.label })) },
-                  { group: "Build", links: buildLinks.map((l) => ({ to: l.to, label: l.label })) },
                 ]
-              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in with wallet" }, { to: "/agents", label: "Agent API docs" }] }]),
+              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in with wallet" }] }]),
             ...(showAdmin && adminLinks.length > 0
               ? [{ group: "Admin", links: adminLinks.map((l) => ({ to: l.to, label: l.label })) }]
               : []),

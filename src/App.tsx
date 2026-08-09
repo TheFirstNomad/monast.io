@@ -17,7 +17,6 @@ import Messages from "./pages/Messages";
 import Transactions from "./pages/Transactions";
 import SellerProfile from "./pages/SellerProfile";
 import NotFound from "./pages/NotFound";
-import Agents from "./pages/Agents";
 import AgentDocs from "./pages/AgentDocs";
 import Pricing from "./pages/Pricing";
 import Promote from "./pages/Promote";
@@ -54,7 +53,6 @@ const App = () => (
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/seller/:id" element={<SellerProfile />} />
               <Route path="/agents" element={<AgentDocs />} />
-              <Route path="/dashboard/agents" element={<Agents />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/publish/:adId" element={<PublishAd />} />
               <Route path="/promote/:adId" element={<Promote />} />

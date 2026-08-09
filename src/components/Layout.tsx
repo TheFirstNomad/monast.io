@@ -23,11 +23,10 @@ const FOOTER_LINKS: { heading: string; links: { to: string; label: string }[] }[
     ],
   },
   {
-    heading: "Agents & API",
+    heading: "Activity",
     links: [
-      { to: "/agents", label: "Agent API docs" },
-      { to: "/dashboard/agents", label: "Manage agent keys" },
       { to: "/transactions", label: "Transactions" },
+      { to: "/messages", label: "Messages" },
     ],
   },
 ];

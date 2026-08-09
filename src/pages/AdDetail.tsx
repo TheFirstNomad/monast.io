@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { attributeLabel } from "@/lib/categoryFields";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -159,6 +160,24 @@ const AdDetail = () => {
               <h2 className="text-lg font-semibold text-foreground mb-3">Description</h2>
               <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">{ad.description}</p>
             </div>
+
+            {Object.entries((ad as any).attributes ?? {}).filter(([, v]) => v).length > 0 && (
+              <div className="mt-6">
+                <h2 className="text-lg font-semibold text-foreground mb-3">Details</h2>
+                <dl className="space-y-3">
+                  {Object.entries((ad as any).attributes as Record<string, string>)
+                    .filter(([, v]) => v)
+                    .map(([k, v]) => (
+                      <div key={k}>
+                        <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                          {attributeLabel(k)}
+                        </dt>
+                        <dd className="text-sm text-foreground whitespace-pre-line break-words">{v}</dd>
+                      </div>
+                    ))}
+                </dl>
+              </div>
+            )}
           </div>
 
           <div className="md:col-span-2 space-y-4">

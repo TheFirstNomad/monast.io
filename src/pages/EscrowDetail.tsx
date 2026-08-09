@@ -19,6 +19,8 @@ import {
   Clock,
 } from "lucide-react";
 import { EscrowFundButton } from "@/components/EscrowFundButton";
+import { ChatDialog } from "@/components/ChatDialog";
+import { MessageCircle } from "lucide-react";
 
 interface EscrowRow {
   id: string;
@@ -54,6 +56,7 @@ const EscrowDetail = () => {
   const [action, setAction] = useState<string | null>(null);
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [reason, setReason] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
 
   const load = async () => {
     if (!id) return;
@@ -178,6 +181,37 @@ const EscrowDetail = () => {
           </Note>
         )}
 
+        {(isBuyer || isSeller) && (
+          <div className="bg-card border border-border rounded-2xl p-5 mb-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-primary" />
+              <h2 className="font-semibold">Delivery & communication</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Agree on delivery and share proof (tracking number, screenshots, transfer details,
+              credentials) in the chat for this order. Messages cannot be deleted by either side, so
+              the thread is the record an arbitrator reviews if you open a dispute.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setChatOpen(true)} className="gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Open chat with {isBuyer ? "seller" : "buyer"}
+              </Button>
+              {canDispute && (
+                <Button
+                  variant="ghost"
+                  onClick={() => call("escrow-dispute", "Dispute")}
+                  disabled={!!action}
+                  className="gap-2"
+                >
+                  <AlertTriangle className="w-4 h-4" />
+                  Item not as promised? Open a dispute
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
           {isBuyer && escrow.status === "created" && (
             <>
@@ -283,6 +317,16 @@ const EscrowDetail = () => {
           )}
         </div>
       </div>
+
+      {(isBuyer || isSeller) && (
+        <ChatDialog
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          adId={escrow.ad_id}
+          sellerId={isBuyer ? escrow.seller_id : escrow.buyer_id}
+          adTitle={adTitle || "Order chat"}
+        />
+      )}
     </Layout>
   );
 };
