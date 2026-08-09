@@ -46,7 +46,6 @@ const App = () => (
               <Route path="/post-ad" element={<PostAd />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/browse" element={<Browse />} />
-              <Route path="/swap" element={<Swap />} />
 
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/favorites" element={<Favorites />} />
