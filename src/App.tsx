@@ -7,6 +7,7 @@ import { WalletProvider } from "@/hooks/useWallet";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import Index from "./pages/Index";
 import PostAd from "./pages/PostAd";
+import EditAd from "./pages/EditAd";
 import AdDetail from "./pages/AdDetail";
 import Browse from "./pages/Browse";
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/post-ad" element={<PostAd />} />
+              <Route path="/edit-ad/:id" element={<EditAd />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/browse" element={<Browse />} />
 
