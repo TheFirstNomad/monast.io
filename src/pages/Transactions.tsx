@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink } from "lucide-react";
@@ -19,14 +21,11 @@ interface Payment {
 }
 
 const Transactions = () => {
-  const { user, loading } = useAuth();
+  const { user, resolving } = useRequireAuth();
   const navigate = useNavigate();
   const [purchases, setPurchases] = useState<Payment[]>([]);
   const [sales, setSales] = useState<Payment[]>([]);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -57,6 +56,7 @@ const Transactions = () => {
     return rows.map((r) => ({ ...r, ad: map.get(r.ad_id) || null }));
   };
 
+  if (resolving) return <AuthResolving />;
   if (!user) return null;
 
   const renderList = (rows: Payment[], emptyText: string) =>

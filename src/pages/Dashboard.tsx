@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Plus, Package, LogOut, Sparkles, Banknote } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { AuthResolving } from "@/components/AuthResolving";
 import { useWallet } from "@/hooks/useWallet";
 import { isOwnerWallet } from "@/lib/owner";
 import { DbAd } from "@/lib/types";
@@ -12,16 +14,14 @@ import { OffersInbox } from "@/components/OffersInbox";
 import { EscrowsList } from "@/components/EscrowsList";
 
 const Dashboard = () => {
-  const { user, loading, signOut } = useAuth();
+  const { signOut } = useAuth();
+  const { user, resolving } = useRequireAuth();
   const { address } = useWallet();
 
   const navigate = useNavigate();
   const [myAds, setMyAds] = useState<DbAd[]>([]);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -39,6 +39,7 @@ const Dashboard = () => {
       .then(({ data }) => setProfile(data));
   }, [user]);
 
+  if (resolving) return <AuthResolving />;
   if (!user) return null;
 
   return (

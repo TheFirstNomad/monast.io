@@ -6,19 +6,18 @@ import { Button } from "@/components/ui/button";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { AuthResolving } from "@/components/AuthResolving";
 import { useFavorites } from "@/hooks/useFavorites";
 import { DbAd } from "@/lib/types";
 
 const Favorites = () => {
-  const { user, loading } = useAuth();
+  const { user, resolving } = useRequireAuth();
   const { ids } = useFavorites();
   const navigate = useNavigate();
   const [ads, setAds] = useState<DbAd[]>([]);
   const [busy, setBusy] = useState(true);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) return;
