@@ -242,6 +242,17 @@ const AdDetail = () => {
                 </div>
               ) : user && user.id === ad.seller_id ? (
                 <>
+                  <Link to={`/edit-ad/${ad.id}`} className="block">
+                    <Button variant="outline" className="w-full gap-2 py-5">
+                      <Pencil className="w-4 h-4" />
+                      Edit Listing
+                    </Button>
+                  </Link>
+                  {openEscrowId && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Item name and price are locked while an active escrow exists.
+                    </p>
+                  )}
                   <Button
                     onClick={markSold}
                     disabled={marking || !!openEscrowId}
