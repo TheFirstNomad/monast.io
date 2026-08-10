@@ -6,6 +6,7 @@ import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink } from "lucide-react";
+import { getExplorerUrl, getExplorerName, PaymentChainId } from "@/lib/arcAppKit";
 
 interface Payment {
   id: string;
@@ -91,12 +92,12 @@ const Transactions = () => {
               </div>
             </div>
             <a
-              href={`https://arbiscan.io/tx/${p.tx_hash}`}
+              href={getExplorerUrl((p.chain_id as PaymentChainId) ?? 5042002, p.tx_hash)}
               target="_blank"
               rel="noreferrer"
               className="text-xs text-primary hover:underline flex items-center gap-1"
             >
-              Tx <ExternalLink className="w-3 h-3" />
+              {getExplorerName((p.chain_id as PaymentChainId) ?? 5042002)} <ExternalLink className="w-3 h-3" />
             </a>
           </div>
         ))}

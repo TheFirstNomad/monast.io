@@ -72,7 +72,7 @@ const Messages = () => {
             {convs.map((c) => (
               <Link
                 key={`${c.ad_id}-${c.other_id}`}
-                to={`/ad/${c.ad_id}`}
+                to={`/messages/${c.ad_id}/${c.other_id}`}
                 className="flex items-center gap-3 bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition"
               >
                 <img src={c.ad_image || "/placeholder.svg"} alt="" className="w-12 h-12 rounded-lg object-cover bg-secondary" />
