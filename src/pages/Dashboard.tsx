@@ -135,18 +135,25 @@ const Dashboard = () => {
                   </div>
                 </Link>
 
-                {/* An unpaid listing is invisible to buyers until the fee clears. */}
-                {ad.status === "pending_fee" ? (
-                  <Link to={`/publish/${ad.id}`} className="shrink-0">
-                    <Button size="sm" className="gap-1">
-                      <Sparkles className="w-3.5 h-3.5" /> Publish
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link to={`/edit-ad/${ad.id}`}>
+                    <Button size="sm" variant="outline" className="gap-1">
+                      <Pencil className="w-3.5 h-3.5" /> Edit
                     </Button>
                   </Link>
-                ) : (
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded capitalize shrink-0">
-                    {ad.status}
-                  </span>
-                )}
+                  {/* An unpaid listing is invisible to buyers until the fee clears. */}
+                  {ad.status === "pending_fee" ? (
+                    <Link to={`/publish/${ad.id}`}>
+                      <Button size="sm" className="gap-1">
+                        <Sparkles className="w-3.5 h-3.5" /> Publish
+                      </Button>
+                    </Link>
+                  ) : (
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded capitalize">
+                      {ad.status}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>
