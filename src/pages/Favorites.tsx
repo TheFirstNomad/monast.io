@@ -38,8 +38,10 @@ const Favorites = () => {
         setBusy(false);
       });
   }, [user, ids]);
+  if (resolving) return <AuthResolving />;
 
   return (
+
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-foreground mb-1 flex items-center gap-2">
