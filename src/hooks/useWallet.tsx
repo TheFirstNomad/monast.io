@@ -45,6 +45,8 @@ interface WalletCtx {
   rehydrationError: string | null;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  /** Restore or complete the Supabase session for the connected wallet. */
+  ensureSession: () => Promise<void>;
 }
 
 const Ctx = createContext<WalletCtx>({
@@ -54,6 +56,7 @@ const Ctx = createContext<WalletCtx>({
   rehydrationError: null,
   connect: async () => {},
   disconnect: async () => {},
+  ensureSession: async () => {},
 });
 
 function buildSiweMessage(address: string, nonce: string) {
