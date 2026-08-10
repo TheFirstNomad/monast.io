@@ -142,7 +142,7 @@ const EditAd = () => {
         patch.price_usdc = Number(form.price);
       }
 
-      const { error } = await supabase.from("ads").update(patch).eq("id", id);
+      const { error } = await supabase.from("ads").update(patch as never).eq("id", id);
       if (error) throw error;
       toast({
         title: "Ad updated",
