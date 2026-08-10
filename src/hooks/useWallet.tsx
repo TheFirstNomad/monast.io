@@ -126,6 +126,47 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     [signMessageAsync, disconnectAsync],
   );
 
+  // Core sync: reuse the existing session when it belongs to this wallet,
+  // otherwise run SIWE so a connected wallet always ends up authenticated.
+  const syncSession = useCallback(
+    async (normalizedAddress: string) => {
+      if (syncing.current) return;
+      syncing.current = true;
+      setRehydrationStatus("checking");
+      setRehydrationError(null);
+
+      try {
+        const { data } = await supabase.auth.getSession();
+        const sessionWallet = (data.session?.user?.user_metadata as any)?.wallet_address as
+          | string
+          | undefined;
+
+        if (data.session && addressesEqual(sessionWallet, normalizedAddress)) {
+          await supabase
+            .from("profiles")
+            .update({ wallet_address: normalizedAddress })
+            .eq("id", data.session.user.id);
+          setRehydrationStatus("rehydrated");
+          return;
+        }
+
+        if (data.session) {
+          await supabase.auth.signOut();
+        }
+
+        setRehydrationStatus("re-signed");
+        await doSiwe(normalizedAddress);
+      } catch (err: any) {
+        console.error("[Wallet] Rehydration failed:", err?.message || err);
+        setRehydrationStatus("failed");
+        setRehydrationError(err?.message || "Session recovery failed");
+      } finally {
+        syncing.current = false;
+      }
+    },
+    [doSiwe],
+  );
+
   // When a wallet connects, rehydrate session if it matches, otherwise run SIWE
   useEffect(() => {
     if (!isConnected || !address) {
@@ -138,46 +179,21 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     if (!normalizedAddress) return;
     if (handledAddress.current && addressesEqual(handledAddress.current, normalizedAddress)) return;
     handledAddress.current = normalizedAddress;
+    void syncSession(normalizedAddress);
+  }, [isConnected, address, syncSession]);
 
-    (async () => {
-      setRehydrationStatus("checking");
-      setRehydrationError(null);
-      console.log("[Wallet] Checking session for address:", normalizedAddress);
+  /**
+   * Called by route guards: a wallet is connected but there is still no
+   * session (expired token, earlier rejected signature, fresh tab). Retry the
+   * sync instead of bouncing the visitor to the sign-in page.
+   */
+  const ensureSession = useCallback(async () => {
+    const normalizedAddress = normalizeAddress(address);
+    if (!isConnected || !normalizedAddress || syncing.current) return;
+    handledAddress.current = normalizedAddress;
+    await syncSession(normalizedAddress);
+  }, [address, isConnected, syncSession]);
 
-      try {
-        const { data } = await supabase.auth.getSession();
-        const sessionWallet = (data.session?.user?.user_metadata as any)?.wallet_address as
-          | string
-          | undefined;
-
-        console.log("[Wallet] Existing session wallet:", sessionWallet || "none");
-
-        if (data.session && addressesEqual(sessionWallet, normalizedAddress)) {
-          console.log("[Wallet] Same wallet detected — rehydrating session");
-          await supabase
-            .from("profiles")
-            .update({ wallet_address: normalizedAddress })
-            .eq("id", data.session.user.id);
-          console.log("[Wallet] Session rehydrated successfully for", normalizedAddress);
-          setRehydrationStatus("rehydrated");
-          return;
-        }
-
-        if (data.session) {
-          console.warn("[Wallet] Different wallet than active session — signing out before re-authenticating");
-          await supabase.auth.signOut();
-        }
-
-        console.log("[Wallet] No matching session — starting SIWE sign-in");
-        setRehydrationStatus("re-signed");
-        await doSiwe(normalizedAddress);
-      } catch (err: any) {
-        console.error("[Wallet] Rehydration failed:", err?.message || err);
-        setRehydrationStatus("failed");
-        setRehydrationError(err?.message || "Session recovery failed");
-      }
-    })();
-  }, [isConnected, address, doSiwe]);
 
   const connect = useCallback(async () => {
     try {
