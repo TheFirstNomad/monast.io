@@ -84,6 +84,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [rehydrationStatus, setRehydrationStatus] = useState<RehydrationStatus>("idle");
   const [rehydrationError, setRehydrationError] = useState<string | null>(null);
   const handledAddress = useRef<string | null>(null);
+  const syncing = useRef(false);
+
 
   const doSiwe = useCallback(
     async (addr: string) => {
