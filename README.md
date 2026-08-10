@@ -17,7 +17,7 @@ removes those walls:
 - **One marketplace** swaps, goods, and services under a single protocol
   and UI, instead of separate platforms for each.
 
-## What you can do on Monast now
+## What you can do on Monast now 
 
 - **Sell goods** list physical products, get paid in USDC, ship anywhere.
 - **Offer services**  freelancers and service providers can list, get hired,
@@ -27,4 +27,4 @@ removes those walls:
  
   - Swaps with arc appkits
   - circle user controlled wallets integration 
-  - agentic finance 
+  - agentic commerce v1 
