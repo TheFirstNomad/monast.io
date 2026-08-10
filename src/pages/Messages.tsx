@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { AuthResolving } from "@/components/AuthResolving";
 import { MessageCircle } from "lucide-react";
 
 interface Conv {
@@ -16,13 +17,9 @@ interface Conv {
 }
 
 const Messages = () => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, resolving } = useRequireAuth();
   const [convs, setConvs] = useState<Conv[]>([]);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -57,6 +54,7 @@ const Messages = () => {
     })();
   }, [user]);
 
+  if (resolving) return <AuthResolving />;
   if (!user) return null;
 
   return (
@@ -74,7 +72,7 @@ const Messages = () => {
             {convs.map((c) => (
               <Link
                 key={`${c.ad_id}-${c.other_id}`}
-                to={`/ad/${c.ad_id}`}
+                to={`/messages/${c.ad_id}/${c.other_id}`}
                 className="flex items-center gap-3 bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition"
               >
                 <img src={c.ad_image || "/placeholder.svg"} alt="" className="w-12 h-12 rounded-lg object-cover bg-secondary" />

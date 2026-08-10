@@ -1,24 +1,21 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { AuthResolving } from "@/components/AuthResolving";
 import { useFavorites } from "@/hooks/useFavorites";
 import { DbAd } from "@/lib/types";
 
 const Favorites = () => {
-  const { user, loading } = useAuth();
+  const { user, resolving } = useRequireAuth();
   const { ids } = useFavorites();
-  const navigate = useNavigate();
   const [ads, setAds] = useState<DbAd[]>([]);
   const [busy, setBusy] = useState(true);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -39,8 +36,10 @@ const Favorites = () => {
         setBusy(false);
       });
   }, [user, ids]);
+  if (resolving) return <AuthResolving />;
 
   return (
+
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-foreground mb-1 flex items-center gap-2">

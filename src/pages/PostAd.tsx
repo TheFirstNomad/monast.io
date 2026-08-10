@@ -8,12 +8,13 @@ import { categories, conditions } from "@/lib/types";
 import { extraFieldsFor } from "@/lib/categoryFields";
 import { Camera, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
 
 const PostAd = () => {
   const { toast } = useToast();
-  const { user, loading } = useAuth();
+  const { user, resolving } = useRequireAuth();
   const navigate = useNavigate();
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -30,9 +31,6 @@ const PostAd = () => {
   const [extras, setExtras] = useState<Record<string, string>>({});
   const extraFields = extraFieldsFor(form.category);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +103,7 @@ const PostAd = () => {
     }
   };
 
+  if (resolving) return <AuthResolving />;
   if (!user) return null;
 
   return (

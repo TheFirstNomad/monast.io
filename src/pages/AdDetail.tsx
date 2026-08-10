@@ -25,10 +25,28 @@ const AdDetail = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
   const [marking, setMarking] = useState(false);
+  // An open escrow means buyer funds are still locked for this ad — the seller
+  // must not be able to close the listing out from under them.
+  const OPEN_ESCROW_STATUSES = ["created", "funded", "disputed"];
+  const [openEscrowId, setOpenEscrowId] = useState<string | null>(null);
 
   const markSold = async () => {
     if (!ad) return;
     setMarking(true);
+    // Re-check at click time so a stale page can't slip through.
+    const { data: live } = await supabase
+      .from("escrows")
+      .select("id")
+      .eq("ad_id", ad.id)
+      .in("status", OPEN_ESCROW_STATUSES)
+      .limit(1)
+      .maybeSingle();
+    if (live) {
+      setOpenEscrowId(live.id);
+      setMarking(false);
+      toast.error("Cannot mark as sold while an active escrow exists");
+      return;
+    }
     const { error } = await supabase
       .from("ads")
       .update({ status: "sold", sold_at: new Date().toISOString() })
@@ -53,6 +71,20 @@ const AdDetail = () => {
         setLoading(false);
       });
   }, [id]);
+
+  // Does this ad have an escrow still in flight?
+  useEffect(() => {
+    if (!id || !user) return;
+    supabase
+      .from("escrows")
+      .select("id")
+      .eq("ad_id", id)
+      .in("status", OPEN_ESCROW_STATUSES)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setOpenEscrowId(data?.id ?? null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user]);
 
   if (loading) {
     return (
@@ -210,10 +242,22 @@ const AdDetail = () => {
                 </div>
               ) : user && user.id === ad.seller_id ? (
                 <>
-                  <Button onClick={markSold} disabled={marking} className="w-full gap-2 font-semibold py-5">
+                  <Button
+                    onClick={markSold}
+                    disabled={marking || !!openEscrowId}
+                    className="w-full gap-2 font-semibold py-5"
+                  >
                     <CheckCircle2 className="w-4 h-4" />
                     {marking ? "Marking..." : "Mark as Sold"}
                   </Button>
+                  {openEscrowId && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Cannot mark as sold while an active escrow exists.{" "}
+                      <Link to={`/escrow/${openEscrowId}`} className="text-primary hover:underline">
+                        View escrow
+                      </Link>
+                    </p>
+                  )}
                   <Link to={`/promote/${ad.id}`} className="block">
                     <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
                       <Sparkles className="w-4 h-4" />

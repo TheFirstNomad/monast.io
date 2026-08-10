@@ -14,6 +14,7 @@ import Browse from "./pages/Browse";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Messages from "./pages/Messages";
+import MessageThread from "./pages/MessageThread";
 import Transactions from "./pages/Transactions";
 import SellerProfile from "./pages/SellerProfile";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="/favorites" element={<Favorites />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/messages" element={<Messages />} />
+              <Route path="/messages/:adId/:otherId" element={<MessageThread />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/seller/:id" element={<SellerProfile />} />
               <Route path="/agents" element={<AgentDocs />} />

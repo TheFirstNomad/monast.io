@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, Save, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { AuthResolving } from "@/components/AuthResolving";
 import { useSeo } from "@/hooks/useSeo";
 import { toast } from "sonner";
 
@@ -20,8 +21,7 @@ const Settings = () => {
     noindex: true,
   });
 
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, resolving } = useRequireAuth();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -29,9 +29,6 @@ const Settings = () => {
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth", { replace: true });
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -83,6 +80,7 @@ const Settings = () => {
     toast.success("Profile updated");
   };
 
+  if (resolving) return <AuthResolving />;
   if (!user) return null;
 
   return (
