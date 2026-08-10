@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { Link } from "react-router-dom";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +21,6 @@ interface Payment {
 
 const Transactions = () => {
   const { user, resolving } = useRequireAuth();
-  const navigate = useNavigate();
   const [purchases, setPurchases] = useState<Payment[]>([]);
   const [sales, setSales] = useState<Payment[]>([]);
 

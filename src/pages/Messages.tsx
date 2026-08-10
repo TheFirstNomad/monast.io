@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { MessageCircle } from "lucide-react";
@@ -19,7 +18,6 @@ interface Conv {
 
 const Messages = () => {
   const { user, resolving } = useRequireAuth();
-  const navigate = useNavigate();
   const [convs, setConvs] = useState<Conv[]>([]);
 
 

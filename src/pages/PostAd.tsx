@@ -8,7 +8,6 @@ import { categories, conditions } from "@/lib/types";
 import { extraFieldsFor } from "@/lib/categoryFields";
 import { Camera, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";

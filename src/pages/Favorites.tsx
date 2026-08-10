@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { useFavorites } from "@/hooks/useFavorites";
@@ -14,7 +13,6 @@ import { DbAd } from "@/lib/types";
 const Favorites = () => {
   const { user, resolving } = useRequireAuth();
   const { ids } = useFavorites();
-  const navigate = useNavigate();
   const [ads, setAds] = useState<DbAd[]>([]);
   const [busy, setBusy] = useState(true);
 
