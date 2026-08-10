@@ -235,6 +235,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         rehydrationError,
         connect,
         disconnect,
+        ensureSession,
+
       }}
     >
       {children}
