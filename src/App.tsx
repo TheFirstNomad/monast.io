@@ -45,6 +45,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/post-ad" element={<PostAd />} />
+              <Route path="/edit-ad/:id" element={<EditAd />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/browse" element={<Browse />} />
 
