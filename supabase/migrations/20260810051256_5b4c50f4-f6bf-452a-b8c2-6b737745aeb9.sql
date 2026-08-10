@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.lock_ad_terms_during_escrow() FROM PUBLIC, anon, authenticated;
