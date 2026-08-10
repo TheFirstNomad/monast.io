@@ -7,6 +7,7 @@ import { WalletProvider } from "@/hooks/useWallet";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import Index from "./pages/Index";
 import PostAd from "./pages/PostAd";
+import EditAd from "./pages/EditAd";
 import AdDetail from "./pages/AdDetail";
 import Browse from "./pages/Browse";
 
