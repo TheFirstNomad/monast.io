@@ -305,6 +305,15 @@ const AdDetail = () => {
                       </Link>
                     </p>
                   )}
+                  <Button
+                    onClick={removeListing}
+                    disabled={removing || !!openEscrowId}
+                    variant="outline"
+                    className="w-full gap-2 py-5 border-destructive/40 text-destructive hover:bg-destructive/5"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {removing ? "Removing..." : "Remove listing"}
+                  </Button>
                   <Link to={`/promote/${ad.id}`} className="block">
                     <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
                       <Sparkles className="w-4 h-4" />
