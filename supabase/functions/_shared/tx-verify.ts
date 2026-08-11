@@ -3,6 +3,9 @@
 // to `expectedTo` for at least `expectedAmountUsdc` (6 decimals),
 // and (when provided) came from `expectedFrom`.
 
+import { toBaseUnits } from "./fees.ts";
+
+
 interface ChainConf {
   rpc: string;
   usdc: string; // lowercase
