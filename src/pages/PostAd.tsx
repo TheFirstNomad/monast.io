@@ -268,7 +268,11 @@ const PostAd = () => {
             disabled={submitting || uploading}
           >
             <Upload className="w-5 h-5" />
-            {submitting ? "Posting..." : "Post Ad for Free"}
+            {submitting
+              ? "Posting..."
+              : LISTING_FEE_USDC > 0
+                ? `Post Ad — ${LISTING_FEE_USDC} USDC`
+                : "Post Ad for Free"}
           </Button>
         </form>
       </div>
