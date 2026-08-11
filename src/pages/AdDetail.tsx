@@ -266,7 +266,12 @@ const AdDetail = () => {
             </div>
 
             <div className="bg-card rounded-xl border border-border p-5 space-y-3">
-              {ad.status === "sold" ? (
+              {ad.status === "removed" ? (
+                <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-muted-foreground">
+                  <Trash2 className="w-4 h-4" />
+                  This listing has been removed
+                </div>
+              ) : ad.status === "sold" ? (
                 <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-foreground">
                   <CheckCircle2 className="w-4 h-4 text-primary" />
                   This item has been sold
