@@ -111,9 +111,12 @@ export function circleBlockchain(chainId: number): string {
   return b;
 }
 
-/** USDC token contract per chain, lowercase. Mirrors _shared/tx-verify.ts. */
+/** USDC token contract per chain, lowercase.
+ *  Source of truth: src/lib/chains.ts (frontend) and _shared/tx-verify.ts
+ *  (deposit verification). These three MUST stay identical — this map is the
+ *  address Circle uses to move real funds on release, refund and fee sweeps. */
 export const USDC_ADDRESS: Record<number, string> = {
-  5042002: "0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d",
+  5042002: "0x3600000000000000000000000000000000000000",
 };
 
 export function usdcAddress(chainId: number): string {

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DbAd } from "@/lib/types";
-import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil } from "lucide-react";
+import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil, Trash2 } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
 import { EscrowButton } from "@/components/EscrowButton";
@@ -56,6 +56,37 @@ const AdDetail = () => {
     else {
       toast.success("Marked as sold");
       setAd({ ...ad, status: "sold" });
+    }
+  };
+
+  const [removing, setRemoving] = useState(false);
+
+  const removeListing = async () => {
+    if (!ad) return;
+    setRemoving(true);
+    // Re-check at click time so a stale page can't slip through.
+    const { data: live } = await supabase
+      .from("escrows")
+      .select("id")
+      .eq("ad_id", ad.id)
+      .in("status", OPEN_ESCROW_STATUSES)
+      .limit(1)
+      .maybeSingle();
+    if (live) {
+      setOpenEscrowId(live.id);
+      setRemoving(false);
+      toast.error("Cannot remove this listing while an active escrow exists");
+      return;
+    }
+    const { error } = await supabase
+      .from("ads")
+      .update({ status: "removed" })
+      .eq("id", ad.id);
+    setRemoving(false);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Listing removed");
+      setAd({ ...ad, status: "removed" });
     }
   };
 
@@ -235,7 +266,12 @@ const AdDetail = () => {
             </div>
 
             <div className="bg-card rounded-xl border border-border p-5 space-y-3">
-              {ad.status === "sold" ? (
+              {ad.status === "removed" ? (
+                <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-muted-foreground">
+                  <Trash2 className="w-4 h-4" />
+                  This listing has been removed
+                </div>
+              ) : ad.status === "sold" ? (
                 <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-foreground">
                   <CheckCircle2 className="w-4 h-4 text-primary" />
                   This item has been sold
@@ -269,6 +305,15 @@ const AdDetail = () => {
                       </Link>
                     </p>
                   )}
+                  <Button
+                    onClick={removeListing}
+                    disabled={removing || !!openEscrowId}
+                    variant="outline"
+                    className="w-full gap-2 py-5 border-destructive/40 text-destructive hover:bg-destructive/5"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {removing ? "Removing..." : "Remove listing"}
+                  </Button>
                   <Link to={`/promote/${ad.id}`} className="block">
                     <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
                       <Sparkles className="w-4 h-4" />
