@@ -166,15 +166,35 @@ export interface TreasuryTransferArgs {
    *  from integer micro-USDC math and cannot carry float error. */
   amountUsdc: number | string;
   chainId: number;
-  /** Stable key so a retried payout cannot double-send. */
+  /** Stable key so a retried payout cannot double-send. Any string is accepted:
+   *  Circle requires a UUID, so non-UUID keys are hashed into a deterministic
+   *  UUID below (same input -> same UUID -> Circle still dedupes retries). */
   idempotencyKey: string;
+}
+
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+/** Deterministic v4-shaped UUID derived from a stable string. */
+export async function stableUuid(seed: string): Promise<string> {
+  const digest = new Uint8Array(
+    await crypto.subtle.digest("SHA-256", new TextEncoder().encode(seed)),
+  );
+  const b = digest.slice(0, 16);
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+export async function circleIdempotencyKey(key: string): Promise<string> {
+  return UUID_RE.test(key) ? key : await stableUuid(key);
 }
 
 export async function treasuryTransfer(args: TreasuryTransferArgs) {
   const body = await circleFetch("/developer/transactions/transfer", {
     method: "POST",
     body: JSON.stringify({
-      idempotencyKey: args.idempotencyKey,
+      idempotencyKey: await circleIdempotencyKey(args.idempotencyKey),
       entitySecretCiphertext: await entitySecretCiphertext(),
       walletId: args.walletId,
       destinationAddress: args.destinationAddress,
