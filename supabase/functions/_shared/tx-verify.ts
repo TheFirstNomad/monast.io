@@ -108,7 +108,7 @@ export async function verifyUsdcTransfer(args: VerifyArgs): Promise<VerifyResult
 
   const expectedToLower = args.expectedTo.toLowerCase();
   const expectedFromLower = args.expectedFrom?.toLowerCase();
-  const expectedRaw = BigInt(Math.round(args.expectedAmountUsdc * 10 ** USDC_DECIMALS));
+  const expectedRaw = toBaseUnits(args.expectedAmountUsdc);
 
   for (const log of receipt.logs ?? []) {
     if (!toChecksumEq(log.address, chain.usdc)) continue;
