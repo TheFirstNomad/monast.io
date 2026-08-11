@@ -59,6 +59,37 @@ const AdDetail = () => {
     }
   };
 
+  const [removing, setRemoving] = useState(false);
+
+  const removeListing = async () => {
+    if (!ad) return;
+    setRemoving(true);
+    // Re-check at click time so a stale page can't slip through.
+    const { data: live } = await supabase
+      .from("escrows")
+      .select("id")
+      .eq("ad_id", ad.id)
+      .in("status", OPEN_ESCROW_STATUSES)
+      .limit(1)
+      .maybeSingle();
+    if (live) {
+      setOpenEscrowId(live.id);
+      setRemoving(false);
+      toast.error("Cannot remove this listing while an active escrow exists");
+      return;
+    }
+    const { error } = await supabase
+      .from("ads")
+      .update({ status: "removed" })
+      .eq("id", ad.id);
+    setRemoving(false);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Listing removed");
+      setAd({ ...ad, status: "removed" });
+    }
+  };
+
   useEffect(() => {
     if (!id) return;
     supabase
