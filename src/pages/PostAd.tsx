@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
+import { LISTING_FEE_USDC } from "@/lib/fees";
 
 const PostAd = () => {
   const { toast } = useToast();
