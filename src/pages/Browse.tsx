@@ -68,11 +68,16 @@ const Browse = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 py-6">
+        <h1 className="text-2xl font-bold text-foreground mb-1">Browse marketplace listings</h1>
+        <p className="text-sm text-muted-foreground mb-5">
+          Every listing settles in USDC escrow on Arc — funds release only when the buyer confirms.
+        </p>
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
-              type="text"
+              type="search"
+              aria-label="Search listings"
               placeholder="Search ads..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
