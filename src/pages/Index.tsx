@@ -42,13 +42,13 @@ const Index = () => {
             <span className="text-primary-foreground/80">Worldwide with USDC on Arc</span>
           </h1>
           <p className="text-base md:text-lg text-primary-foreground/70 mb-8 max-w-xl mx-auto">
-            The global marketplace where anyone can post free ads and trade instantly using USDC stablecoin.
+            The global marketplace where anyone can list anything and trade instantly with USDC escrow on Arc.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="text-base px-8 py-6 font-bold bg-card text-primary hover:bg-card/90">
               <Link to="/post-ad">
                 <Plus className="w-5 h-5 mr-2" />
-                Post Free Ad
+                Post an Ad
               </Link>
             </Button>
             <Button
@@ -102,7 +102,7 @@ const Index = () => {
               <Button asChild>
                 <Link to="/post-ad">
                   <Plus className="w-4 h-4 mr-2" />
-                  Post Free Ad
+                  Post an Ad
                 </Link>
               </Button>
             </div>

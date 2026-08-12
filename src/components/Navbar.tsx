@@ -186,7 +186,7 @@ export const Navbar = () => {
             <Link to="/post-ad">
               <Button size="sm" className="gap-2 font-semibold">
                 <Plus className="w-4 h-4" />
-                Post Free Ad
+                Post an Ad
               </Button>
             </Link>
           </div>
