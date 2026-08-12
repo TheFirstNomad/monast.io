@@ -186,12 +186,14 @@ const AdDetail = () => {
                 <>
                   <button
                     onClick={() => setCurrentImage((currentImage - 1 + images.length) % images.length)}
+                    aria-label="Previous photo"
                     className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-card/80 backdrop-blur rounded-full flex items-center justify-center"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setCurrentImage((currentImage + 1) % images.length)}
+                    aria-label="Next photo"
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-card/80 backdrop-blur rounded-full flex items-center justify-center"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -209,6 +211,7 @@ const AdDetail = () => {
                   <button
                     key={i}
                     onClick={() => setCurrentImage(i)}
+                    aria-label={`Show photo ${i + 1}`}
                     className={`w-16 h-16 shrink-0 rounded-lg overflow-hidden border-2 ${
                       i === currentImage ? "border-primary" : "border-border"
                     }`}

@@ -91,7 +91,8 @@ export const Navbar = () => {
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
-                type="text"
+                type="search"
+                aria-label="Search listings"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for anything..."
@@ -111,7 +112,10 @@ export const Navbar = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors">
+                <button
+                  aria-label={signedIn ? "Account menu" : "Sign in menu"}
+                  className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors"
+                >
                   {address ? (
                     <>
                       <Wallet className="w-4 h-4 text-primary" />
@@ -182,7 +186,7 @@ export const Navbar = () => {
             <Link to="/post-ad">
               <Button size="sm" className="gap-2 font-semibold">
                 <Plus className="w-4 h-4" />
-                Post Free Ad
+                Post an Ad
               </Button>
             </Link>
           </div>

@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DbAd } from "@/lib/types";
 import { Plus, Shield, Zap, Globe } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
+import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 
 const Index = () => {
   useSeo({
@@ -32,8 +33,44 @@ const Index = () => {
 
   const recentAds = ads.slice(0, 8);
 
+  const jsonLdHtml = serializeJsonLdSafe({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://monast.io/#org",
+        name: "monast.io",
+        url: "https://monast.io/",
+        description:
+          "Global peer-to-peer marketplace settling every trade in USDC escrow on Arc.",
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://monast.io/#website",
+        name: "monast.io",
+        url: "https://monast.io/",
+        publisher: { "@id": "https://monast.io/#org" },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: "https://monast.io/browse?q={search_term_string}",
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  });
+
   return (
     <Layout>
+      {jsonLdHtml && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml }}
+        />
+      )}
+
       <section className="hero-gradient py-16 md:py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-4 tracking-tight leading-tight">
@@ -42,13 +79,13 @@ const Index = () => {
             <span className="text-primary-foreground/80">Worldwide with USDC on Arc</span>
           </h1>
           <p className="text-base md:text-lg text-primary-foreground/70 mb-8 max-w-xl mx-auto">
-            The global marketplace where anyone can post free ads and trade instantly using USDC stablecoin.
+            The global marketplace where anyone can list anything and trade instantly with USDC escrow on Arc.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="text-base px-8 py-6 font-bold bg-card text-primary hover:bg-card/90">
               <Link to="/post-ad">
                 <Plus className="w-5 h-5 mr-2" />
-                Post Free Ad
+                Post an Ad
               </Link>
             </Button>
             <Button
@@ -102,7 +139,7 @@ const Index = () => {
               <Button asChild>
                 <Link to="/post-ad">
                   <Plus className="w-4 h-4 mr-2" />
-                  Post Free Ad
+                  Post an Ad
                 </Link>
               </Button>
             </div>
