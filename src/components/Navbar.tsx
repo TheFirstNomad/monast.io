@@ -91,7 +91,8 @@ export const Navbar = () => {
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
-                type="text"
+                type="search"
+                aria-label="Search listings"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for anything..."
