@@ -110,17 +110,38 @@ Deno.serve(async (req) => {
     crypto.getRandomValues(pwBytes);
     const password = Array.from(pwBytes, (b) => b.toString(16).padStart(2, "0")).join("");
 
-    // Try to find existing user
+    // Find an existing wallet user.
+    // Fast path: profiles mirrors wallet_address, so one indexed read usually
+    // answers it. Fallback: page through the admin user list (listUsers is
+    // paginated — a single page would miss users once the project grows).
     let userId: string | null = null;
     {
-      // listUsers is paginated; we search by email via filter on the admin endpoint
-      const { data: list } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 200,
-      });
-      const existing = list.users.find((u) => u.email?.toLowerCase() === email);
-      if (existing) userId = existing.id;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("wallet_address", address)
+        .maybeSingle();
+      if (profile?.id) userId = profile.id;
     }
+
+    if (!userId) {
+      const perPage = 200;
+      for (let page = 1; page <= 50; page++) {
+        const { data: list, error: listErr } = await supabase.auth.admin.listUsers({
+          page,
+          perPage,
+        });
+        if (listErr) throw listErr;
+        const users = list?.users ?? [];
+        const existing = users.find((u) => u.email?.toLowerCase() === email);
+        if (existing) {
+          userId = existing.id;
+          break;
+        }
+        if (users.length < perPage) break;
+      }
+    }
+
 
     if (!userId) {
       const { data: created, error: createErr } = await supabase.auth.admin.createUser({
