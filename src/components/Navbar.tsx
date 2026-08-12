@@ -112,7 +112,10 @@ export const Navbar = () => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors">
+                <button
+                  aria-label={signedIn ? "Account menu" : "Sign in menu"}
+                  className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors"
+                >
                   {address ? (
                     <>
                       <Wallet className="w-4 h-4 text-primary" />
