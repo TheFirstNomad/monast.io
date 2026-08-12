@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DbAd } from "@/lib/types";
 import { Plus, Shield, Zap, Globe } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
+import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 
 const Index = () => {
   useSeo({
