@@ -32,8 +32,44 @@ const Index = () => {
 
   const recentAds = ads.slice(0, 8);
 
+  const jsonLdHtml = serializeJsonLdSafe({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://monast.io/#org",
+        name: "monast.io",
+        url: "https://monast.io/",
+        description:
+          "Global peer-to-peer marketplace settling every trade in USDC escrow on Arc.",
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://monast.io/#website",
+        name: "monast.io",
+        url: "https://monast.io/",
+        publisher: { "@id": "https://monast.io/#org" },
+        potentialAction: {
+          "@type": "SearchAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: "https://monast.io/browse?q={search_term_string}",
+          },
+          "query-input": "required name=search_term_string",
+        },
+      },
+    ],
+  });
+
   return (
     <Layout>
+      {jsonLdHtml && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml }}
+        />
+      )}
+
       <section className="hero-gradient py-16 md:py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-4 tracking-tight leading-tight">
