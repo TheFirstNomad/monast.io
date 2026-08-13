@@ -74,7 +74,7 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
         chainId: ARC_CHAIN_ID,
       } as any);
       setPendingHash(hash);
-      toast.success("Payment sent — waiting for confirmation…");
+      toast.success("Payment sent. Waiting for confirmation…");
     } catch (e: any) {
       toast.error(e?.shortMessage || e?.message || "Payment failed");
     }

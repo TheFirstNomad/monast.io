@@ -345,7 +345,7 @@ const WalletCard = ({
       <>
         <p className="text-2xl font-bold">
           {wallet.balance_error
-            ? "—"
+            ? "-"
             : `${(wallet.usdc_balance ?? 0).toLocaleString()} USDC`}
         </p>
         <p className="text-xs font-mono break-all text-muted-foreground">{wallet.address}</p>
