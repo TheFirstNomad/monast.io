@@ -138,7 +138,7 @@ const MessageThread = () => {
           </div>
 
           <p className="px-4 pb-1 text-[11px] text-muted-foreground">
-            Messages are permanent — neither side can delete them, so this thread works as proof of what
+            Messages are permanent. Neither side can delete them, so this thread works as proof of what
             was agreed and delivered.
           </p>
           <div className="p-3 border-t border-border flex gap-2">

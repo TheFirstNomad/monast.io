@@ -181,7 +181,7 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
       {circleOnly && (
         <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
           Your email (Circle) wallet works for buying, selling and escrow. Swapping on Arc Testnet
-          needs a self-custody wallet signer — connect one above to trade.
+          needs a self-custody wallet signer. Connect one above to trade.
         </p>
       )}
 

@@ -110,7 +110,7 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
           </DialogTitle>
           <DialogDescription>
             Circle mints you a non-custodial wallet on Arc, where every monast.io trade
-            settles in USDC. You pick the PIN — we never see it.
+            settles in USDC. You pick the PIN. We never see it.
           </DialogDescription>
         </DialogHeader>
 

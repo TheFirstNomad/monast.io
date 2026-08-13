@@ -357,7 +357,7 @@ const AdDetail = () => {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Star className="w-3 h-3 fill-primary text-primary" />
-                      {ad.seller.rating ?? "—"} · {ad.seller.total_ads ?? 0} ads
+                      {ad.seller.rating ?? "-"} · {ad.seller.total_ads ?? 0} ads
                     </div>
                   </div>
                 </div>

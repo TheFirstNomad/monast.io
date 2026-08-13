@@ -12,7 +12,7 @@ type SortKey = "newest" | "price_asc" | "price_desc";
 
 const Browse = () => {
   useSeo({
-    title: "Browse listings — monast.io marketplace",
+    title: "monast.io | Browse listings marketplace",
     description:
       "Search thousands of listings across every category and buy safely with USDC escrow on monast.io.",
     canonicalPath: "/browse",
@@ -70,7 +70,7 @@ const Browse = () => {
       <div className="max-w-6xl mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold text-foreground mb-1">Browse marketplace listings</h1>
         <p className="text-sm text-muted-foreground mb-5">
-          Every listing settles in USDC escrow on Arc — funds release only when the buyer confirms.
+          Every listing settles in USDC escrow on Arc. Funds release only when the buyer confirms.
         </p>
         <div className="flex items-center gap-3 mb-6">
           <div className="relative flex-1">

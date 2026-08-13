@@ -16,7 +16,7 @@ const MAX_BIO = 500;
 
 const Settings = () => {
   useSeo({
-    title: "Profile settings — monast.io",
+    title: "monast.io | Profile settings",
     description: "Update your monast.io seller profile, display name, bio and avatar.",
     noindex: true,
   });
@@ -154,7 +154,7 @@ const Settings = () => {
               <div className="min-w-0">
                 <div className="text-xs text-muted-foreground">Payout wallet</div>
                 <div className="text-sm font-medium text-foreground truncate">
-                  {wallet ?? "No wallet linked yet — connect one to receive USDC"}
+                  {wallet ?? "No wallet linked yet. Connect one to receive USDC"}
                 </div>
               </div>
             </div>

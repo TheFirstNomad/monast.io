@@ -104,7 +104,7 @@ const AdminTreasury = () => {
       await load();
     } catch (e: any) {
       if (/entity secret has not been set/i.test(e.message ?? "")) {
-        toast.error("Register your entity secret in the Circle console first — see the box below.");
+        toast.error("Register your entity secret in the Circle console first. See the box below.");
         await getCiphertext();
       } else {
         toast.error(e.message);
@@ -199,7 +199,7 @@ const AdminTreasury = () => {
             <h2 className="font-semibold">Treasury not set up yet</h2>
             <p className="text-sm text-muted-foreground">
               Create the escrow and revenue wallets on Arc Testnet. Until this is done, payments and
-              escrow funding stay disabled — no funds can be sent anywhere unsafe.
+              escrow funding stay disabled; no funds can be sent anywhere unsafe.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button onClick={provision} disabled={provisioning} className="gap-2">

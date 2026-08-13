@@ -127,12 +127,12 @@ const EscrowDetail = () => {
             }`}
           >
             <span className="font-semibold">
-              {isBuyer ? "You are the buyer" : "You are the seller"}
+              {isBuyer ? "You are the buyer." : "You are the seller."}
             </span>
             <span className="text-muted-foreground">
               {isBuyer
-                ? " — your USDC stays in escrow until you confirm the item and release it."
-                : " — you get paid once the buyer confirms, or automatically after the release window."}
+                ? " Your USDC stays in escrow until you confirm the item and release it."
+                : " You get paid once the buyer confirms, or automatically after the release window."}
             </span>
           </div>
         )}
@@ -208,7 +208,7 @@ const EscrowDetail = () => {
             </div>
             <p className="text-sm text-muted-foreground">
               {isSeller
-                ? "Post your proof of delivery here — tracking number, handover photo, transfer hash or credentials. Messages cannot be deleted, so this thread is what an arbitrator reads if the buyer disputes."
+                ? "Post your proof of delivery here: tracking number, handover photo, transfer hash or credentials. Messages cannot be deleted, so this thread is what an arbitrator reads if the buyer disputes."
                 : "Ask the seller for proof of delivery here and check it before you release the funds. Messages cannot be deleted, so this thread is what an arbitrator reads if you open a dispute."}
             </p>
             <div className="flex flex-wrap gap-2">

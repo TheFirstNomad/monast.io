@@ -68,7 +68,7 @@ export const ReportDialog = ({
       toast.error(error.message);
       return;
     }
-    toast.success("Report submitted — our moderators will review it");
+    toast.success("Report submitted. Our moderators will review it.");
     setDetails("");
     setOpen(false);
   };

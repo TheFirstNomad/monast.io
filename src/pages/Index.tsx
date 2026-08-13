@@ -13,7 +13,7 @@ import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 
 const Index = () => {
   useSeo({
-    title: "monast.io — Buy & Sell Anything Worldwide with USDC",
+    title: "monast.io | Buy & Sell Anything Worldwide with USDC",
     description:
       "Global peer-to-peer marketplace. Post free ads and trade anything worldwide with USDC escrow on Arc.",
     canonicalPath: "/",
@@ -135,7 +135,7 @@ const Index = () => {
           </div>
           {recentAds.length === 0 ? (
             <div className="text-center py-16 bg-card border border-border rounded-xl">
-              <p className="text-muted-foreground mb-4">No ads yet — be the first to post!</p>
+              <p className="text-muted-foreground mb-4">No ads yet. Be the first to post!</p>
               <Button asChild>
                 <Link to="/post-ad">
                   <Plus className="w-4 h-4 mr-2" />

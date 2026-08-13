@@ -33,8 +33,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
       </div>
       <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to monast.io</h1>
       <p className="text-muted-foreground mb-8">
-        Connect your wallet and sign a message. You pay and get paid in USDC on Arc — monast.io
-        never holds your keys.
+        Connect your wallet and sign a message. You pay and get paid in USDC on Arc. monast.io never holds your keys.
       </p>
 
       <Button

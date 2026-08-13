@@ -5,9 +5,9 @@ import { ShieldCheck, Zap, Coins } from "lucide-react";
 
 const Swap = () => {
   useSeo({
-    title: "Swap USDC & EURC on Arc — monast.io",
+    title: "monast.io | Swap USDC & EURC on Arc",
     description:
-      "Swap stablecoins on Arc directly from your wallet. Powered by Circle App Kit routing — no pools, no custody, no swap fee from monast.io.",
+      "Swap stablecoins on Arc directly from your wallet. Powered by Circle App Kit routing: no pools, no custody, no swap fee from monast.io.",
     canonicalPath: "/swap",
   });
 
