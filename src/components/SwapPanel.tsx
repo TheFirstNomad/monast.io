@@ -201,7 +201,7 @@ export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
 
       <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
         Swaps route through Circle App Kit on Arc. monast.io holds no liquidity and takes no swap
-        fee — you only pay Arc network costs and the route's own spread.
+        fee. You only pay Arc network costs and the route's own spread.
       </p>
     </div>
   );
