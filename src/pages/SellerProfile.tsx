@@ -6,6 +6,7 @@ import { AdCard } from "@/components/AdCard";
 import { ReportDialog } from "@/components/ReportDialog";
 import { DbAd } from "@/lib/types";
 import { Star } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Profile {
   id: string;
@@ -27,6 +28,7 @@ interface Review {
 
 const SellerProfile = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ads, setAds] = useState<DbAd[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
