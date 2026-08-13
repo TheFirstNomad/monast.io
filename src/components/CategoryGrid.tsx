@@ -10,7 +10,14 @@ export const CategoryGrid = () => {
           to={`/browse?category=${encodeURIComponent(cat.name)}`}
           className="flex flex-col items-center gap-2 p-4 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-accent transition-all group"
         >
-          <span className="text-3xl">{cat.icon}</span>
+          <img
+            src={cat.image}
+            alt={`${cat.name} category`}
+            loading="lazy"
+            width={512}
+            height={512}
+            className="w-12 h-12 object-contain"
+          />
           <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors text-center">
             {cat.name}
           </span>
