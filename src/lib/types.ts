@@ -23,17 +23,28 @@ export interface DbAd {
   } | null;
 }
 
+import catVehicles from "@/assets/cat-vehicles.png";
+import catProperty from "@/assets/cat-property.png";
+import catElectronics from "@/assets/cat-electronics.png";
+import catFashion from "@/assets/cat-fashion.png";
+import catCrypto from "@/assets/cat-crypto.png";
+import catApps from "@/assets/cat-apps.png";
+import catServices from "@/assets/cat-services.png";
+import catJobs from "@/assets/cat-jobs.png";
+import catAgriculture from "@/assets/cat-agriculture.png";
+import catOthers from "@/assets/cat-others.png";
+
 export const categories = [
-  { name: "Vehicles", icon: "🚗" },
-  { name: "Property", icon: "🏠" },
-  { name: "Electronics & Phones", icon: "💻📱" },
-  { name: "Fashion", icon: "👗" },
-  { name: "Crypto & NFTs", icon: "🪙" },
-  { name: "Apps", icon: "📲" },
-  { name: "Services", icon: "🔧" },
-  { name: "Jobs", icon: "💼" },
-  { name: "Agriculture", icon: "🌾" },
-  { name: "Others", icon: "📦" },
+  { name: "Vehicles", icon: "🚗", image: catVehicles },
+  { name: "Property", icon: "🏠", image: catProperty },
+  { name: "Electronics & Phones", icon: "💻📱", image: catElectronics },
+  { name: "Fashion", icon: "👗", image: catFashion },
+  { name: "Crypto & NFTs", icon: "🪙", image: catCrypto },
+  { name: "Apps", icon: "📲", image: catApps },
+  { name: "Services", icon: "🔧", image: catServices },
+  { name: "Jobs", icon: "💼", image: catJobs },
+  { name: "Agriculture", icon: "🌾", image: catAgriculture },
+  { name: "Others", icon: "📦", image: catOthers },
 ];
 
 /**
