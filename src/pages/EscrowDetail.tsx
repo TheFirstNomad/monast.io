@@ -118,6 +118,25 @@ const EscrowDetail = () => {
           For <Link to={`/ad/${escrow.ad_id}`} className="text-foreground font-medium hover:underline">{adTitle || "ad"}</Link>
         </p>
 
+        {(isBuyer || isSeller) && (
+          <div
+            className={`rounded-2xl border p-3 mb-4 text-sm ${
+              isBuyer
+                ? "border-primary/40 bg-primary/5 text-foreground"
+                : "border-border bg-card text-foreground"
+            }`}
+          >
+            <span className="font-semibold">
+              {isBuyer ? "You are the buyer" : "You are the seller"}
+            </span>
+            <span className="text-muted-foreground">
+              {isBuyer
+                ? " — your USDC stays in escrow until you confirm the item and release it."
+                : " — you get paid once the buyer confirms, or automatically after the release window."}
+            </span>
+          </div>
+        )}
+
         <div className="bg-card border border-border rounded-2xl p-5 mb-4 space-y-3">
           <Row k="Status" v={<span className="font-medium text-foreground">{ESCROW_STATUS_LABEL[escrow.status]}</span>} />
           <Row k="Amount in escrow" v={<span className="font-mono">{amount.toLocaleString()} USDC</span>} />
