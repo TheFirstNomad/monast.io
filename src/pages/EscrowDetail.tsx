@@ -320,7 +320,7 @@ const EscrowDetail = () => {
           {canDispute && (
             <Button variant="secondary" onClick={() => call("escrow-dispute", "Dispute")} disabled={!!action} className="w-full gap-2 py-5">
               {action === "Dispute" ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
-              Open dispute
+              {isBuyer ? "Item not as promised? Open a dispute" : "Buyer not cooperating? Open a dispute"}
             </Button>
           )}
         </div>
