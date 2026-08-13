@@ -74,7 +74,7 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
         chainId: ARC_CHAIN_ID,
       } as any);
       setPendingHash(hash);
-      toast.success("Payment sent — waiting for confirmation…");
+      toast.success("Payment sent. Waiting for confirmation…");
     } catch (e: any) {
       toast.error(e?.shortMessage || e?.message || "Payment failed");
     }
@@ -121,7 +121,7 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
   return (
     <Button onClick={buy} disabled={busy || treasuryLoading} className="w-full gap-2 font-semibold py-5">
       {busy || treasuryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-      {confirming ? "Verifying…" : mining ? "Confirming payment…" : isPending ? "Awaiting wallet…" : treasuryLoading ? "Loading…" : `Buy with Escrow — ${amount.toLocaleString()} USDC`}
+      {confirming ? "Verifying…" : mining ? "Confirming payment…" : isPending ? "Awaiting wallet…" : treasuryLoading ? "Loading…" : `Buy with Escrow · ${amount.toLocaleString()} USDC`}
     </Button>
   );
 

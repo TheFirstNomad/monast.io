@@ -91,7 +91,7 @@ const SellerProfile = () => {
             <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
               <span className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-primary text-primary" />
-                {profile.rating ?? "—"}
+                {profile.rating ?? "-"}
               </span>
               <span>·</span>
               <span>{profile.total_ads ?? ads.length} ads</span>

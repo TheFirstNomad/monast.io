@@ -113,7 +113,7 @@ export const Navbar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  aria-label={signedIn ? "Account menu" : "Sign in menu"}
+                  aria-label={signedIn ? "Account menu" : "Connect wallet menu"}
                   className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors"
                 >
                   {address ? (
@@ -122,7 +122,10 @@ export const Navbar = () => {
                       <span className="font-medium text-foreground">{short}</span>
                     </>
                   ) : (
-                    <User className="w-4 h-4 text-foreground" />
+                    <>
+                      <Wallet className="w-4 h-4 text-emerald-500" />
+                      <span className="font-medium text-foreground">Connect</span>
+                    </>
                   )}
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>

@@ -76,7 +76,7 @@ const Promote = () => {
         chainId: ARC_CHAIN_ID,
       } as any);
       setPendingHash(hash);
-      toast.success("Payment sent — activating promotion...");
+      toast.success("Payment sent. Activating promotion...");
     } catch (e: any) {
       toast.error(e?.shortMessage || e?.message || "Payment failed");
     }

@@ -95,7 +95,7 @@ const PublishAd = () => {
         chainId: ARC_CHAIN_ID,
       } as any);
       setPendingHash(hash);
-      toast.success("Fee sent — verifying on-chain…");
+      toast.success("Fee sent. Verifying on-chain…");
     } catch (e: any) {
       toast.error(e?.shortMessage || e?.message || "Payment failed");
     }

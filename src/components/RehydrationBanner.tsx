@@ -26,7 +26,7 @@ export const RehydrationBanner = () => {
     },
     failed: {
       icon: <AlertTriangle className="w-4 h-4" />,
-      text: rehydrationError || "Session recovery failed — please try again",
+      text: rehydrationError || "Session recovery failed. Please try again.",
       className: "bg-red-500/15 text-red-400 border-red-500/30",
     },
   };

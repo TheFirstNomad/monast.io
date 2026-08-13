@@ -52,7 +52,7 @@ export const CircleFundButton = ({ escrowId, amount, onFunded }: Props) => {
       });
 
       if (!data.transactionId) {
-        toast.success("Transfer submitted — refresh in a moment to see it confirmed.");
+        toast.success("Transfer submitted. Refresh in a moment to see it confirmed.");
         setPhase("idle");
         return;
       }

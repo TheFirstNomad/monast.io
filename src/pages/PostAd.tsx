@@ -272,7 +272,7 @@ const PostAd = () => {
             {submitting
               ? "Posting..."
               : LISTING_FEE_USDC > 0
-                ? `Post Ad — ${LISTING_FEE_USDC} USDC`
+                ? `Post Ad · ${LISTING_FEE_USDC} USDC`
                 : "Post Ad for Free"}
           </Button>
         </form>

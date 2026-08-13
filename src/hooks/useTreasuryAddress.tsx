@@ -54,7 +54,7 @@ export function useTreasuryAddress(
         setError(
           res?.error ??
             fnError?.message ??
-            "Payments are not available yet — the platform treasury is not configured.",
+            "Payments are not available yet. The platform treasury is not configured.",
         );
       } else {
         setData({

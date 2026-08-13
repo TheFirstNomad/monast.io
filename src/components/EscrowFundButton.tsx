@@ -51,7 +51,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
         chainId: ARC_CHAIN_ID,
       } as any);
       setPendingHash(hash);
-      toast.success("Payment sent — waiting for confirmation…");
+      toast.success("Payment sent. Waiting for confirmation…");
     } catch (e: any) {
       toast.error(e?.shortMessage || e?.message || "Payment failed");
     }
@@ -116,7 +116,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
               ? "Loading…"
               : !address
                 ? "Connect wallet to fund escrow"
-                : `Fund escrow — ${amount.toLocaleString()} USDC`}
+                : `Fund escrow · ${amount.toLocaleString()} USDC`}
     </Button>
   );
 };

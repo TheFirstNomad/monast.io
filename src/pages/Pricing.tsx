@@ -7,7 +7,7 @@ import { useSeo } from "@/hooks/useSeo";
 
 const Pricing = () => {
   useSeo({
-    title: "Featured listing pricing — monast.io",
+    title: "monast.io | Featured listing pricing",
     description:
       "Boost your listing with a featured slot on monast.io. Transparent USDC pricing, spotlight placement and agent-API priority.",
     canonicalPath: "/pricing",

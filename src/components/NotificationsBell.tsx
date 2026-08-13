@@ -73,7 +73,7 @@ export const NotificationsBell = () => {
         <div className="px-3 py-2 text-sm font-semibold border-b border-border">Notifications</div>
         {rows.length === 0 && (
           <div className="px-3 py-6 text-sm text-muted-foreground text-center">
-            Nothing yet — offers, messages and escrow updates land here.
+            Nothing yet. Offers, messages and escrow updates land here.
           </div>
         )}
         {rows.map((n) => {

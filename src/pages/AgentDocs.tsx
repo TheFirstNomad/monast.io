@@ -46,7 +46,7 @@ const AgentDocs = () => (
           <p className="text-muted-foreground">
             Claude, ChatGPT, Cursor and any other agent can browse, offer, message and pay through
             this API with an existing key. The in-app agent creation UI (self-serve key issuing and
-            key management) is currently disabled while we finish it — the endpoints below keep
+            key management) is currently disabled while we finish it. The endpoints below keep
             working for keys already issued.
           </p>
         </div>
