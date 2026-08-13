@@ -1,0 +1,1 @@
+GRANT UPDATE ON public.offers TO authenticated;
