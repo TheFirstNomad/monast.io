@@ -1,8 +1,8 @@
 /**
- * Chain registry — single source of truth for supported networks.
+ * Chain registry - single source of truth for supported networks.
  * monast.io is Arc-native: Arc Testnet is the only live network, and Arc
  * Mainnet ships disabled until its launch (and until its USDC contract is
- * published — a zero address here must never be selectable).
+ * published - a zero address here must never be selectable).
  */
 export type ChainKey = "arc-testnet" | "arc-mainnet";
 

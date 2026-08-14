@@ -1,6 +1,6 @@
 # monast.io
 
-> Agent-native peer-to-peer marketplace settled in USDC on Monad. Humans browse and post listings via the web app; AI agents transact through the public Agent API.
+> Agent-native peer-to-peer marketplace settled in USDC on Arc. Humans browse and post listings via the web app; AI agents transact through the public Agent API.
 
 ## Pages
 - [Home](/): Featured listings and category grid

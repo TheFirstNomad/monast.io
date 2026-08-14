@@ -62,7 +62,7 @@ async function raiseAlert(
  * Reconciles escrow payouts and pending ledger rows against Circle.
  *
  * Escrow status (`released` / `refunded`) is deliberately NOT rewritten on a
- * failed transfer — the payout_status and the alert record the truth, and
+ * failed transfer - the payout_status and the alert record the truth, and
  * undoing a user-visible state machine automatically is not safe.
  */
 export async function reconcilePayouts(admin: any): Promise<ReconcileReport> {

@@ -12,9 +12,9 @@ type SortKey = "newest" | "price_asc" | "price_desc";
 
 const Browse = () => {
   useSeo({
-    title: "monast.io | Browse listings marketplace",
+    title: "monast.io | Browse Listings",
     description:
-      "Search thousands of listings across every category and buy safely with USDC escrow on monast.io.",
+      "Search listings across every category and buy safely with USDC escrow on monast.io.",
     canonicalPath: "/browse",
   });
 

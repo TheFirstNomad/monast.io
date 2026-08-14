@@ -61,7 +61,7 @@ export const EscrowButton = ({ adId, sellerId, amount }: Props) => {
         return;
       }
 
-      // 2. Fund escrow — USDC transfer to marketplace treasury.
+      // 2. Fund escrow - USDC transfer to marketplace treasury.
       if (chainId !== ARC_CHAIN_ID) {
         try { await switchChainAsync({ chainId: ARC_CHAIN_ID }); }
         catch { toast.error("Please switch your wallet to Arc Testnet"); return; }

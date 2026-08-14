@@ -25,7 +25,7 @@ const AdDetail = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
   const [marking, setMarking] = useState(false);
-  // An open escrow means buyer funds are still locked for this ad — the seller
+  // An open escrow means buyer funds are still locked for this ad - the seller
   // must not be able to close the listing out from under them.
   const OPEN_ESCROW_STATUSES = ["created", "funded", "disputed"];
   const [openEscrowId, setOpenEscrowId] = useState<string | null>(null);

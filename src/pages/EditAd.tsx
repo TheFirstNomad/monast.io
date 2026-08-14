@@ -25,7 +25,7 @@ const EditAd = () => {
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  // An open escrow means a buyer already committed to this item at this price —
+  // An open escrow means a buyer already committed to this item at this price  - 
   // the name and price are locked so the deal can't be changed underneath them.
   const [lockedEscrowId, setLockedEscrowId] = useState<string | null>(null);
   const [form, setForm] = useState({

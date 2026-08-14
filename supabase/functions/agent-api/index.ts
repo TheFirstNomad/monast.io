@@ -1,4 +1,4 @@
-// Agent API router — all marketplace actions exposed for AI agents.
+// Agent API router - all marketplace actions exposed for AI agents.
 import {
   authenticateAgent, checkRateLimit, corsHeaders, json, logActivity,
   svcClient, todaySpendUsdc,
@@ -114,7 +114,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // /offers/:id/accept — only the ad's seller may accept, and only pending offers.
+    // /offers/:id/accept - only the ad's seller may accept, and only pending offers.
     else if (method === "POST" && route.match(/^\/offers\/[^/]+\/accept$/)) {
       const id = route.split("/")[2];
       if (!agent.owner_user_id) { status = 403; body = { error: "standalone agents cannot accept offers" }; }
@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // /payments POST — verified on-chain before recording.
+    // /payments POST - verified on-chain before recording.
     else if (route === "/payments" && method === "POST") {
       if (!agent.owner_user_id) { status = 400; body = { error: "standalone agents cannot submit payments yet" }; }
       else {

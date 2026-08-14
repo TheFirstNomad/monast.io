@@ -1,5 +1,5 @@
 /**
- * Platform owner wallet — mirrors OWNER_WALLET in
+ * Platform owner wallet - mirrors OWNER_WALLET in
  * supabase/functions/_shared/admin-auth.ts. Used only to show or hide admin
  * UI; every privileged action is re-verified server-side against a fresh
  * owner-wallet signature.

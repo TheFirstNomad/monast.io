@@ -20,7 +20,7 @@ type Phase = "idle" | "provisioning" | "ready" | "signing" | "done" | "error";
  * Runs after a first successful email OTP login. Calls the
  * `circle-provision-wallet` edge function to mint a userToken + challengeId,
  * then hands that challenge to the Circle Web SDK so the user sets a PIN and
- * security answers. Circle never sends the PIN to our server — this component
+ * security answers. Circle never sends the PIN to our server - this component
  * only relays the challenge id.
  */
 export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => {

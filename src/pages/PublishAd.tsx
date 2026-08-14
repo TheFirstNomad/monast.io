@@ -14,7 +14,7 @@ import { ArrowLeft, Check, Loader2, ShieldCheck } from "lucide-react";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 
 /**
- * Listing-fee checkout. An ad stays in `pending_fee` — invisible to buyers —
+ * Listing-fee checkout. An ad stays in `pending_fee` - invisible to buyers  - 
  * until this small USDC fee is confirmed on-chain, which is what keeps the
  * marketplace free of spam listings.
  */

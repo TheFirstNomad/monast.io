@@ -71,7 +71,7 @@ async function walletAddressFor(
 /**
  * Sends the escrowed USDC out. On release the seller receives the net amount and
  * the platform fee is swept to the revenue wallet. On refund the buyer receives
- * 100% — no fee is ever charged on a deal that did not complete.
+ * 100% - no fee is ever charged on a deal that did not complete.
  */
 export async function runPayout(
   admin: any,

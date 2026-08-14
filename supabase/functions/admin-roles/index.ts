@@ -1,4 +1,4 @@
-// Owner-only role management — how arbitrators and moderators get appointed.
+// Owner-only role management - how arbitrators and moderators get appointed.
 //
 // Authorised by a fresh owner-wallet signature (the same scheme as the treasury
 // console), because roles are the root of trust for the dispute queue and must

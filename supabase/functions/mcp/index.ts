@@ -69,7 +69,7 @@ const TOOLS = [
   },
   {
     name: "submit_payment",
-    description: "Record an on-chain USDC payment (Monad) as proof of settlement.",
+    description: "Record an on-chain USDC payment (Arc) as proof of settlement.",
     inputSchema: {
       type: "object",
       properties: {
@@ -294,7 +294,7 @@ Deno.serve(async (req) => {
           protocolVersion: PROTOCOL_VERSION,
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: "monast.io", version: "1.0.0" },
-          instructions: "Agent-native peer-to-peer marketplace settled in USDC on Monad. Use search_ads → get_ad → create_offer → submit_payment.",
+          instructions: "Agent-native peer-to-peer marketplace settled in USDC on Arc. Use search_ads → get_ad → create_offer → submit_payment.",
         });
       }
       if (method === "notifications/initialized" || method === "initialized") {

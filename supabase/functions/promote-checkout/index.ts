@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  // Authn — verify caller via JWT.
+  // Authn - verify caller via JWT.
   const authHeader = req.headers.get("Authorization") || "";
   if (!authHeader.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
   const userClient = createClient(url, anon, {
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
   const baseEnd = existingEnd && existingEnd > startsAt ? existingEnd : startsAt;
   const endsAt = new Date(baseEnd.getTime() + conf.hours * 3600 * 1000);
 
-  // On-chain payment verification — must be a USDC transfer to the treasury
+  // On-chain payment verification - must be a USDC transfer to the treasury
   // for at least this tier's price on the specified chain.
   if (!txHash || !chainId) return json({ error: "tx_hash and chain_id are required" }, 400);
 

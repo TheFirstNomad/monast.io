@@ -1,5 +1,5 @@
 /**
- * Fee model — single source of truth for the client.
+ * Fee model - single source of truth for the client.
  * Mirrored server-side in supabase/functions/_shared/fees.ts and stored in the
  * fee_settings table. Keep all three in step.
  */

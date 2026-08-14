@@ -1,5 +1,5 @@
 // Either party can flag a funded escrow as `disputed`. Manual admin resolution
-// in v1 — a future function will resolve to released or refunded.
+// in v1 - a future function will resolve to released or refunded.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";

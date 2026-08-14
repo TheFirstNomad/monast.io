@@ -8,7 +8,7 @@ const Auth = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect as soon as a session exists — whether the visitor arrived signed
+  // Redirect as soon as a session exists - whether the visitor arrived signed
   // in or the wallet signature completed while they were on this page.
   useEffect(() => {
     if (loading || !user) return;

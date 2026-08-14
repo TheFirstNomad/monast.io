@@ -1,4 +1,4 @@
-// Fee model — server mirror of src/lib/fees.ts.
+// Fee model - server mirror of src/lib/fees.ts.
 // Authoritative values also live in the fee_settings table; these constants are
 // the fallback and the arithmetic used when moving money.
 

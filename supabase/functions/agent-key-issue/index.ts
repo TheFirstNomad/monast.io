@@ -44,5 +44,5 @@ Deno.serve(async (req) => {
   }).select("id, display_name, wallet_address, api_key_prefix, max_spend_usdc_per_day, status").single();
 
   if (error) return json({ error: error.message }, 400);
-  return json({ ...data, api_key: key, note: "Store this key now — it will not be shown again." });
+  return json({ ...data, api_key: key, note: "Store this key now - it will not be shown again." });
 });

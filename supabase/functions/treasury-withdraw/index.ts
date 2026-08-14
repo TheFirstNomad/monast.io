@@ -1,6 +1,6 @@
 // Owner-only revenue withdrawal. Moves USDC out of the REVENUE treasury wallet
 // to any address the owner supplies. The escrow wallet is deliberately not
-// reachable from here — user funds have no withdrawal path.
+// reachable from here - user funds have no withdrawal path.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { verifyAdmin } from "../_shared/admin-auth.ts";

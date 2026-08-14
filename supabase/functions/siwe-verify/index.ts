@@ -30,7 +30,7 @@ function hostAllowed(host: string): boolean {
 }
 
 function parseSiwe(message: string) {
-  // Minimal EIP-4361 parsing — pulls out the fields we need to validate.
+  // Minimal EIP-4361 parsing - pulls out the fields we need to validate.
   const addressMatch = message.match(/\n([0-9a-fA-FxX]{42})\n\n/);
   const nonceMatch = message.match(/\nNonce: ([A-Za-z0-9]+)/);
   const issuedAtMatch = message.match(/\nIssued At: (\S+)/);
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     // Find an existing wallet user.
     // Fast path: profiles mirrors wallet_address, so one indexed read usually
     // answers it. Fallback: page through the admin user list (listUsers is
-    // paginated — a single page would miss users once the project grows).
+    // paginated - a single page would miss users once the project grows).
     let userId: string | null = null;
     {
       const { data: profile } = await supabase

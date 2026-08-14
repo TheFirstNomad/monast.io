@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 /**
  * Self-custody sign-in. Connecting a wallet and signing the message creates the
- * monast.io session — there is no password and no email step.
+ * monast.io session - there is no password and no email step.
  * (Email + Circle wallet sign-in is parked for a later release.)
  */
 export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {

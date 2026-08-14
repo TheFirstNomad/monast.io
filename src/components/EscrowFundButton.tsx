@@ -57,7 +57,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
     }
   };
 
-  // Confirm on the server once mined. A 202 means "not deep enough yet" — keep polling.
+  // Confirm on the server once mined. A 202 means "not deep enough yet" - keep polling.
   useEffect(() => {
     if (!isSuccess || !pendingHash) return;
     let cancelled = false;

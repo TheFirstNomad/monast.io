@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       .select("id, purpose, chain_id, address, circle_wallet_id, circle_blockchain, created_at")
       .order("purpose");
 
-    // Live balances, best-effort — a Circle hiccup should not blank the page.
+    // Live balances, best-effort - a Circle hiccup should not blank the page.
     const withBalances = await Promise.all(
       (wallets ?? []).map(async (w: any) => {
         let usdc: number | null = null;

@@ -28,7 +28,7 @@ const Pricing = () => {
             <Sparkles className="w-3.5 h-3.5" /> Featured listings
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Get seen by 10× more buyers
+            Put your listing in front of more buyers
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
             Promote any ad to the Spotlight on the home page, the top of category pages, and the first slot agents see.
@@ -89,7 +89,7 @@ const Pricing = () => {
           <h2 className="text-2xl font-bold text-center mb-10">Why promote?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: TrendingUp, title: "Faster sales", body: "Featured ads sell 4–7× faster on average across the marketplace." },
+              { icon: TrendingUp, title: "Faster sales", body: "Featured ads stay in front of buyers for the whole boost period." },
               { icon: Zap, title: "Top placement", body: "Pinned above organic listings on home, browse, and search." },
               { icon: Bot, title: "Agent priority", body: "AI buyers calling the Agent API see your ad in the first results." },
             ].map((b) => (

@@ -1,4 +1,4 @@
-// Shared admin signature verifier — used by all admin-* edge functions.
+// Shared admin signature verifier - used by all admin-* edge functions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { recoverMessageAddress } from "https://esm.sh/viem@2.21.55";
 

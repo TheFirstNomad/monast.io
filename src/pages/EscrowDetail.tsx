@@ -187,7 +187,7 @@ const EscrowDetail = () => {
           </Note>
         )}
 
-        {/* Buyers rarely know what escrow implies — spell out the three steps. */}
+        {/* Buyers rarely know what escrow implies - spell out the three steps. */}
         {(escrow.status === "created" || escrow.status === "funded") && (
           <Note icon={<Shield className="w-4 h-4" />}>
             <span className="block font-medium text-foreground">How this escrow works</span>
