@@ -89,7 +89,7 @@ const Pricing = () => {
           <h2 className="text-2xl font-bold text-center mb-10">Why promote?</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: TrendingUp, title: "Faster sales", body: "Featured ads sell 4–7× faster on average across the marketplace." },
+              { icon: TrendingUp, title: "Faster sales", body: "Featured ads stay in front of buyers for the whole boost period." },
               { icon: Zap, title: "Top placement", body: "Pinned above organic listings on home, browse, and search." },
               { icon: Bot, title: "Agent priority", body: "AI buyers calling the Agent API see your ad in the first results." },
             ].map((b) => (
