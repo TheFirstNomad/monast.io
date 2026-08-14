@@ -1,7 +1,7 @@
 // Client-side Circle Web SDK singleton.
 // The SDK is initialized with the public APP_ID and later receives the
 // userToken + encryptionKey minted server-side by the circle-provision-wallet
-// edge function. All PIN entry happens inside the SDK's UI overlay — the app
+// edge function. All PIN entry happens inside the SDK's UI overlay - the app
 // never sees the PIN, keeping wallets non-custodial.
 import { W3SSdk } from "@circle-fin/w3s-pw-web-sdk";
 import { CIRCLE_APP_ID } from "./config";

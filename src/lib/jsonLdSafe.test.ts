@@ -100,7 +100,7 @@ describe("serializeJsonLdSafe", () => {
   it("returns empty string on cycles", () => {
     const a: Record<string, unknown> = {};
     a.self = a;
-    // Cycles cause `self` to be dropped, not the whole doc — still safe.
+    // Cycles cause `self` to be dropped, not the whole doc - still safe.
     const out = serializeJsonLdSafe(a);
     expect(out).not.toBe("");
     expect(decode(out)).toEqual({});

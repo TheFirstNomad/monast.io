@@ -6,7 +6,7 @@ import { useWallet } from "@/hooks/useWallet";
 /**
  * Guard for pages that need a session.
  *
- * A connected wallet does not instantly mean a Supabase session exists — the
+ * A connected wallet does not instantly mean a Supabase session exists - the
  * SIWE nonce/signature round trip takes a moment, and during that window the
  * auth hook still reports "no user". Redirecting immediately is what made an
  * already-connected wallet get bounced back to the sign-in page.
@@ -27,7 +27,7 @@ export function useRequireAuth() {
 
   const walletConnected = !!address;
 
-  // A wallet is connected but no session yet — the signature flow owns this window.
+  // A wallet is connected but no session yet - the signature flow owns this window.
   const walletPending = !gaveUp && !user && walletConnected && rehydrationStatus !== "failed";
 
   const resolving = loading || walletPending;

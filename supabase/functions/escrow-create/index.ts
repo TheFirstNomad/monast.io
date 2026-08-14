@@ -1,5 +1,5 @@
 // Creates a new escrow row for a buyer/ad pair. Idempotent per (ad_id, buyer_id)
-// while an escrow is in "created" or "funded" state — a second call returns the
+// while an escrow is in "created" or "funded" state - a second call returns the
 // existing row instead of creating a duplicate.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";

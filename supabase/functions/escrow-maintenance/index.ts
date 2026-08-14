@@ -1,5 +1,5 @@
 // Scheduled escrow maintenance. Invoked every 15 minutes by pg_cron with a
-// token stored in internal_config — never callable from the browser.
+// token stored in internal_config - never callable from the browser.
 //
 // Two jobs:
 //  1. Auto-release: a funded escrow whose delivery-confirmation window has
@@ -9,7 +9,7 @@
 //     refund with no platform fee.
 //
 // Escrows in dispute, or where the seller declined the cancellation, are never
-// touched here — those need a human arbitrator.
+// touched here - those need a human arbitrator.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";

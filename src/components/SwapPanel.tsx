@@ -20,7 +20,7 @@ const CHAIN_ID: PaymentChainId = 5042002;
 
 /**
  * Real on-chain swap panel powered by Circle App Kit (`kit.swap`).
- * No monast.io DEX contracts or liquidity pools — routing is Circle's.
+ * No monast.io DEX contracts or liquidity pools - routing is Circle's.
  */
 export const SwapPanel = ({ compact = false }: { compact?: boolean }) => {
   const { address, connecting } = useWallet();

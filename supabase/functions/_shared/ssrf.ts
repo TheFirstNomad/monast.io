@@ -1,4 +1,4 @@
-// SSRF allowlist helper — use before any server-side fetch of a user-supplied URL.
+// SSRF allowlist helper - use before any server-side fetch of a user-supplied URL.
 // Blocks private/loopback/link-local addresses and restricts to https.
 
 const PRIVATE_RANGES = [

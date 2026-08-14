@@ -1,4 +1,4 @@
-// Promotion tier catalog — mirrored in supabase/functions/promote-checkout.
+// Promotion tier catalog - mirrored in supabase/functions/promote-checkout.
 export type PromotionTier = "24h" | "7d" | "30d";
 
 export interface TierConfig {

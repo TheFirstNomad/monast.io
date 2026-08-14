@@ -1,4 +1,4 @@
-// Treasury resolution — the single place a treasury address comes from.
+// Treasury resolution - the single place a treasury address comes from.
 //
 // Hard rule: there is no fallback address. If the treasury for a chain is not
 // provisioned, money operations fail loudly rather than sending USDC to an
@@ -44,7 +44,7 @@ export async function getTreasury(
   return data as TreasuryWallet;
 }
 
-/** Address only — for "where should the buyer send funds" style questions. */
+/** Address only - for "where should the buyer send funds" style questions. */
 export async function getTreasuryAddress(
   admin: any,
   purpose: TreasuryPurpose,

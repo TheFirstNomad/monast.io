@@ -1,4 +1,4 @@
-// Refund path. Returns 100% of the escrowed USDC to the buyer — no platform fee
+// Refund path. Returns 100% of the escrowed USDC to the buyer - no platform fee
 // is ever charged on a deal that did not complete. Callable by the seller, or by
 // the buyer once the seller has failed to answer a cancellation request in time.
 
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     if (!isSeller) {
       if (!esc.cancel_requested_at) {
         return json(
-          { error: "Request a cancellation first — the seller has a chance to respond." },
+          { error: "Request a cancellation first - the seller has a chance to respond." },
           400,
         );
       }

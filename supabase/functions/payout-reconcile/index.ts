@@ -1,5 +1,5 @@
 // Standalone reconciliation endpoint. Same cron token as escrow-maintenance,
-// so it can be triggered on its own schedule or manually for verification —
+// so it can be triggered on its own schedule or manually for verification  - 
 // never callable from the browser.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";

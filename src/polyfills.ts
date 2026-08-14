@@ -1,4 +1,4 @@
-// Must be imported FIRST in src/main.tsx — before React, AppKit, Coinbase Wallet SDK, etc.
+// Must be imported FIRST in src/main.tsx - before React, AppKit, Coinbase Wallet SDK, etc.
 import { Buffer } from "buffer";
 
 const g = globalThis as unknown as {

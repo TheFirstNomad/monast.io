@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
         .order("updated_at", { ascending: false })
         .limit(100);
       if (error) {
-        // The profile join is optional — fall back to a plain read.
+        // The profile join is optional - fall back to a plain read.
         const { data: plain } = await admin
           .from("escrows")
           .select("*, ads(id, title, images, category)")

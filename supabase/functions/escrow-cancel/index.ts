@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     if (action === "request") {
       if (!isBuyer) return json({ error: "Only the buyer can request a cancellation" }, 403);
       if (esc.status === "created") {
-        // Nothing deposited yet — cancel outright, no cost, no payout needed.
+        // Nothing deposited yet - cancel outright, no cost, no payout needed.
         const { data: cancelled, error } = await admin
           .from("escrows")
           .update({ status: "cancelled", cancel_requested_by: userId, cancel_requested_at: now, cancel_reason: reason })

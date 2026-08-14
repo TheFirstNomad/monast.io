@@ -1,4 +1,4 @@
-// Circle developer-controlled wallets — treasury side.
+// Circle developer-controlled wallets - treasury side.
 //
 // Developer-controlled wallets are signed by Circle on the backend's behalf.
 // Every mutating call needs a fresh `entitySecretCiphertext`: the 32-byte entity
@@ -19,7 +19,7 @@ function entitySecretHex(): string {
   const s = Deno.env.get("CIRCLE_ENTITY_SECRET");
   if (!s) {
     throw new Error(
-      "CIRCLE_ENTITY_SECRET is not configured — treasury operations are disabled",
+      "CIRCLE_ENTITY_SECRET is not configured - treasury operations are disabled",
     );
   }
   const hex = s.trim().replace(/^0x/, "");
@@ -113,7 +113,7 @@ export function circleBlockchain(chainId: number): string {
 
 /** USDC token contract per chain, lowercase.
  *  Source of truth: src/lib/chains.ts (frontend) and _shared/tx-verify.ts
- *  (deposit verification). These three MUST stay identical — this map is the
+ *  (deposit verification). These three MUST stay identical - this map is the
  *  address Circle uses to move real funds on release, refund and fee sweeps. */
 export const USDC_ADDRESS: Record<number, string> = {
   5042002: "0x3600000000000000000000000000000000000000",

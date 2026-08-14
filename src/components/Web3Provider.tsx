@@ -8,7 +8,7 @@ import { CHAINS } from "@/lib/chains";
 
 const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "3592c16759a9b6907bc4eb5afd455b15";
 
-// monast.io is Arc-native — Arc Testnet is the only wallet network offered.
+// monast.io is Arc-native - Arc Testnet is the only wallet network offered.
 // USDC is the native gas token on Arc (18 decimals for msg.value).
 const ARC = CHAINS["arc-testnet"];
 

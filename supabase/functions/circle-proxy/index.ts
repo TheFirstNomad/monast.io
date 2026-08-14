@@ -1,5 +1,5 @@
 /**
- * circle-proxy — forwards requests to https://api.circle.com on behalf of
+ * circle-proxy - forwards requests to https://api.circle.com on behalf of
  * the browser, bypassing CORS. Requires a Supabase JWT and locks path to
  * /v1/stablecoinKits/*.
  */
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Never let the browser supply auth or a kit key — the server owns both.
+    // Never let the browser supply auth or a kit key - the server owns both.
     const safeHeaders: Record<string, string> = {};
     for (const [k, v] of Object.entries(extraHeaders ?? {})) {
       const lower = k.toLowerCase();

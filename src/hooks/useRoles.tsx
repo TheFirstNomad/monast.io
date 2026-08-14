@@ -6,7 +6,7 @@ export type AppRole = "admin" | "arbitrator" | "moderator" | "user";
 
 /**
  * Reads the signed-in user's roles from the database. Roles are stored in a
- * dedicated table that users can only read for themselves — this hook is for
+ * dedicated table that users can only read for themselves - this hook is for
  * showing or hiding UI, never the security boundary. Every privileged action is
  * re-checked server-side.
  */

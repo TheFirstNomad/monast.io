@@ -69,7 +69,7 @@ function sanitize(value: unknown, seen: WeakSet<object>): Json | undefined {
 /**
  * Escape a JSON string so it is safe inside an inline HTML `<script>` block.
  * Applied after `JSON.stringify`, so all characters are already inside JSON
- * string literals or JSON syntax — replacing with `\uXXXX` remains valid JSON.
+ * string literals or JSON syntax - replacing with `\uXXXX` remains valid JSON.
  */
 function escapeForScript(json: string): string {
   return json

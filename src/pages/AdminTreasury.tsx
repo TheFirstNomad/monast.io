@@ -37,7 +37,7 @@ interface Status {
 
 /**
  * Owner-only treasury console. Every call is authorised by a fresh wallet
- * signature from the owner address — there is no password and no client-side
+ * signature from the owner address - there is no password and no client-side
  * admin flag to tamper with.
  */
 const AdminTreasury = () => {

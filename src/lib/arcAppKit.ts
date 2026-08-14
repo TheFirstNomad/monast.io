@@ -1,5 +1,5 @@
 /**
- * Circle Arc App Kit integration — kit.send / kit.bridge / kit.swap.
+ * Circle Arc App Kit integration - kit.send / kit.bridge / kit.swap.
  * All Circle API calls are routed through the circle-proxy Edge Function
  * to bypass CORS on custom domains.
  */
@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * The real Circle Kit Key is a server-side secret (ARC_KIT_KEY) held only by
  * the circle-proxy edge function, which injects it into every Circle API
- * request. The browser never sees it — App Kit is constructed with this
+ * request. The browser never sees it - App Kit is constructed with this
  * non-secret placeholder and all traffic is relayed through the proxy.
  */
 export const ARC_KIT_KEY = "KIT_KEY:proxy:proxy";

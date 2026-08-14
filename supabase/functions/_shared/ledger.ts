@@ -1,6 +1,6 @@
 // Append-only money ledger writer. Every USDC movement gets exactly one row.
 // `idempotencyKey` is UNIQUE in the database, so a retried call cannot duplicate
-// an entry — a conflict is treated as success.
+// an entry - a conflict is treated as success.
 
 export type LedgerKind =
   | "escrow_deposit"

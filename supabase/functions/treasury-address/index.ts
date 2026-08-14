@@ -1,5 +1,5 @@
 // Returns the treasury deposit address for a chain so the buyer's wallet knows
-// where to send USDC. Fails loudly when the treasury is not provisioned — the
+// where to send USDC. Fails loudly when the treasury is not provisioned - the
 // app must never show a placeholder address.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";

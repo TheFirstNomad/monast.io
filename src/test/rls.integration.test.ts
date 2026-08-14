@@ -129,7 +129,7 @@ suite("RLS policies & triggers", () => {
 
 
     it("blocks a stranger from accepting the offer", async () => {
-      // Stranger isn't buyer or seller — RLS UPDATE policy rejects them.
+      // Stranger isn't buyer or seller - RLS UPDATE policy rejects them.
       const { data, error } = await strangerClient
         .from("offers").update({ status: "accepted" }).eq("id", offerId).select();
       // Either explicit error or just zero rows updated.

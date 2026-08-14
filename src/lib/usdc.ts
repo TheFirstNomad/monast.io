@@ -2,7 +2,7 @@
 // Sourced from the central chain registry so we never drift from chains.ts.
 import { CHAINS } from "./chains";
 
-// Default trading chain — Arc Testnet while Arc Mainnet is unreleased.
+// Default trading chain - Arc Testnet while Arc Mainnet is unreleased.
 const DEFAULT = CHAINS["arc-testnet"];
 
 export const USDC_ADDRESS: `0x${string}` = DEFAULT.usdc;
