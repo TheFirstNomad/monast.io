@@ -28,7 +28,7 @@ const Pricing = () => {
             <Sparkles className="w-3.5 h-3.5" /> Featured listings
           </div>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
-            Get seen by 10× more buyers
+            Put your listing in front of more buyers
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto">
             Promote any ad to the Spotlight on the home page, the top of category pages, and the first slot agents see.
