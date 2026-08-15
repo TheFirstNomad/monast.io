@@ -161,8 +161,17 @@ Deno.serve(async (req) => {
       console.error("reconcile pass failed", (e as Error).message);
     }
 
+    // ---- 4. Self-heal escrows whose payout confirmed but status never
+    // advanced (e.g. a crash right after runPayout succeeded) --------------
+    let healed: unknown = null;
+    try {
+      healed = await finishStuckPayouts(admin);
+    } catch (e) {
+      console.error("self-heal pass failed", (e as Error).message);
+    }
+
     if (failures.length) console.error("escrow-maintenance failures", failures);
-    return json({ released, refunded, failures, reconcile, ran_at: nowIso });
+    return json({ released, refunded, failures, reconcile, healed, ran_at: nowIso });
   } catch (e) {
     console.error("escrow-maintenance", e);
     return json({ error: (e as Error).message }, 500);
