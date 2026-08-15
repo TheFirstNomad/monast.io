@@ -57,11 +57,20 @@ Deno.serve(async (req) => {
       throw e;
     }
 
+    // Bind the proof to this buyer's own wallet so a stranger's transaction
+    // hash cannot be replayed by someone else.
+    const { data: buyerProfile } = await admin
+      .from("profiles")
+      .select("wallet_address")
+      .eq("id", buyerId)
+      .maybeSingle();
+
     const verify = await verifyUsdcTransfer({
       chainId: esc.chain_id,
       txHash,
       expectedTo: treasury.address,
       expectedAmountUsdc: Number(esc.amount_usdc),
+      expectedFrom: buyerProfile?.wallet_address ?? undefined,
     });
     if (!verify.ok) {
       // "Not deep enough yet" is a wait state, not a rejection: 202 lets the
