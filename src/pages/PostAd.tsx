@@ -111,7 +111,7 @@ const PostAd = () => {
     <Layout>
       <div className="max-w-2xl mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-foreground mb-2">Post an Ad</h1>
-        <p className="text-muted-foreground mb-8">Reach buyers worldwide. It's free!</p>
+        <p className="text-muted-foreground mb-8">Reach buyers worldwide.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
