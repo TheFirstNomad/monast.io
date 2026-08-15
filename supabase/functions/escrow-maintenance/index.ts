@@ -15,7 +15,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
 import { runPayout } from "../_shared/payout.ts";
 import { loadFeeSettings } from "../_shared/fees.ts";
-import { reconcilePayouts } from "../_shared/reconcile.ts";
+import { reconcilePayouts, finishStuckPayouts } from "../_shared/reconcile.ts";
 import { timingSafeEqual } from "../_shared/timing-safe.ts";
 
 const corsHeaders = {
