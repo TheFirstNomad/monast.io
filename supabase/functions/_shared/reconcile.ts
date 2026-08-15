@@ -8,6 +8,7 @@
 
 import { getTransaction } from "./circle-dev.ts";
 import { updateLedgerStatus } from "./ledger.ts";
+import { notify } from "./notify.ts";
 
 const SETTLE_DELAY_MS = 2 * 60 * 1000; // give Circle a couple of minutes
 const BATCH = 50;
@@ -184,4 +185,81 @@ export async function reconcilePayouts(admin: any): Promise<ReconcileReport> {
   }
 
   return report;
+}
+
+/**
+ * Finishes escrows whose Circle payout is confirmed but whose own status
+ * never advanced past funded/disputed - e.g. the transfer succeeded and
+ * then the follow-up DB write crashed or timed out. Determines release vs
+ * refund from the matching ledger_entries row (seller_payout vs
+ * buyer_refund), then replays the same side effects the manual/auto path
+ * performs: escrow status, ad status, payments row, notification.
+ */
+export async function finishStuckPayouts(admin: any): Promise<{ finished: string[]; errors: { escrow_id: string; error: string }[] }> {
+  const finished: string[] = [];
+  const errors: { escrow_id: string; error: string }[] = [];
+
+  const { data: stuck } = await admin
+    .from("escrows")
+    .select("*")
+    .in("payout_status", ["sent", "confirmed"])
+    .in("status", ["funded", "disputed"])
+    .limit(BATCH);
+
+  for (const esc of stuck ?? []) {
+    try {
+      const { data: ledgerRow } = await admin
+        .from("ledger_entries")
+        .select("kind")
+        .eq("escrow_id", esc.id)
+        .in("kind", ["seller_payout", "buyer_refund"])
+        .maybeSingle();
+      if (!ledgerRow) continue; // no ledger trail yet - leave for next pass
+
+      const isRelease = ledgerRow.kind === "seller_payout";
+      const nextStatus = isRelease ? "released" : "refunded";
+      const timeField = isRelease ? "released_at" : "refunded_at";
+
+      await admin
+        .from("escrows")
+        .update({ status: nextStatus, [timeField]: new Date().toISOString() })
+        .eq("id", esc.id);
+
+      if (isRelease) {
+        if (esc.deposit_tx_hash) {
+          await admin.from("payments").insert({
+            ad_id: esc.ad_id,
+            buyer_id: esc.buyer_id,
+            seller_id: esc.seller_id,
+            amount_usdc: esc.amount_usdc,
+            tx_hash: esc.deposit_tx_hash,
+            chain_id: esc.chain_id,
+          }).select().maybeSingle();
+        }
+        await admin.from("ads").update({ status: "sold", sold_at: new Date().toISOString() }).eq("id", esc.ad_id);
+        await notify({
+          userId: esc.seller_id,
+          kind: "escrow_released",
+          title: "Escrow released to you",
+          body: "Your payout was confirmed and the escrow has been closed out.",
+          link: `/escrow/${esc.id}`,
+        });
+      } else {
+        await admin.from("ads").update({ status: "active" }).eq("id", esc.ad_id).eq("status", "reserved");
+        await notify({
+          userId: esc.buyer_id,
+          kind: "escrow_refunded",
+          title: "Escrow refunded in full",
+          body: "Your refund was confirmed and the escrow has been closed out.",
+          link: `/escrow/${esc.id}`,
+        });
+      }
+
+      finished.push(esc.id);
+    } catch (e) {
+      errors.push({ escrow_id: esc.id, error: (e as Error).message });
+    }
+  }
+
+  return { finished, errors };
 }

@@ -99,10 +99,19 @@ Deno.serve(async (req) => {
     return json({ error: (e as Error).message }, 500);
   }
 
+  // Bind the proof to this user's own wallet so a stranger's transaction hash
+  // cannot be replayed by someone else.
+  const { data: buyerProfile } = await admin
+    .from("profiles")
+    .select("wallet_address")
+    .eq("id", userId)
+    .maybeSingle();
+
   const check = await verifyUsdcTransfer({
     chainId, txHash,
     expectedTo: revenue.address,
     expectedAmountUsdc: conf.price,
+    expectedFrom: buyerProfile?.wallet_address ?? undefined,
   });
   if (!check.ok) return json({ error: `payment verification failed: ${check.error}` }, 400);
 

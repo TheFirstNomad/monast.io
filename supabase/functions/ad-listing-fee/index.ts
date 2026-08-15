@@ -63,11 +63,20 @@ Deno.serve(async (req) => {
       throw e;
     }
 
+    // Bind the proof to this seller's own wallet so a stranger's transaction
+    // hash cannot be replayed by someone else.
+    const { data: sellerProfile } = await admin
+      .from("profiles")
+      .select("wallet_address")
+      .eq("id", userId)
+      .maybeSingle();
+
     const verify = await verifyUsdcTransfer({
       chainId,
       txHash,
       expectedTo: revenue.address,
       expectedAmountUsdc: fees.listingFeeUsdc,
+      expectedFrom: sellerProfile?.wallet_address ?? undefined,
     });
     if (!verify.ok) return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
 
