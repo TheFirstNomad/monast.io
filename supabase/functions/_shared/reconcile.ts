@@ -8,6 +8,7 @@
 
 import { getTransaction } from "./circle-dev.ts";
 import { updateLedgerStatus } from "./ledger.ts";
+import { notify } from "./notify.ts";
 
 const SETTLE_DELAY_MS = 2 * 60 * 1000; // give Circle a couple of minutes
 const BATCH = 50;
