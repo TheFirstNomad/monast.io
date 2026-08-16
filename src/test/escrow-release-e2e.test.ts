@@ -216,7 +216,7 @@ suite("escrow release end to end", () => {
     await admin.from("user_wallets").insert({
       user_id: sellerId,
       address: SELLER_LINKED_WALLET,
-      kind: "self_custody",
+      kind: "external",
       chain_id: ARC_CHAIN_ID,
       is_primary: true,
     });
