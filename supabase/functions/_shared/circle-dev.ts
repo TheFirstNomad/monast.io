@@ -9,14 +9,19 @@ import { formatUsdc, toBaseUnits } from "./fees.ts";
 
 const CIRCLE_BASE = "https://api.circle.com/v1/w3s";
 
+/** Deno env read that also type-checks in a DOM/browser TS program (tests). */
+function envVar(name: string): string | undefined {
+  return (globalThis as any).Deno?.env?.get(name);
+}
+
 function apiKey(): string {
-  const k = Deno.env.get("CIRCLE_API_KEY");
+  const k = envVar("CIRCLE_API_KEY");
   if (!k) throw new Error("CIRCLE_API_KEY is not configured");
   return k;
 }
 
 function entitySecretHex(): string {
-  const s = Deno.env.get("CIRCLE_ENTITY_SECRET");
+  const s = envVar("CIRCLE_ENTITY_SECRET");
   if (!s) {
     throw new Error(
       "CIRCLE_ENTITY_SECRET is not configured - treasury operations are disabled",
@@ -78,7 +83,7 @@ export async function entitySecretCiphertext(): Promise<string> {
   const pem = await entityPublicKeyPem();
   const key = await crypto.subtle.importKey(
     "spki",
-    pemToDer(pem),
+    pemToDer(pem) as unknown as BufferSource,
     { name: "RSA-OAEP", hash: "SHA-256" },
     false,
     ["encrypt"],
@@ -86,7 +91,7 @@ export async function entitySecretCiphertext(): Promise<string> {
   const encrypted = await crypto.subtle.encrypt(
     { name: "RSA-OAEP" },
     key,
-    hexToBytes(entitySecretHex()),
+    hexToBytes(entitySecretHex()) as unknown as BufferSource,
   );
   let binary = "";
   const bytes = new Uint8Array(encrypted);
@@ -100,8 +105,8 @@ export async function entitySecretCiphertext(): Promise<string> {
  * so a rename on Circle's side needs no redeploy.
  */
 export function circleBlockchain(chainId: number): string {
-  const arcTestnet = Deno.env.get("CIRCLE_ARC_TESTNET_BLOCKCHAIN") ?? "ARC-TESTNET";
-  const arcMainnet = Deno.env.get("CIRCLE_ARC_MAINNET_BLOCKCHAIN") ?? "ARC";
+  const arcTestnet = envVar("CIRCLE_ARC_TESTNET_BLOCKCHAIN") ?? "ARC-TESTNET";
+  const arcMainnet = envVar("CIRCLE_ARC_MAINNET_BLOCKCHAIN") ?? "ARC";
   const map: Record<number, string> = {
     5042002: arcTestnet,
     5042001: arcMainnet,
