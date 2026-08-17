@@ -197,8 +197,6 @@ describe("EscrowDetail action gating", () => {
     expect(btn(/Open a dispute/i)).toBeNull();
     expect(btn(/cancellation/i)).toBeNull();
     expect(btn(/Cancel this order/i)).toBeNull();
-
-    screen.unmount?.();
   });
 
   it("refunded escrows hide refund, release and dispute for the seller", async () => {
