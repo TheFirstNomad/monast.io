@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Save, Wallet } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
+import { WalletNetworkCard } from "@/components/WalletNetworkCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
@@ -149,15 +150,11 @@ const Settings = () => {
               />
             </div>
 
-            <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-              <Wallet className="w-5 h-5 text-primary shrink-0" />
-              <div className="min-w-0">
-                <div className="text-xs text-muted-foreground">Payout wallet</div>
-                <div className="text-sm font-medium text-foreground truncate">
-                  {wallet ?? "No wallet linked yet. Connect one to receive USDC"}
-                </div>
-              </div>
-            </div>
+            <WalletNetworkCard
+              userId={user.id}
+              payoutWallet={wallet}
+              onPayoutWalletChange={setWallet}
+            />
 
             <Button onClick={save} disabled={saving} className="gap-2">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
