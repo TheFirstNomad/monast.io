@@ -21,18 +21,18 @@ const ALLOWED_HOSTS = new Set([
 
 // The stable ID of THIS project only, supplied as a backend secret. A wildcard
 // would let any other Lovable project relay a signed message here.
-const LOVABLE_PROJECT_ID = (Deno.env.get("LOVABLE_PROJECT_ID") ?? "").toLowerCase().trim();
+const PREVIEW_PROJECT_ID = (Deno.env.get("PREVIEW_PROJECT_ID") ?? "").toLowerCase().trim();
 
 function hostAllowed(host: string): boolean {
   const h = host.toLowerCase();
   if (ALLOWED_HOSTS.has(h)) return true;
   const bare = h.split(":")[0];
   if (ALLOWED_HOSTS.has(bare)) return true;
-  if (!LOVABLE_PROJECT_ID) return false;
+  if (!PREVIEW_PROJECT_ID) return false;
   // Only this project's own in-editor preview / sandbox hosts.
-  return bare === `${LOVABLE_PROJECT_ID}.lovableproject.com` ||
-    bare === `id-preview--${LOVABLE_PROJECT_ID}.lovable.app` ||
-    bare === `preview--${LOVABLE_PROJECT_ID}.lovable.app`;
+  return bare === `${PREVIEW_PROJECT_ID}.lovableproject.com` ||
+    bare === `id-preview--${PREVIEW_PROJECT_ID}.lovable.app` ||
+    bare === `preview--${PREVIEW_PROJECT_ID}.lovable.app`;
 }
 
 
