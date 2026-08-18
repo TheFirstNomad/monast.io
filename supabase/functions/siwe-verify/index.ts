@@ -19,15 +19,22 @@ const ALLOWED_HOSTS = new Set([
   "127.0.0.1:8080",
 ]);
 
+// The stable ID of THIS project only, supplied as a backend secret. A wildcard
+// would let any other Lovable project relay a signed message here.
+const LOVABLE_PROJECT_ID = (Deno.env.get("LOVABLE_PROJECT_ID") ?? "").toLowerCase().trim();
+
 function hostAllowed(host: string): boolean {
   const h = host.toLowerCase();
   if (ALLOWED_HOSTS.has(h)) return true;
   const bare = h.split(":")[0];
   if (ALLOWED_HOSTS.has(bare)) return true;
-  // Lovable preview/sandbox hosts for this project
-  return /^[a-z0-9-]*--[a-z0-9-]+\.lovable\.app$/.test(bare) ||
-    bare.endsWith(".lovableproject.com");
+  if (!LOVABLE_PROJECT_ID) return false;
+  // Only this project's own in-editor preview / sandbox hosts.
+  return bare === `${LOVABLE_PROJECT_ID}.lovableproject.com` ||
+    bare === `id-preview--${LOVABLE_PROJECT_ID}.lovable.app` ||
+    bare === `preview--${LOVABLE_PROJECT_ID}.lovable.app`;
 }
+
 
 function parseSiwe(message: string) {
   // Minimal EIP-4361 parsing - pulls out the fields we need to validate.
