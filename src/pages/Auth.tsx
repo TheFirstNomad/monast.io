@@ -17,8 +17,8 @@ const Auth = () => {
   useEffect(() => {
     if (loading || !user) return;
 
-    const email = user.email ?? "";
-    const isSelfCustody = email.endsWith(SELF_CUSTODY_EMAIL_DOMAIN);
+    const isSelfCustody = isSelfCustodyEmail(user.email);
+
 
     if (isSelfCustody) {
       navigate("/dashboard", { replace: true });
