@@ -259,11 +259,12 @@ export const Navbar = () => {
             </div>
           ))}
 
-          {address ? (
+          {signedIn ? (
             <Button variant="outline" size="sm" onClick={disconnect} className="w-full gap-2">
               <LogOut className="w-4 h-4" />
-              Sign out ({short})
+              {address ? `Sign out (${short})` : "Sign out"}
             </Button>
+
           ) : (
             <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
               <Wallet className="w-4 h-4" />
