@@ -152,9 +152,22 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        // An email / Google session is a real login that the user never asked
+        // to end. Connecting a wallet must not sign them out or hijack the
+        // session with SIWE - just record the address on their profile.
+        if (data.session && !isSelfCustodyEmail(data.session.user.email)) {
+          await supabase
+            .from("profiles")
+            .update({ wallet_address: normalizedAddress })
+            .eq("id", data.session.user.id);
+          setRehydrationStatus("rehydrated");
+          return;
+        }
+
         if (data.session) {
           await supabase.auth.signOut();
         }
+
 
         setRehydrationStatus("re-signed");
         await doSiwe(normalizedAddress);
