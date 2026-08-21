@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Wallet, ShieldCheck, Coins, Mail, Loader2, CheckCircle2 } from "lucide-react";
+import { Wallet, ShieldCheck, Coins, Mail, Loader2 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { toast } from "@/hooks/use-toast";
 
 type Mode = "wallet" | "email";
@@ -13,16 +12,14 @@ type Mode = "wallet" | "email";
 /**
  * Two ways in:
  *  - Self-custody: connect a wallet and sign the message (no password, no email).
- *  - Email: a magic link, after which a Circle multichain wallet on Arc is
- *    provisioned for the account (handled on /auth once the session lands).
+ *  - Google: one tap with the account already signed in on this browser. A Circle
+ *    multichain wallet on Arc is provisioned afterwards (handled on /auth).
  */
 export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   const { connect, connecting, address } = useWallet();
   const { user } = useAuth();
   const [mode, setMode] = useState<Mode>("wallet");
-  const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   // `connect()` only opens the wallet modal; the session appears later, once
   // the user picks a wallet and signs. Wait for that before moving on.
@@ -35,45 +32,33 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
     await connect();
   };
 
-  const sendMagicLink = async () => {
-    const trimmed = email.trim();
-    if (!trimmed) return;
-    setSending(true);
+  const continueWithGoogle = async () => {
+    setGoogleLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: trimmed,
-        options: { emailRedirectTo: `${window.location.origin}/auth` },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/auth`,
       });
-      if (error) throw error;
-      setSent(true);
+      if (result.error) {
+        toast({
+          title: "Could not sign you in",
+          description: result.error.message ?? "Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (result.redirected) return;
+      // Session already set by the helper.
+      onDone?.();
     } catch (e) {
       toast({
-        title: "Could not send the link",
+        title: "Could not sign you in",
         description: (e as Error).message,
         variant: "destructive",
       });
     } finally {
-      setSending(false);
+      setGoogleLoading(false);
     }
   };
-
-  if (sent) {
-    return (
-      <div className="text-center">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-          <CheckCircle2 className="w-8 h-8 text-primary" />
-        </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Check your inbox</h1>
-        <p className="text-muted-foreground mb-6">
-          We sent a sign-in link to <span className="text-foreground font-medium">{email.trim()}</span>.
-          Open it on this device to finish signing in.
-        </p>
-        <Button variant="outline" className="w-full" onClick={() => setSent(false)}>
-          Use a different email
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="text-center">
@@ -88,7 +73,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
       <p className="text-muted-foreground mb-6">
         {mode === "wallet"
           ? "Connect your wallet and sign a message. You pay and get paid in USDC on Arc. monast.io never holds your keys."
-          : "Sign in with your email and we set up a Circle wallet on Arc for you. You pick the PIN, so the wallet stays yours."}
+          : "One tap with the Google account you are already signed in to. We set up a Circle wallet on Arc for you, and you pick the PIN, so the wallet stays yours."}
       </p>
 
       <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted mb-6">
@@ -132,40 +117,30 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
           </p>
         </>
       ) : (
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            sendMagicLink();
-          }}
-        >
-          <Input
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-label="Email address"
-          />
+        <>
           <Button
-            type="submit"
+            onClick={continueWithGoogle}
+            disabled={googleLoading}
             size="lg"
-            disabled={sending || !email.trim()}
-            className="w-full gap-2 font-semibold"
+            variant="outline"
+            className="w-full gap-3 font-semibold"
           >
-            {sending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
-            {sending ? "Sending link..." : "Email me a sign-in link"}
+            {googleLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <GoogleMark />
+            )}
+            {googleLoading ? "Signing you in..." : "Continue with Google"}
           </Button>
-          <p className="text-xs text-muted-foreground">
-            No password. We email you a one-time link.
+          <p className="text-xs text-muted-foreground mt-3">
+            No password, no code to type. Uses the Google account on this browser.
           </p>
-        </form>
+        </>
       )}
 
       <div className="mt-10 grid gap-3 text-left">
         {[
-          { Icon: ShieldCheck, title: "No password, no seed phrase to hand over", body: "Your signature or a one-time link is the login. Nothing to leak." },
+          { Icon: ShieldCheck, title: "No password, no seed phrase to hand over", body: "Your signature or your Google account is the login. Nothing to leak." },
           { Icon: Coins, title: "USDC on Arc", body: "Escrow holds the buyer's funds until the item is confirmed delivered." },
         ].map(({ Icon, title, body }) => (
           <div key={title} className="flex gap-3 rounded-xl border border-border bg-card p-3">
@@ -180,6 +155,15 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
     </div>
   );
 };
+
+const GoogleMark = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4.2h6.6c-.1 1.1-.9 2.8-2.6 3.9l-.1.1 3.8 3c2.4-2.2 3.8-5.5 3.8-9z" />
+    <path fill="#34A853" d="M12 24c3.5 0 6.4-1.2 8.5-3.1l-4-3.1c-1.1.8-2.6 1.3-4.5 1.3-3.4 0-6.3-2.2-7.3-5.3l-.1.1-4 3.1C2.6 21.3 7 24 12 24z" />
+    <path fill="#FBBC05" d="M4.7 13.8c-.3-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5V8.7l-4-3.1C.4 7.3 0 9.6 0 11.3s.4 4 1.1 5.7l3.6-3.2z" />
+    <path fill="#EA4335" d="M12 4.7c2.4 0 4 1 4.9 1.9l3.6-3.5C18.4 1.2 15.5 0 12 0 7 0 2.6 2.7 1.1 6.7l3.6 2.8C5.7 6.9 8.6 4.7 12 4.7z" />
+  </svg>
+);
 
 export const SignInChoiceDialog = ({
   open,
