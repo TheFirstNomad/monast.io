@@ -34,9 +34,9 @@ describe("parked features stay unreachable", () => {
     }
   });
 
-  it("sign-in offers both wallet and email paths", () => {
+  it("sign-in offers both wallet and Google paths", () => {
     const src = read("src/components/SignInChoice.tsx");
-    expect(src.includes("signInWithOtp")).toBe(true);
+    expect(src.includes('signInWithOAuth("google"')).toBe(true);
     expect(src.includes("connect()")).toBe(true);
   });
 
