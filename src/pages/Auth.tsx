@@ -5,10 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { SignInChoice } from "@/components/SignInChoice";
 import { WalletSetupDialog } from "@/components/WalletSetupDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { isSelfCustodyEmail } from "@/lib/session";
 
-// Self-custody sessions are created by SIWE with a synthetic email on this
-// domain. Those users already hold their own keys, so no Circle wallet.
-const SELF_CUSTODY_EMAIL_DOMAIN = "@wallet.monast.io";
 
 const Auth = () => {
   const { user, loading } = useAuth();
