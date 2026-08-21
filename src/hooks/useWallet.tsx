@@ -4,6 +4,8 @@ import { useAppKit } from "@reown/appkit/react";
 import { getAddress, isAddress } from "viem";
 import { supabase } from "@/integrations/supabase/client";
 import { ARC_CHAIN_ID } from "@/lib/usdc";
+import { isSelfCustodyEmail } from "@/lib/session";
+
 import { toast } from "sonner";
 
 /**
