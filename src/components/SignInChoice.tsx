@@ -92,7 +92,10 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
           });
         }
 
+        // Tells /auth that the Circle wallet is already handled for this login.
+        sessionStorage.setItem("monast.circleSocial", "1");
         toast({ title: "You're in", description: "Your Arc wallet is ready." });
+
         onDone?.();
       } catch (e) {
         handling.current = false;
