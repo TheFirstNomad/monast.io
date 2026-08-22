@@ -3,8 +3,11 @@
 // userToken + encryptionKey minted by Circle (social login) or by the
 // circle-provision-wallet edge function. All PIN entry happens inside the
 // SDK's UI overlay - the app never sees the PIN, keeping wallets non-custodial.
-import { W3SSdk, SocialLoginProvider } from "@circle-fin/w3s-pw-web-sdk";
-import type { LoginCompleteCallback } from "@circle-fin/w3s-pw-web-sdk/dist/src/types";
+import { W3SSdk } from "@circle-fin/w3s-pw-web-sdk";
+import {
+  SocialLoginProvider,
+  type LoginCompleteCallback,
+} from "@circle-fin/w3s-pw-web-sdk/dist/src/types";
 import { supabase } from "@/integrations/supabase/client";
 import { CIRCLE_APP_ID, GOOGLE_CLIENT_ID, googleRedirectUri } from "./config";
 
