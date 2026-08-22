@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Wallet, ShieldCheck, Coins, Mail, Loader2 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  initGoogleSocialLogin,
+  runCircleChallenge,
+  startGoogleSocialLogin,
+} from "@/lib/circle/client";
 import { toast } from "@/hooks/use-toast";
 
 type Mode = "wallet" | "email";
@@ -12,14 +17,16 @@ type Mode = "wallet" | "email";
 /**
  * Two ways in:
  *  - Self-custody: connect a wallet and sign the message (no password, no email).
- *  - Google: one tap with the account already signed in on this browser. A Circle
- *    multichain wallet on Arc is provisioned afterwards (handled on /auth).
+ *  - Google via Circle Social Login: Circle owns the Google flow and mints the
+ *    userToken, then a non-custodial SCA wallet on Arc is created. A Supabase
+ *    session for the real Google email is minted server-side afterwards.
  */
 export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   const { connect, connecting, address } = useWallet();
   const { user } = useAuth();
   const [mode, setMode] = useState<Mode>("wallet");
   const [googleLoading, setGoogleLoading] = useState(false);
+  const handling = useRef(false);
 
   // `connect()` only opens the wallet modal; the session appears later, once
   // the user picks a wallet and signs. Wait for that before moving on.
@@ -32,33 +39,100 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
     await connect();
   };
 
-  const continueWithGoogle = async () => {
-    setGoogleLoading(true);
-    try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/auth`,
-      });
-      if (result.error) {
+  // Turns a finished Circle social login into: Arc wallet + Supabase session.
+  const finishSocialLogin = useCallback(
+    async (
+      error: { message: string } | undefined,
+      result:
+        | {
+            userToken: string;
+            encryptionKey: string;
+            oAuthInfo?: { socialUserInfo?: { email?: string } };
+          }
+        | undefined,
+    ) => {
+      if (handling.current) return;
+      if (error) {
+        setGoogleLoading(false);
         toast({
           title: "Could not sign you in",
-          description: result.error.message ?? "Please try again.",
+          description: error.message,
           variant: "destructive",
         });
         return;
       }
-      if (result.redirected) return;
-      // Session already set by the helper.
-      onDone?.();
+      if (!result?.userToken) return;
+      handling.current = true;
+      setGoogleLoading(true);
+
+      try {
+        const email = result.oAuthInfo?.socialUserInfo?.email;
+        if (!email) throw new Error("Google did not share an email address.");
+
+        const { data, error: fnErr } = await supabase.functions.invoke("circle-social", {
+          body: { action: "complete", userToken: result.userToken, email },
+        });
+        if (fnErr) throw new Error(fnErr.message);
+        if (!data || data.error) throw new Error(data?.error ?? "Sign-in failed");
+
+        // Sign into Lovable Cloud with the real Google email.
+        const { error: sessErr } = await supabase.auth.verifyOtp({
+          email: data.email,
+          token_hash: data.tokenHash,
+          type: "email",
+        });
+        if (sessErr) throw new Error(sessErr.message);
+
+        // A brand new Circle user still needs to pick a PIN.
+        if (data.status === "challenge" && data.challengeId) {
+          await runCircleChallenge({
+            userToken: result.userToken,
+            encryptionKey: result.encryptionKey,
+            challengeId: data.challengeId,
+          });
+        }
+
+        toast({ title: "You're in", description: "Your Arc wallet is ready." });
+        onDone?.();
+      } catch (e) {
+        handling.current = false;
+        toast({
+          title: "Could not sign you in",
+          description: (e as Error).message,
+          variant: "destructive",
+        });
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    [onDone],
+  );
+
+  // Register the Circle SDK login callback up front so the redirect back from
+  // Google is picked up on load, not only when the button is pressed.
+  useEffect(() => {
+    if (user) return;
+    initGoogleSocialLogin(finishSocialLogin as never).catch(() => {
+      /* surfaced when the user actually presses the button */
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const continueWithGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      await initGoogleSocialLogin(finishSocialLogin as never);
+      await startGoogleSocialLogin();
     } catch (e) {
+      setGoogleLoading(false);
       toast({
         title: "Could not sign you in",
         description: (e as Error).message,
         variant: "destructive",
       });
-    } finally {
-      setGoogleLoading(false);
     }
   };
+
 
   return (
     <div className="text-center">
