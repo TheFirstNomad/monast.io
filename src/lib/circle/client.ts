@@ -1,10 +1,15 @@
 // Client-side Circle Web SDK singleton.
 // The SDK is initialized with the public APP_ID and later receives the
-// userToken + encryptionKey minted server-side by the circle-provision-wallet
-// edge function. All PIN entry happens inside the SDK's UI overlay - the app
-// never sees the PIN, keeping wallets non-custodial.
+// userToken + encryptionKey minted by Circle (social login) or by the
+// circle-provision-wallet edge function. All PIN entry happens inside the
+// SDK's UI overlay - the app never sees the PIN, keeping wallets non-custodial.
 import { W3SSdk } from "@circle-fin/w3s-pw-web-sdk";
-import { CIRCLE_APP_ID } from "./config";
+import {
+  SocialLoginProvider,
+  type LoginCompleteCallback,
+} from "@circle-fin/w3s-pw-web-sdk/dist/src/types";
+import { supabase } from "@/integrations/supabase/client";
+import { CIRCLE_APP_ID, GOOGLE_CLIENT_ID, googleRedirectUri } from "./config";
 
 let sdk: W3SSdk | null = null;
 
@@ -45,4 +50,50 @@ export function runCircleChallenge(input: CircleChallengeInput): Promise<void> {
       reject(new Error("Circle challenge returned no result"));
     });
   });
+}
+
+/**
+ * Prepares the singleton for Circle's native Google Social Login and registers
+ * the callback that fires when the browser returns from Google's consent
+ * screen. Must be called before `startGoogleSocialLogin()` and also on page
+ * load so the redirect back from Google can be picked up.
+ */
+export async function initGoogleSocialLogin(
+  onLoginComplete: LoginCompleteCallback,
+): Promise<void> {
+  if (!GOOGLE_CLIENT_ID) {
+    throw new Error(
+      "Google sign-in is not configured yet (missing VITE_GOOGLE_CLIENT_ID).",
+    );
+  }
+
+  const s = getCircleSdk();
+  const deviceId = await s.getDeviceId();
+
+  const { data, error } = await supabase.functions.invoke("circle-social", {
+    body: { action: "deviceToken", deviceId },
+  });
+  if (error) throw new Error(error.message);
+  if (!data || data.error) throw new Error(data?.error ?? "Could not reach Circle");
+
+  s.updateConfigs(
+    {
+      appSettings: { appId: CIRCLE_APP_ID },
+      loginConfigs: {
+        google: {
+          clientId: GOOGLE_CLIENT_ID,
+          redirectUri: googleRedirectUri(),
+          selectAccountPrompt: true,
+        },
+        deviceToken: data.deviceToken,
+        deviceEncryptionKey: data.deviceEncryptionKey,
+      },
+    },
+    onLoginComplete,
+  );
+}
+
+/** Sends the user to Google via Circle. Resolves once the redirect starts. */
+export async function startGoogleSocialLogin(): Promise<void> {
+  await getCircleSdk().performLogin(SocialLoginProvider.GOOGLE);
 }

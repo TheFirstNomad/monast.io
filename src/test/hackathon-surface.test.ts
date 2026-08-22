@@ -34,11 +34,14 @@ describe("parked features stay unreachable", () => {
     }
   });
 
-  it("sign-in offers both wallet and Google paths", () => {
+  it("sign-in offers both wallet and Circle Google paths", () => {
     const src = read("src/components/SignInChoice.tsx");
-    expect(src.includes('signInWithOAuth("google"')).toBe(true);
+    expect(src.includes("startGoogleSocialLogin")).toBe(true);
     expect(src.includes("connect()")).toBe(true);
+    // Lovable/Supabase Google OAuth is no longer used on the email path.
+    expect(src.includes("signInWithOAuth")).toBe(false);
   });
+
 
   it("email sign-in provisions a Circle wallet", () => {
     const src = read("src/pages/Auth.tsx");

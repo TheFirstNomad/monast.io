@@ -19,11 +19,15 @@ const Auth = () => {
 
     const isSelfCustody = isSelfCustodyEmail(user.email);
 
+    // Circle Social Login already created the Arc wallet during sign-in.
+    const socialHandled = sessionStorage.getItem("monast.circleSocial") === "1";
 
-    if (isSelfCustody) {
+    if (isSelfCustody || socialHandled) {
+      sessionStorage.removeItem("monast.circleSocial");
       navigate("/dashboard", { replace: true });
       return;
     }
+
 
     // Email sign-in: make sure a Circle wallet exists before moving on.
     if (provisioned.current) return;
