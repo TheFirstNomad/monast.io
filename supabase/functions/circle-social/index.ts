@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
 
       const res = await circle("/users/social/token", {
         method: "POST",
-        body: JSON.stringify({ deviceId }),
+        body: JSON.stringify({ deviceId, idempotencyKey: crypto.randomUUID() }),
       });
       const data = res?.data ?? {};
       const deviceToken = data.deviceToken;
