@@ -13,6 +13,8 @@ import { CIRCLE_APP_ID, GOOGLE_CLIENT_ID, googleRedirectUri } from "./config";
 
 let sdk: W3SSdk | null = null;
 
+const PENDING_DEVICE_KEY = "monast.circleGoogleDevice";
+
 export function getCircleSdk(): W3SSdk {
   if (!sdk) {
     sdk = new W3SSdk({
@@ -68,13 +70,29 @@ export async function initGoogleSocialLogin(
   }
 
   const s = getCircleSdk();
-  const deviceId = await s.getDeviceId();
+  // If a login is already in flight (we're returning from Google's
+  // redirect), reuse the exact device token pair used before the redirect.
+  // Circle's own docs warn that calling getDeviceId() again mid-login
+  // opens a fresh invisible modal and interrupts the pending login - so
+  // we must NOT re-derive the device id/token here in that case.
+  const pending = sessionStorage.getItem(PENDING_DEVICE_KEY);
+  let deviceToken: string;
+  let deviceEncryptionKey: string;
 
-  const { data, error } = await supabase.functions.invoke("circle-social", {
-    body: { action: "deviceToken", deviceId },
-  });
-  if (error) throw new Error(error.message);
-  if (!data || data.error) throw new Error(data?.error ?? "Could not reach Circle");
+  if (pending) {
+    ({ deviceToken, deviceEncryptionKey } = JSON.parse(pending));
+  } else {
+    const deviceId = await s.getDeviceId();
+
+    const { data, error } = await supabase.functions.invoke("circle-social", {
+      body: { action: "deviceToken", deviceId },
+    });
+    if (error) throw new Error(error.message);
+    if (!data || data.error) throw new Error(data?.error ?? "Could not reach Circle");
+
+    deviceToken = data.deviceToken;
+    deviceEncryptionKey = data.deviceEncryptionKey;
+  }
 
   s.updateConfigs(
     {
@@ -85,12 +103,24 @@ export async function initGoogleSocialLogin(
           redirectUri: googleRedirectUri(),
           selectAccountPrompt: true,
         },
-        deviceToken: data.deviceToken,
-        deviceEncryptionKey: data.deviceEncryptionKey,
+        deviceToken,
+        deviceEncryptionKey,
       },
     },
-    onLoginComplete,
+    (error, result) => {
+      // Login finished (success or failure) - the pending pair is no
+      // longer needed regardless of outcome.
+      sessionStorage.removeItem(PENDING_DEVICE_KEY);
+      onLoginComplete(error, result);
+    },
   );
+
+  if (!pending) {
+    sessionStorage.setItem(
+      PENDING_DEVICE_KEY,
+      JSON.stringify({ deviceToken, deviceEncryptionKey }),
+    );
+  }
 }
 
 /** Sends the user to Google via Circle. Resolves once the redirect starts. */
