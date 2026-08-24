@@ -99,7 +99,6 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
 
         // Sign into Lovable Cloud with the real Google email.
         const { error: sessErr } = await supabase.auth.verifyOtp({
-          email: data.email,
           token_hash: data.tokenHash,
           type: "email",
         });
@@ -112,6 +111,25 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
             encryptionKey: result.encryptionKey,
             challengeId: data.challengeId,
           });
+
+          // Circle may take a moment to expose the newly initialized wallet.
+          // Wait for the backend to see and persist it before declaring the
+          // first-time onboarding complete.
+          let walletReady = false;
+          for (let attempt = 0; attempt < 5; attempt += 1) {
+            if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 800));
+            const { data: syncData, error: syncErr } = await supabase.functions.invoke(
+              "circle-social",
+              { body: { action: "syncWallet", userToken: result.userToken } },
+            );
+            if (!syncErr && syncData?.status === "ready") {
+              walletReady = true;
+              break;
+            }
+          }
+          if (!walletReady) {
+            throw new Error("Your Arc wallet was created but could not be synced. Please try again.");
+          }
         }
 
         // Tells /auth that the Circle wallet is already handled for this login.

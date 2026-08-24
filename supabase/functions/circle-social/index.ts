@@ -77,7 +77,64 @@ Deno.serve(async (req) => {
       return json({ deviceToken, deviceEncryptionKey });
     }
 
-    // ---- 2. Finish social login: wallet + Supabase session -----------------
+    // ---- 2. Persist a wallet created by the first-time PIN challenge -------
+    if (action === "syncWallet") {
+      const userToken = String(payload?.userToken ?? "");
+      const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+      if (!userToken) return json({ error: "userToken is required" }, 400);
+      if (!jwt) return json({ error: "Authentication is required" }, 401);
+
+      const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+      const { data: authData, error: authError } = await admin.auth.getUser(jwt);
+      if (authError || !authData.user) return json({ error: "Invalid session" }, 401);
+
+      const me = await circle("/user", {
+        method: "GET",
+        headers: { "X-User-Token": userToken },
+      });
+      const circleUserId: string | undefined = me?.data?.user?.id ?? me?.data?.id;
+      if (!circleUserId) return json({ error: "Could not verify the Circle session" }, 401);
+
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("circle_user_id")
+        .eq("id", authData.user.id)
+        .maybeSingle();
+      if (!profile || profile.circle_user_id !== circleUserId) {
+        return json({ error: "Circle identity does not match this account" }, 403);
+      }
+
+      const walletsRes = await circle("/wallets", {
+        method: "GET",
+        headers: { "X-User-Token": userToken },
+      });
+      const wallets = walletsRes?.data?.wallets ?? [];
+      if (wallets.length === 0) {
+        return json({ error: "Arc wallet is not ready yet", code: "wallet_not_ready" }, 409);
+      }
+
+      for (const wallet of wallets) {
+        await admin.from("user_wallets").upsert(
+          {
+            user_id: authData.user.id,
+            address: String(wallet.address).toLowerCase(),
+            kind: "email_circle",
+            chain_id: null,
+            label: wallet.blockchain,
+            is_primary: false,
+          },
+          { onConflict: "user_id,address" },
+        );
+      }
+      await admin
+        .from("profiles")
+        .update({ circle_wallet_address: wallets[0].address })
+        .eq("id", authData.user.id);
+
+      return json({ status: "ready", wallets });
+    }
+
+    // ---- 3. Finish social login: wallet + Supabase session -----------------
     if (action === "complete") {
       const userToken = String(payload?.userToken ?? "");
       const rawEmail = String(payload?.email ?? "").trim().toLowerCase();
