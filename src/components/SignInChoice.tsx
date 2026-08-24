@@ -97,9 +97,13 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         if (fnErr) throw new Error(await readFunctionError(fnErr));
         if (!data || data.error) throw new Error(data?.error ?? "Sign-in failed");
 
-        // Sign into Lovable Cloud with the real Google email.
+        // Prevent /auth from starting the legacy email-wallet provisioner while
+        // this first-time Circle Social Login is still finishing its challenge.
+        sessionStorage.setItem("monast.circleSocial", "pending");
+
+        // Sign into Lovable Cloud with the real Google email. For token-hash
+        // verification the auth API requires exactly token_hash + type.
         const { error: sessErr } = await supabase.auth.verifyOtp({
-          email: data.email,
           token_hash: data.tokenHash,
           type: "email",
         });
@@ -112,6 +116,25 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
             encryptionKey: result.encryptionKey,
             challengeId: data.challengeId,
           });
+
+          // Circle may take a moment to expose the newly initialized wallet.
+          // Wait for the backend to see and persist it before declaring the
+          // first-time onboarding complete.
+          let walletReady = false;
+          for (let attempt = 0; attempt < 5; attempt += 1) {
+            if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 800));
+            const { data: syncData, error: syncErr } = await supabase.functions.invoke(
+              "circle-social",
+              { body: { action: "syncWallet", userToken: result.userToken } },
+            );
+            if (!syncErr && syncData?.status === "ready") {
+              walletReady = true;
+              break;
+            }
+          }
+          if (!walletReady) {
+            throw new Error("Your Arc wallet was created but could not be synced. Please try again.");
+          }
         }
 
         // Tells /auth that the Circle wallet is already handled for this login.
@@ -121,6 +144,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         onDone?.();
       } catch (e) {
         handling.current = false;
+        sessionStorage.removeItem("monast.circleSocial");
         toast({
           title: "Could not sign you in",
           description: (e as Error).message,
