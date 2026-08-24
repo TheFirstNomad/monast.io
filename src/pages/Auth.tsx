@@ -20,7 +20,12 @@ const Auth = () => {
     const isSelfCustody = isSelfCustodyEmail(user.email);
 
     // Circle Social Login already created the Arc wallet during sign-in.
-    const socialHandled = sessionStorage.getItem("monast.circleSocial") === "1";
+    const socialState = sessionStorage.getItem("monast.circleSocial");
+    const socialHandled = socialState === "1";
+
+    // Circle Social Login creates the auth session before its first-time PIN
+    // challenge and wallet sync finish. Do not race the legacy provisioner.
+    if (socialState === "pending") return;
 
     if (isSelfCustody || socialHandled) {
       sessionStorage.removeItem("monast.circleSocial");

@@ -97,7 +97,12 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         if (fnErr) throw new Error(await readFunctionError(fnErr));
         if (!data || data.error) throw new Error(data?.error ?? "Sign-in failed");
 
-        // Sign into Lovable Cloud with the real Google email.
+        // Prevent /auth from starting the legacy email-wallet provisioner while
+        // this first-time Circle Social Login is still finishing its challenge.
+        sessionStorage.setItem("monast.circleSocial", "pending");
+
+        // Sign into Lovable Cloud with the real Google email. For token-hash
+        // verification the auth API requires exactly token_hash + type.
         const { error: sessErr } = await supabase.auth.verifyOtp({
           token_hash: data.tokenHash,
           type: "email",
@@ -139,6 +144,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         onDone?.();
       } catch (e) {
         handling.current = false;
+        sessionStorage.removeItem("monast.circleSocial");
         toast({
           title: "Could not sign you in",
           description: (e as Error).message,
