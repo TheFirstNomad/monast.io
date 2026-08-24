@@ -14,6 +14,37 @@ import { CIRCLE_APP_ID, GOOGLE_CLIENT_ID, googleRedirectUri } from "./config";
 let sdk: W3SSdk | null = null;
 
 const PENDING_DEVICE_KEY = "monast.circleGoogleDevice";
+// Circle device tokens live for 10 minutes. Anything older than this is
+// discarded so a slow trip through Google's consent screen re-mints instead of
+// stalling the login with an expired token.
+const PENDING_DEVICE_TTL_MS = 8 * 60 * 1000;
+
+interface PendingDevice {
+  deviceToken: string;
+  deviceEncryptionKey: string;
+  mintedAt: number;
+}
+
+function readPendingDevice(): PendingDevice | null {
+  const raw = sessionStorage.getItem(PENDING_DEVICE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Partial<PendingDevice>;
+    if (
+      !parsed.deviceToken ||
+      !parsed.deviceEncryptionKey ||
+      !parsed.mintedAt ||
+      Date.now() - parsed.mintedAt > PENDING_DEVICE_TTL_MS
+    ) {
+      sessionStorage.removeItem(PENDING_DEVICE_KEY);
+      return null;
+    }
+    return parsed as PendingDevice;
+  } catch {
+    sessionStorage.removeItem(PENDING_DEVICE_KEY);
+    return null;
+  }
+}
 
 export function getCircleSdk(): W3SSdk {
   if (!sdk) {
@@ -75,12 +106,12 @@ export async function initGoogleSocialLogin(
   // Circle's own docs warn that calling getDeviceId() again mid-login
   // opens a fresh invisible modal and interrupts the pending login - so
   // we must NOT re-derive the device id/token here in that case.
-  const pending = sessionStorage.getItem(PENDING_DEVICE_KEY);
+  const pending = readPendingDevice();
   let deviceToken: string;
   let deviceEncryptionKey: string;
 
   if (pending) {
-    ({ deviceToken, deviceEncryptionKey } = JSON.parse(pending));
+    ({ deviceToken, deviceEncryptionKey } = pending);
   } else {
     const deviceId = await s.getDeviceId();
 
@@ -118,7 +149,7 @@ export async function initGoogleSocialLogin(
   if (!pending) {
     sessionStorage.setItem(
       PENDING_DEVICE_KEY,
-      JSON.stringify({ deviceToken, deviceEncryptionKey }),
+      JSON.stringify({ deviceToken, deviceEncryptionKey, mintedAt: Date.now() }),
     );
   }
 }

@@ -121,7 +121,29 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (profile?.circle_user_id && profile.circle_user_id !== circleUserId) {
-        return json({ error: "This email is already linked to another wallet" }, 409);
+        // A legacy record from the old email/OTP path may exist but never have
+        // been completed (no wallet, no PIN). Such a record is stale and the
+        // social identity may adopt it. A record that actually owns a wallet is
+        // a real conflict and is still refused.
+        const legacy = await circle(`/wallets?userId=${profile.circle_user_id}`, {
+          method: "GET",
+        }).catch(() => null);
+        const legacyWallets = legacy?.data?.wallets ?? [];
+
+        if (legacyWallets.length > 0) {
+          return json(
+            {
+              error: "This email is already linked to another wallet",
+              code: "circle_identity_conflict",
+            },
+            409,
+          );
+        }
+
+        await admin
+          .from("profiles")
+          .update({ circle_user_id: circleUserId })
+          .eq("id", authUserId);
       }
 
       if (!profile) {
