@@ -61,7 +61,12 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         });
         return;
       }
-      if (!result?.userToken) return;
+      if (!result?.userToken) {
+        // Cancelled at Google, or nothing pending on this page load.
+        setGoogleLoading(false);
+        handling.current = false;
+        return;
+      }
       handling.current = true;
       setGoogleLoading(true);
 
@@ -72,7 +77,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         const { data, error: fnErr } = await supabase.functions.invoke("circle-social", {
           body: { action: "complete", userToken: result.userToken, email },
         });
-        if (fnErr) throw new Error(fnErr.message);
+        if (fnErr) throw new Error(await readFunctionError(fnErr));
         if (!data || data.error) throw new Error(data?.error ?? "Sign-in failed");
 
         // Sign into Lovable Cloud with the real Google email.
