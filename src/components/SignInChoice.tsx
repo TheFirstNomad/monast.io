@@ -15,6 +15,23 @@ import { toast } from "@/hooks/use-toast";
 type Mode = "wallet" | "email";
 
 /**
+ * Edge function failures arrive as a generic "non-2xx status code" message.
+ * The real reason lives in the response body, so read it when available.
+ */
+const readFunctionError = async (err: unknown): Promise<string> => {
+  const ctx = (err as { context?: Response }).context;
+  if (ctx && typeof ctx.json === "function") {
+    try {
+      const body = await ctx.clone().json();
+      if (body?.error) return String(body.error);
+    } catch {
+      /* fall through to the generic message */
+    }
+  }
+  return (err as Error).message ?? "Sign-in failed";
+};
+
+/**
  * Two ways in:
  *  - Self-custody: connect a wallet and sign the message (no password, no email).
  *  - Google via Circle Social Login: Circle owns the Google flow and mints the
