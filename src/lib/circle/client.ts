@@ -75,12 +75,12 @@ export async function initGoogleSocialLogin(
   // Circle's own docs warn that calling getDeviceId() again mid-login
   // opens a fresh invisible modal and interrupts the pending login - so
   // we must NOT re-derive the device id/token here in that case.
-  const pending = sessionStorage.getItem(PENDING_DEVICE_KEY);
+  const pending = readPendingDevice();
   let deviceToken: string;
   let deviceEncryptionKey: string;
 
   if (pending) {
-    ({ deviceToken, deviceEncryptionKey } = JSON.parse(pending));
+    ({ deviceToken, deviceEncryptionKey } = pending);
   } else {
     const deviceId = await s.getDeviceId();
 
