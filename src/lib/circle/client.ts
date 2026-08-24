@@ -149,7 +149,7 @@ export async function initGoogleSocialLogin(
   if (!pending) {
     sessionStorage.setItem(
       PENDING_DEVICE_KEY,
-      JSON.stringify({ deviceToken, deviceEncryptionKey }),
+      JSON.stringify({ deviceToken, deviceEncryptionKey, mintedAt: Date.now() }),
     );
   }
 }
