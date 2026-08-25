@@ -238,22 +238,75 @@ Deno.serve(async (req) => {
         return json({ status: "ready", tokenHash, email: rawEmail, wallets });
       }
 
-      const initRes = await circle("/user/initialize", {
-        method: "POST",
-        headers: { "X-User-Token": userToken },
-        body: JSON.stringify({
-          idempotencyKey: crypto.randomUUID(),
-          blockchains: BLOCKCHAINS,
-          accountType: "SCA",
-        }),
-      });
+      let initRes: { data?: { challengeId?: string } } | null = null;
+      try {
+        initRes = await circle("/user/initialize", {
+          method: "POST",
+          headers: { "X-User-Token": userToken },
+          body: JSON.stringify({
+            idempotencyKey: crypto.randomUUID(),
+            blockchains: BLOCKCHAINS,
+            accountType: "SCA",
+          }),
+        });
+      } catch (e) {
+        // Code 155106 = this Circle user was already initialized by an earlier,
+        // never-completed attempt (e.g. an interrupted login before a bug fix).
+        // There's no new challenge to run in that case - re-check for a wallet
+        // instead of treating this as a hard failure.
+        const msg = (e as Error).message;
+        if (!msg.includes("155106")) throw e;
 
-      return json({
-        status: "challenge",
-        challengeId: initRes?.data?.challengeId,
-        tokenHash,
-        email: rawEmail,
-      });
+        const retryWallets = await circle("/wallets", {
+          method: "GET",
+          headers: { "X-User-Token": userToken },
+        }).catch(() => ({ data: { wallets: [] } }));
+        const existing = retryWallets?.data?.wallets ?? [];
+
+        if (existing.length > 0) {
+          for (const w of existing) {
+            await admin.from("user_wallets").upsert(
+              {
+                user_id: authUserId,
+                address: String(w.address).toLowerCase(),
+                kind: "email_circle",
+                chain_id: null,
+                label: w.blockchain,
+                is_primary: false,
+              },
+              { onConflict: "user_id,address" },
+            );
+          }
+          await admin
+            .from("profiles")
+            .update({ circle_wallet_address: existing[0].address })
+            .eq("id", authUserId);
+
+          return json({ status: "ready", tokenHash, email: rawEmail, wallets: existing });
+        }
+
+        // Genuinely stuck: initialized on Circle's side, but the PIN challenge
+        // was never completed and no wallet exists. Surface this clearly
+        // instead of silently returning a broken "challenge" response.
+        return json(
+          {
+            error:
+              "Your wallet setup was started but never finished. Contact support to reset it, or try a different Google account.",
+            code: "stuck_uninitialized",
+          },
+          409,
+        );
+      }
+
+      const challengeId = initRes?.data?.challengeId;
+      if (!challengeId) {
+        // Defensive: never claim "challenge" status without a real challengeId -
+        // this was silently swallowed before, producing a fake "success" with
+        // no PIN prompt and no wallet.
+        return json({ error: "Circle did not return a wallet setup challenge" }, 502);
+      }
+
+      return json({ status: "challenge", challengeId, tokenHash, email: rawEmail });
     }
 
     return json({ error: "Unknown action" }, 400);
