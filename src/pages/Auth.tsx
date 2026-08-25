@@ -57,7 +57,7 @@ const Auth = () => {
   return (
     <Layout>
       <div className="max-w-md mx-auto px-4 py-16">
-        <SignInChoice onDone={() => {}} />
+        <SignInChoice onDone={() => navigate("/dashboard", { replace: true })} />
 
         <div className="mt-8 text-xs text-muted-foreground text-center">
           <Link to="/" className="hover:text-foreground">← Back to home</Link>
