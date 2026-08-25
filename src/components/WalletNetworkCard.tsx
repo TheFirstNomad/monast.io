@@ -15,6 +15,7 @@ interface Props {
   userId: string;
   payoutWallet: string | null;
   onPayoutWalletChange: (address: string) => void;
+  isCircleWallet?: boolean;
 }
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -60,7 +61,7 @@ const Row = ({ label, value, href }: { label: string; value: string; href?: stri
   );
 };
 
-export const WalletNetworkCard = ({ userId, payoutWallet, onPayoutWalletChange }: Props) => {
+export const WalletNetworkCard = ({ userId, payoutWallet, onPayoutWalletChange, isCircleWallet }: Props) => {
   const { address, connect } = useWallet();
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
@@ -69,6 +70,25 @@ export const WalletNetworkCard = ({ userId, payoutWallet, onPayoutWalletChange }
 
   const onArc = chainId === ARC.id;
   const linked = !!address && !!payoutWallet && address.toLowerCase() === payoutWallet.toLowerCase();
+
+  if (isCircleWallet && payoutWallet) {
+    return (
+      <div className="rounded-xl border border-border p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Wallet className="w-4 h-4 text-emerald-500" />
+          <div>
+            <div className="text-xs text-muted-foreground">Payout wallet (Arc, via Google)</div>
+            <div className="text-sm font-semibold">Ready to receive USDC</div>
+          </div>
+        </div>
+        <Row label="Address" value={payoutWallet} href={`${ARC.explorer}/address/${payoutWallet}`} />
+        <p className="text-xs text-muted-foreground">
+          This wallet was created automatically when you signed in with Google.
+          Escrow releases and refunds go here.
+        </p>
+      </div>
+    );
+  }
 
   const useConnectedWallet = async () => {
     if (!address) {

@@ -27,6 +27,7 @@ const Settings = () => {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [wallet, setWallet] = useState<string | null>(null);
+  const [walletSource, setWalletSource] = useState<"self_custody" | "circle" | null>(null);
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -36,13 +37,22 @@ const Settings = () => {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("display_name, bio, avatar_url, wallet_address")
+        .select("display_name, bio, avatar_url, wallet_address, circle_wallet_address")
         .eq("id", user.id)
         .maybeSingle();
       setDisplayName(data?.display_name ?? "");
       setBio(data?.bio ?? "");
       setAvatarUrl(data?.avatar_url ?? "");
-      setWallet(data?.wallet_address ?? null);
+      if (data?.wallet_address) {
+        setWallet(data.wallet_address);
+        setWalletSource("self_custody");
+      } else if (data?.circle_wallet_address) {
+        setWallet(data.circle_wallet_address);
+        setWalletSource("circle");
+      } else {
+        setWallet(null);
+        setWalletSource(null);
+      }
       setFetching(false);
     })();
   }, [user]);
@@ -154,6 +164,7 @@ const Settings = () => {
               userId={user.id}
               payoutWallet={wallet}
               onPayoutWalletChange={setWallet}
+              isCircleWallet={walletSource === "circle"}
             />
 
             <Button onClick={save} disabled={saving} className="gap-2">
