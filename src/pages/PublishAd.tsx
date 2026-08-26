@@ -12,6 +12,7 @@ import { useSeo } from "@/hooks/useSeo";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2, ShieldCheck } from "lucide-react";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { sendUsdcPayment, resolvePayingWallet } from "@/lib/payments/sendUsdc";
 
 /**
  * Listing-fee checkout. An ad stays in `pending_fee` - invisible to buyers  - 
@@ -36,8 +37,17 @@ const PublishAd = () => {
   const [ad, setAd] = useState<DbAd | null>(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
+  const [circleWallet, setCircleWallet] = useState(false);
+  const [circlePaying, setCirclePaying] = useState(false);
   const fee = treasury?.listingFeeUsdc ?? 0.15;
-  const busy = isPending || mining || verifying;
+  const busy = isPending || mining || verifying || circlePaying;
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    resolvePayingWallet(user.id).then((w) => { if (!cancelled) setCircleWallet(w.isCircleWallet); });
+    return () => { cancelled = true; };
+  }, [user]);
 
   useSeo({
     title: "Publish your listing | monast.io",
@@ -60,24 +70,46 @@ const PublishAd = () => {
 
   // Once the fee transaction is mined, the backend verifies it on-chain and
   // flips the ad to active. The client never marks the fee as paid itself.
+  const verifyFee = async (txHash: string) => {
+    if (!ad) return;
+    setVerifying(true);
+    const { data, error } = await supabase.functions.invoke("ad-listing-fee", {
+      body: { ad_id: ad.id, tx_hash: txHash, chain_id: ARC_CHAIN_ID },
+    });
+    setVerifying(false);
+    setPendingHash(undefined);
+    if (error) return toast.error(error.message);
+    if (data?.error) return toast.error(data.error);
+    toast.success("Listing published");
+    navigate(`/ad/${ad.id}`);
+  };
+
   useEffect(() => {
     if (!isSuccess || !pendingHash || !ad) return;
-    (async () => {
-      setVerifying(true);
-      const { data, error } = await supabase.functions.invoke("ad-listing-fee", {
-        body: { ad_id: ad.id, tx_hash: pendingHash, chain_id: ARC_CHAIN_ID },
-      });
-      setVerifying(false);
-      setPendingHash(undefined);
-      if (error) return toast.error(error.message);
-      if (data?.error) return toast.error(data.error);
-      toast.success("Listing published");
-      navigate(`/ad/${ad.id}`);
-    })();
-  }, [isSuccess, pendingHash, ad, navigate]);
+    void verifyFee(pendingHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuccess, pendingHash, ad]);
 
   const pay = async () => {
     if (!user || !ad) return;
+    // Circle wallets sign through Circle's SDK; the fee verifier is unchanged.
+    if (circleWallet) {
+      setCirclePaying(true);
+      try {
+        const { txHash } = await sendUsdcPayment({
+          purpose: "listing_fee",
+          referenceId: ad.id,
+          isCircleWallet: true,
+        });
+        toast.success("Fee sent. Verifying on-chain…");
+        await verifyFee(txHash);
+      } catch (e: any) {
+        toast.error(e?.message || "Payment failed");
+      } finally {
+        setCirclePaying(false);
+      }
+      return;
+    }
     if (!address) { await connect(); return; }
     if (!treasury) {
       toast.error(treasuryError ?? "Publishing is unavailable right now");
