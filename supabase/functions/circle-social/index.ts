@@ -118,6 +118,7 @@ Deno.serve(async (req) => {
           {
             user_id: authData.user.id,
             address: String(wallet.address).toLowerCase(),
+            circle_wallet_id: wallet.id,
             kind: "email_circle",
             chain_id: null,
             label: wallet.blockchain,
@@ -128,7 +129,7 @@ Deno.serve(async (req) => {
       }
       await admin
         .from("profiles")
-        .update({ circle_wallet_address: wallets[0].address })
+        .update({ circle_wallet_address: wallets[0].address, circle_wallet_id: wallets[0].id })
         .eq("id", authData.user.id);
 
       return json({ status: "ready", wallets });
@@ -138,6 +139,9 @@ Deno.serve(async (req) => {
     if (action === "complete") {
       const userToken = String(payload?.userToken ?? "");
       const rawEmail = String(payload?.email ?? "").trim().toLowerCase();
+      // Circle's Social Login refresh token (14-day life). Persisted so paying
+      // later can mint a fresh userToken without another Google round-trip.
+      const refreshToken = payload?.refreshToken ? String(payload.refreshToken) : null;
       if (!userToken) return json({ error: "userToken is required" }, 400);
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rawEmail)) {
         return json({ error: "A Google email is required" }, 400);
@@ -168,6 +172,17 @@ Deno.serve(async (req) => {
       const authUserId = link.user.id;
       const tokenHash = (link.properties as { hashed_token?: string } | null)?.hashed_token;
       if (!tokenHash) return json({ error: "Could not start the session" }, 500);
+
+      if (refreshToken) {
+        await admin.from("circle_sessions").upsert(
+          {
+            user_id: authUserId,
+            refresh_token: refreshToken,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+      }
 
       // Guard: never let a Circle identity take over an account that already
       // belongs to a different Circle user (or to a self-custody wallet).
@@ -222,6 +237,7 @@ Deno.serve(async (req) => {
             {
               user_id: authUserId,
               address: String(w.address).toLowerCase(),
+              circle_wallet_id: w.id,
               kind: "email_circle",
               chain_id: null,
               label: w.blockchain,
@@ -232,7 +248,7 @@ Deno.serve(async (req) => {
         }
         await admin
           .from("profiles")
-          .update({ circle_wallet_address: wallets[0].address })
+          .update({ circle_wallet_address: wallets[0].address, circle_wallet_id: wallets[0].id })
           .eq("id", authUserId);
 
         return json({ status: "ready", tokenHash, email: rawEmail, wallets });
@@ -269,6 +285,7 @@ Deno.serve(async (req) => {
               {
                 user_id: authUserId,
                 address: String(w.address).toLowerCase(),
+                circle_wallet_id: w.id,
                 kind: "email_circle",
                 chain_id: null,
                 label: w.blockchain,
@@ -279,7 +296,7 @@ Deno.serve(async (req) => {
           }
           await admin
             .from("profiles")
-            .update({ circle_wallet_address: existing[0].address })
+            .update({ circle_wallet_address: existing[0].address, circle_wallet_id: existing[0].id })
             .eq("id", authUserId);
 
           return json({ status: "ready", tokenHash, email: rawEmail, wallets: existing });

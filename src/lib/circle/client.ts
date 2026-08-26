@@ -1,8 +1,9 @@
 // Client-side Circle Web SDK singleton.
 // The SDK is initialized with the public APP_ID and later receives the
 // userToken + encryptionKey minted by Circle (social login) or by the
-// circle-provision-wallet edge function. All PIN entry happens inside the
-// SDK's UI overlay - the app never sees the PIN, keeping wallets non-custodial.
+// circle-provision-wallet edge function. Wallet initialization happens inside
+// the SDK's UI overlay - Social Login wallets have no PIN step; the app never
+// sees any wallet secret either way, keeping wallets non-custodial.
 import { W3SSdk } from "@circle-fin/w3s-pw-web-sdk";
 import {
   SocialLoginProvider,
@@ -61,9 +62,18 @@ export interface CircleChallengeInput {
   challengeId: string;
 }
 
-// Runs a Circle challenge (PIN setup / wallet initialize / sign transaction).
-// Resolves on user success, rejects on error or user cancellation.
-export function runCircleChallenge(input: CircleChallengeInput): Promise<void> {
+export interface CircleChallengeResult {
+  type?: string;
+  status?: string;
+  data?: { id?: string; status?: string; signature?: string };
+}
+
+// Runs a Circle challenge (wallet initialize / sign transaction).
+// Resolves with Circle's result on user success (the transaction id lives in
+// `data.id` for transfer challenges), rejects on error or user cancellation.
+export function runCircleChallenge(
+  input: CircleChallengeInput,
+): Promise<CircleChallengeResult> {
   const s = getCircleSdk();
   s.setAuthentication({
     userToken: input.userToken,
@@ -77,7 +87,7 @@ export function runCircleChallenge(input: CircleChallengeInput): Promise<void> {
         return;
       }
       if (result?.type) {
-        resolve();
+        resolve(result as CircleChallengeResult);
         return;
       }
       reject(new Error("Circle challenge returned no result"));

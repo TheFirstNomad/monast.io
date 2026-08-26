@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -210,6 +210,24 @@ export type Database = {
           status?: string
           updated_at?: string
           wallet_address?: string
+        }
+        Relationships: []
+      }
+      circle_sessions: {
+        Row: {
+          refresh_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          refresh_token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          refresh_token?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -677,6 +695,7 @@ export type Database = {
           bio: string | null
           circle_user_id: string | null
           circle_wallet_address: string | null
+          circle_wallet_id: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -690,6 +709,7 @@ export type Database = {
           bio?: string | null
           circle_user_id?: string | null
           circle_wallet_address?: string | null
+          circle_wallet_id?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -703,6 +723,7 @@ export type Database = {
           bio?: string | null
           circle_user_id?: string | null
           circle_wallet_address?: string | null
+          circle_wallet_id?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -965,6 +986,7 @@ export type Database = {
         Row: {
           address: string
           chain_id: number | null
+          circle_wallet_id: string | null
           created_at: string
           id: string
           is_primary: boolean
@@ -977,6 +999,7 @@ export type Database = {
         Insert: {
           address: string
           chain_id?: number | null
+          circle_wallet_id?: string | null
           created_at?: string
           id?: string
           is_primary?: boolean
@@ -989,6 +1012,7 @@ export type Database = {
         Update: {
           address?: string
           chain_id?: number | null
+          circle_wallet_id?: string | null
           created_at?: string
           id?: string
           is_primary?: boolean

@@ -109,7 +109,9 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         });
         if (sessErr) throw new Error(sessErr.message);
 
-        // A brand new Circle user still needs to pick a PIN.
+        // A brand new Circle user's wallet still needs to finish initializing -
+        // Circle's Social Login model has no PIN step, this just completes
+        // wallet creation behind the scenes.
         if (data.status === "challenge" && data.challengeId) {
           await runCircleChallenge({
             userToken: result.userToken,
@@ -196,7 +198,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
       <p className="text-muted-foreground mb-6">
         {mode === "wallet"
           ? "Connect your wallet and sign a message. You pay and get paid in USDC on Arc. monast.io never holds your keys."
-          : "One tap with the Google account you are already signed in to. We set up a Circle wallet on Arc for you, and you pick the PIN, so the wallet stays yours."}
+          : "One tap with the Google account you are already signed in to. We set up a non-custodial Circle wallet on Arc for you automatically - Google is the only sign-in you need."}
       </p>
 
       <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted mb-6">

@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
   // cannot be replayed by someone else.
   const { data: buyerProfile } = await admin
     .from("profiles")
-    .select("wallet_address")
+    .select("wallet_address, circle_wallet_address")
     .eq("id", userId)
     .maybeSingle();
 
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     chainId, txHash,
     expectedTo: revenue.address,
     expectedAmountUsdc: conf.price,
-    expectedFrom: buyerProfile?.wallet_address ?? undefined,
+    expectedFrom: buyerProfile?.wallet_address ?? buyerProfile?.circle_wallet_address ?? undefined,
   });
   if (!check.ok) return json({ error: `payment verification failed: ${check.error}` }, 400);
 

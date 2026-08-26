@@ -27,6 +27,7 @@ export const USER_LIMITS: Record<string, number> = {
   "ad-listing-fee": 20,
   "record-payment": 20,
   "promote-checkout": 20,
+  "circle-transfer": 20,
 };
 const DEFAULT_LIMIT = 20;
 

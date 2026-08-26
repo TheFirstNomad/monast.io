@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     // hash cannot be replayed by someone else.
     const { data: buyerProfile } = await admin
       .from("profiles")
-      .select("wallet_address")
+      .select("wallet_address, circle_wallet_address")
       .eq("id", buyerId)
       .maybeSingle();
 
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
       txHash,
       expectedTo: treasury.address,
       expectedAmountUsdc: Number(esc.amount_usdc),
-      expectedFrom: buyerProfile?.wallet_address ?? undefined,
+      expectedFrom: buyerProfile?.wallet_address ?? buyerProfile?.circle_wallet_address ?? undefined,
     });
     if (!verify.ok) {
       // "Not deep enough yet" is a wait state, not a rejection: 202 lets the

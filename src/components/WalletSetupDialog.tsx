@@ -19,9 +19,9 @@ type Phase = "idle" | "provisioning" | "ready" | "signing" | "done" | "error";
 /**
  * Runs after a first successful email OTP login. Calls the
  * `circle-provision-wallet` edge function to mint a userToken + challengeId,
- * then hands that challenge to the Circle Web SDK so the user sets a PIN and
- * security answers. Circle never sends the PIN to our server - this component
- * only relays the challenge id.
+ * then hands that challenge to the Circle Web SDK to finish initializing the
+ * wallet. Circle's Social Login model has no PIN or security-question step -
+ * this component only relays the challenge id.
  */
 export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => {
   const [phase, setPhase] = useState<Phase>("idle");
@@ -80,7 +80,7 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
         challengeId: challenge.challengeId,
       });
       setPhase("done");
-      toast({ title: "Wallet ready", description: "PIN set. Your multichain wallet is live." });
+      toast({ title: "Wallet ready", description: "Your Arc wallet is live." });
       // Refresh backend state so profiles.circle_wallet_address gets populated.
       await supabase.functions.invoke("circle-provision-wallet").catch(() => {});
       onComplete?.();
@@ -110,13 +110,13 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
           </DialogTitle>
           <DialogDescription>
             Circle mints you a non-custodial wallet on Arc, where every monast.io trade
-            settles in USDC. You pick the PIN. We never see it.
+            settles in USDC. Signed in with Google, non-custodial by design.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
           <FeatureRow icon={<Sparkles className="w-4 h-4" />} text="Auto-provisioned in seconds" />
-          <FeatureRow icon={<ShieldCheck className="w-4 h-4" />} text="PIN + recovery questions, held by Circle's secure enclave" />
+          <FeatureRow icon={<ShieldCheck className="w-4 h-4" />} text="Secured by your Google account - non-custodial, held in Circle's enclave" />
           <FeatureRow icon={<Wallet className="w-4 h-4" />} text="An Arc address ready to receive USDC" />
         </div>
 
@@ -128,7 +128,7 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
 
         {phase === "ready" && (
           <Button onClick={startPinSetup} size="lg" className="w-full font-semibold">
-            Choose PIN & finish setup
+            Finish wallet setup
           </Button>
         )}
 
