@@ -64,6 +64,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         | {
             userToken: string;
             encryptionKey: string;
+            refreshToken?: string;
             oAuthInfo?: { socialUserInfo?: { email?: string } };
           }
         | undefined,
@@ -92,7 +93,14 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
         if (!email) throw new Error("Google did not share an email address.");
 
         const { data, error: fnErr } = await supabase.functions.invoke("circle-social", {
-          body: { action: "complete", userToken: result.userToken, email },
+          body: {
+            action: "complete",
+            userToken: result.userToken,
+            email,
+            // Lets the server mint a fresh wallet session later so paying does
+            // not need another Google round-trip.
+            refreshToken: result.refreshToken,
+          },
         });
         if (fnErr) throw new Error(await readFunctionError(fnErr));
         if (!data || data.error) throw new Error(data?.error ?? "Sign-in failed");
