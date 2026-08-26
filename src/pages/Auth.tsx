@@ -23,8 +23,9 @@ const Auth = () => {
     const socialState = sessionStorage.getItem("monast.circleSocial");
     const socialHandled = socialState === "1";
 
-    // Circle Social Login creates the auth session before its first-time PIN
-    // challenge and wallet sync finish. Do not race the legacy provisioner.
+    // Circle Social Login creates the auth session before the wallet finishes
+    // initializing (no PIN step in this auth method). Do not race the legacy
+    // provisioner.
     if (socialState === "pending") return;
 
     if (isSelfCustody || socialHandled) {
