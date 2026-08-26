@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     // hash cannot be replayed by someone else.
     const { data: sellerProfile } = await admin
       .from("profiles")
-      .select("wallet_address")
+      .select("wallet_address, circle_wallet_address")
       .eq("id", userId)
       .maybeSingle();
 
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       txHash,
       expectedTo: revenue.address,
       expectedAmountUsdc: fees.listingFeeUsdc,
-      expectedFrom: sellerProfile?.wallet_address ?? undefined,
+      expectedFrom: sellerProfile?.wallet_address ?? sellerProfile?.circle_wallet_address ?? undefined,
     });
     if (!verify.ok) return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
 
