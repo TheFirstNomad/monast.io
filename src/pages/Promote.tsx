@@ -12,6 +12,7 @@ import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/l
 import { toast } from "sonner";
 import { Sparkles, Check, Loader2, ArrowLeft, Wallet } from "lucide-react";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { sendUsdcPayment, resolvePayingWallet } from "@/lib/payments/sendUsdc";
 
 const Promote = () => {
   const { adId } = useParams();
@@ -28,9 +29,18 @@ const Promote = () => {
   const [loading, setLoading] = useState(true);
   const [tier, setTier] = useState<PromotionTier>("7d");
   const [activating, setActivating] = useState(false);
+  const [circleWallet, setCircleWallet] = useState(false);
+  const [circlePaying, setCirclePaying] = useState(false);
   const selected = PROMOTION_TIERS.find((t) => t.id === tier)!;
   const { treasury, error: treasuryError } = useTreasuryAddress("revenue", ARC_CHAIN_ID);
-  const busy = isPending || confirming || activating;
+  const busy = isPending || confirming || activating || circlePaying;
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    resolvePayingWallet(user.id).then((w) => { if (!cancelled) setCircleWallet(w.isCircleWallet); });
+    return () => { cancelled = true; };
+  }, [user]);
 
 
   useEffect(() => {
@@ -40,25 +50,47 @@ const Promote = () => {
   }, [adId]);
 
   // After payment confirms, call the edge function to activate the promotion.
+  const activate = async (txHash: string) => {
+    if (!ad) return;
+    setActivating(true);
+    const { data, error } = await supabase.functions.invoke("promote-checkout", {
+      body: { ad_id: ad.id, tier, tx_hash: txHash, chain_id: ARC_CHAIN_ID },
+    });
+    setActivating(false);
+    setPendingHash(undefined);
+    if (error) return toast.error(error.message);
+    if (data?.error) return toast.error(data.error);
+    toast.success(`Ad featured until ${new Date(data.ends_at).toLocaleString()}`);
+    navigate(`/ad/${ad.id}`);
+  };
+
   useEffect(() => {
     if (!isSuccess || !pendingHash || !ad) return;
-    (async () => {
-      setActivating(true);
-      const { data, error } = await supabase.functions.invoke("promote-checkout", {
-        body: { ad_id: ad.id, tier, tx_hash: pendingHash, chain_id: ARC_CHAIN_ID },
-      });
-      setActivating(false);
-      setPendingHash(undefined);
-      if (error) return toast.error(error.message);
-      if (data?.error) return toast.error(data.error);
-      toast.success(`Ad featured until ${new Date(data.ends_at).toLocaleString()}`);
-      navigate(`/ad/${ad.id}`);
-    })();
-  }, [isSuccess, pendingHash, ad, tier, navigate]);
+    void activate(pendingHash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuccess, pendingHash, ad, tier]);
 
   const promote = async () => {
     if (!user) { toast.error("Sign in first"); return; }
     if (!ad) return;
+    // Circle wallets sign through Circle's SDK; verification is unchanged.
+    if (circleWallet) {
+      setCirclePaying(true);
+      try {
+        const { txHash } = await sendUsdcPayment({
+          purpose: "promote_checkout",
+          referenceId: `${ad.id}:${tier}`,
+          isCircleWallet: true,
+        });
+        toast.success("Payment sent. Activating promotion...");
+        await activate(txHash);
+      } catch (e: any) {
+        toast.error(e?.message || "Payment failed");
+      } finally {
+        setCirclePaying(false);
+      }
+      return;
+    }
     if (!address) { await connect(); return; }
     if (!treasury) {
       toast.error(treasuryError ?? "Promotions are unavailable right now");
