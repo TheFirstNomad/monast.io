@@ -148,7 +148,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
             ? "Awaiting wallet…"
             : treasuryLoading
               ? "Loading…"
-              : !address
+              : !address && !circleWallet
                 ? "Connect wallet to fund escrow"
                 : `Fund escrow · ${amount.toLocaleString()} USDC`}
     </Button>
