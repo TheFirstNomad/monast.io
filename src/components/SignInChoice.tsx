@@ -6,6 +6,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  getLastDeviceId,
   initGoogleSocialLogin,
   runCircleChallenge,
   startGoogleSocialLogin,
