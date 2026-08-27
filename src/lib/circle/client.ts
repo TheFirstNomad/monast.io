@@ -143,11 +143,13 @@ export async function initGoogleSocialLogin(
   const pending = readPendingDevice();
   let deviceToken: string;
   let deviceEncryptionKey: string;
+  let deviceId: string;
 
   if (pending) {
     ({ deviceToken, deviceEncryptionKey } = pending);
+    deviceId = pending.deviceId ?? getLastDeviceId() ?? "";
   } else {
-    const deviceId = await s.getDeviceId();
+    deviceId = await s.getDeviceId();
 
     const { data, error } = await supabase.functions.invoke("circle-social", {
       body: { action: "deviceToken", deviceId },
@@ -158,6 +160,8 @@ export async function initGoogleSocialLogin(
     deviceToken = data.deviceToken;
     deviceEncryptionKey = data.deviceEncryptionKey;
   }
+  if (deviceId) rememberDeviceId(deviceId);
+
 
   s.updateConfigs(
     {
