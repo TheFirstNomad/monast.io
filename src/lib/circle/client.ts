@@ -20,9 +20,14 @@ const PENDING_DEVICE_KEY = "monast.circleGoogleDevice";
 // stalling the login with an expired token.
 const PENDING_DEVICE_TTL_MS = 8 * 60 * 1000;
 
+// Circle's token refresh needs the same deviceId the login was minted with, so
+// it has to outlive the pending-login blob (which is cleared on callback).
+const DEVICE_ID_KEY = "monast.circleDeviceId";
+
 interface PendingDevice {
   deviceToken: string;
   deviceEncryptionKey: string;
+  deviceId?: string;
   mintedAt: number;
 }
 
@@ -44,6 +49,25 @@ function readPendingDevice(): PendingDevice | null {
   } catch {
     sessionStorage.removeItem(PENDING_DEVICE_KEY);
     return null;
+  }
+}
+
+/** The deviceId used for the most recent Circle login on this browser. */
+export function getLastDeviceId(): string | null {
+  const pending = readPendingDevice();
+  if (pending?.deviceId) return pending.deviceId;
+  try {
+    return localStorage.getItem(DEVICE_ID_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function rememberDeviceId(deviceId: string) {
+  try {
+    localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  } catch {
+    /* private mode - the pending blob still carries it for this login */
   }
 }
 
@@ -119,11 +143,13 @@ export async function initGoogleSocialLogin(
   const pending = readPendingDevice();
   let deviceToken: string;
   let deviceEncryptionKey: string;
+  let deviceId: string;
 
   if (pending) {
     ({ deviceToken, deviceEncryptionKey } = pending);
+    deviceId = pending.deviceId ?? getLastDeviceId() ?? "";
   } else {
-    const deviceId = await s.getDeviceId();
+    deviceId = await s.getDeviceId();
 
     const { data, error } = await supabase.functions.invoke("circle-social", {
       body: { action: "deviceToken", deviceId },
@@ -134,6 +160,8 @@ export async function initGoogleSocialLogin(
     deviceToken = data.deviceToken;
     deviceEncryptionKey = data.deviceEncryptionKey;
   }
+  if (deviceId) rememberDeviceId(deviceId);
+
 
   s.updateConfigs(
     {
@@ -159,7 +187,7 @@ export async function initGoogleSocialLogin(
   if (!pending) {
     sessionStorage.setItem(
       PENDING_DEVICE_KEY,
-      JSON.stringify({ deviceToken, deviceEncryptionKey, mintedAt: Date.now() }),
+      JSON.stringify({ deviceToken, deviceEncryptionKey, deviceId, mintedAt: Date.now() }),
     );
   }
 }
