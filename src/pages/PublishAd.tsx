@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2, ShieldCheck } from "lucide-react";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { sendUsdcPayment, resolvePayingWallet } from "@/lib/payments/sendUsdc";
+import { getFunctionErrorMessage } from "@/lib/functionErrors";
 
 /**
  * Listing-fee checkout. An ad stays in `pending_fee` - invisible to buyers  - 
@@ -78,7 +79,7 @@ const PublishAd = () => {
     });
     setVerifying(false);
     setPendingHash(undefined);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(await getFunctionErrorMessage(error, "Could not verify listing fee"));
     if (data?.error) return toast.error(data.error);
     toast.success("Listing published");
     navigate(`/ad/${ad.id}`);

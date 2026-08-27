@@ -216,10 +216,13 @@ Deno.serve(async (req) => {
       });
 
       const challengeId = transfer?.data?.challengeId;
+      const transactionId = transfer?.data?.id;
       if (!challengeId) return json({ error: "Circle did not return a payment challenge" }, 502);
+      if (!transactionId) return json({ error: "Circle did not return a transaction id" }, 502);
 
       return json({
         challengeId,
+        transactionId,
         userToken: session.userToken,
         encryptionKey: session.encryptionKey,
         chainId,
@@ -234,9 +237,13 @@ Deno.serve(async (req) => {
       const tx = await circle(`/transactions/${transactionId}`, {
         method: "GET",
         headers: { "X-User-Token": session.userToken },
-      }).catch(() => null);
+      });
       const t = tx?.data?.transaction;
-      return json({ status: t?.state ?? "PENDING", txHash: t?.txHash ?? null });
+      return json({
+        status: t?.state ?? "PENDING",
+        txHash: t?.txHash ?? null,
+        message: t?.errorReason ?? t?.errorDetails ?? null,
+      });
     }
 
     return json({ error: "Unknown action" }, 400);
