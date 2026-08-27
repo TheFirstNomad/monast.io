@@ -99,8 +99,10 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
             userToken: result.userToken,
             email,
             // Lets the server mint a fresh wallet session later so paying does
-            // not need another Google round-trip.
+            // not need another Google round-trip. Circle's refresh call needs
+            // the userToken and the deviceId the login was minted with.
             refreshToken: result.refreshToken,
+            deviceId: getLastDeviceId(),
           },
         });
         if (fnErr) throw new Error(await readFunctionError(fnErr));
