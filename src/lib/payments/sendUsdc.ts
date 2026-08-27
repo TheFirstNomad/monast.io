@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { runCircleChallenge } from "@/lib/circle/client";
+import { getFunctionErrorMessage } from "@/lib/functionErrors";
 
 export type PaymentPurpose = "escrow_fund" | "listing_fee" | "promote_checkout";
 
@@ -46,25 +47,36 @@ export async function sendUsdcPayment(input: {
       referenceId: input.referenceId,
     },
   });
-  if (error || !data?.challengeId) {
-    throw new Error(data?.error ?? error?.message ?? "Could not start payment");
+  if (error) {
+    throw new Error(await getFunctionErrorMessage(error, "Could not start payment"));
+  }
+  if (data?.error || !data?.challengeId || !data?.transactionId) {
+    throw new Error(data?.error ?? "Circle did not return the payment details");
   }
 
-  const result = await runCircleChallenge({
+  await runCircleChallenge({
     challengeId: data.challengeId,
     userToken: data.userToken,
     encryptionKey: data.encryptionKey,
   });
 
-  const transactionId = result?.data?.id ?? data.challengeId;
+  const transactionId = String(data.transactionId);
 
   // Circle broadcasts asynchronously - poll until a txHash exists, which is
   // what the verification endpoints need.
   for (let attempt = 0; attempt < 20; attempt += 1) {
-    const { data: statusData } = await supabase.functions.invoke("circle-transfer", {
+    const { data: statusData, error: statusError } = await supabase.functions.invoke("circle-transfer", {
       body: { action: "status", transactionId },
     });
+    if (statusError) {
+      throw new Error(await getFunctionErrorMessage(statusError, "Could not check payment status"));
+    }
+    if (statusData?.error) throw new Error(statusData.error);
     if (statusData?.txHash) return { txHash: statusData.txHash };
+    const state = String(statusData?.status ?? "").toUpperCase();
+    if (["FAILED", "CANCELLED", "DENIED", "EXPIRED"].includes(state)) {
+      throw new Error(statusData?.message ?? `Circle payment ${state.toLowerCase()}`);
+    }
     await new Promise((r) => setTimeout(r, 1500));
   }
   throw new Error("Payment is taking longer than expected - check Transactions shortly.");

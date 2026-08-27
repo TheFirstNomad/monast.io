@@ -171,13 +171,28 @@ Deno.serve(async (req) => {
         } else if (purpose === "listing_fee") {
           const { data: ad } = await admin
             .from("ads")
-            .select("id, seller_id")
+            .select("id, seller_id, status, listing_fee_usdc")
             .eq("id", referenceId)
             .maybeSingle();
           if (!ad || ad.seller_id !== userId) return json({ error: "Ad not found" }, 404);
+          if (ad.status !== "pending_fee") {
+            return json({ error: "This listing is not awaiting its publication fee" }, 409);
+          }
           const fees = await loadFeeSettings(admin);
           destinationAddress = (await getTreasury(admin, "revenue", chainId)).address;
-          amountUsdc = fees.listingFeeUsdc;
+          // Pin the quoted fee to this listing so a later settings change cannot
+          // invalidate a transfer that the user already approved.
+          amountUsdc = Number(ad.listing_fee_usdc) > 0
+            ? Number(ad.listing_fee_usdc)
+            : fees.listingFeeUsdc;
+          if (!(Number(ad.listing_fee_usdc) > 0)) {
+            const { error: quoteError } = await admin
+              .from("ads")
+              .update({ listing_fee_usdc: amountUsdc })
+              .eq("id", referenceId)
+              .eq("status", "pending_fee");
+            if (quoteError) throw quoteError;
+          }
         } else if (purpose === "promote_checkout") {
           // referenceId format: "<ad_id>:<tier>"
           const [adId, tier] = String(referenceId).split(":");
@@ -216,10 +231,13 @@ Deno.serve(async (req) => {
       });
 
       const challengeId = transfer?.data?.challengeId;
+      const transactionId = transfer?.data?.id;
       if (!challengeId) return json({ error: "Circle did not return a payment challenge" }, 502);
+      if (!transactionId) return json({ error: "Circle did not return a transaction id" }, 502);
 
       return json({
         challengeId,
+        transactionId,
         userToken: session.userToken,
         encryptionKey: session.encryptionKey,
         chainId,
@@ -231,12 +249,16 @@ Deno.serve(async (req) => {
       const transactionId = String(body?.transactionId ?? "");
       if (!transactionId) return json({ error: "Missing transactionId" }, 400);
       const session = await getFreshUserSession(admin, userId);
-      const tx = await circle(`/transactions/${transactionId}`, {
+      const tx = await circle(`/user/transactions/${transactionId}`, {
         method: "GET",
         headers: { "X-User-Token": session.userToken },
-      }).catch(() => null);
+      });
       const t = tx?.data?.transaction;
-      return json({ status: t?.state ?? "PENDING", txHash: t?.txHash ?? null });
+      return json({
+        status: t?.state ?? "PENDING",
+        txHash: t?.txHash ?? null,
+        message: t?.errorReason ?? t?.errorDetails ?? null,
+      });
     }
 
     return json({ error: "Unknown action" }, 400);

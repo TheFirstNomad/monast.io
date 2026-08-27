@@ -46,14 +46,20 @@ Deno.serve(async (req) => {
     if (!rl.ok) return json(rateLimitBody(rl), 429);
     const { data: ad } = await admin
       .from("ads")
-      .select("id, seller_id, status, listing_fee_paid_at")
+      .select("id, seller_id, status, listing_fee_usdc, listing_fee_paid_at")
       .eq("id", adId)
       .maybeSingle();
     if (!ad) return json({ error: "Ad not found" }, 404);
     if (ad.seller_id !== userId) return json({ error: "Not your ad" }, 403);
     if (ad.listing_fee_paid_at) return json({ ad, already_paid: true });
+    if (ad.status !== "pending_fee") {
+      return json({ error: "This listing is not awaiting its publication fee" }, 409);
+    }
 
     const fees = await loadFeeSettings(admin);
+    const expectedFee = Number(ad.listing_fee_usdc) > 0
+      ? Number(ad.listing_fee_usdc)
+      : fees.listingFeeUsdc;
 
     let revenue;
     try {
@@ -75,7 +81,7 @@ Deno.serve(async (req) => {
       chainId,
       txHash,
       expectedTo: revenue.address,
-      expectedAmountUsdc: fees.listingFeeUsdc,
+      expectedAmountUsdc: expectedFee,
       expectedFrom: sellerProfile?.wallet_address ?? sellerProfile?.circle_wallet_address ?? undefined,
     });
     if (!verify.ok) return json({ error: `On-chain verify failed: ${verify.error}` }, 400);
@@ -83,11 +89,11 @@ Deno.serve(async (req) => {
     const { data: updated, error } = await admin
       .from("ads")
       .update({
-        listing_fee_usdc: fees.listingFeeUsdc,
+        listing_fee_usdc: expectedFee,
         listing_fee_tx_hash: txHash,
         listing_fee_paid_at: new Date().toISOString(),
         listing_fee_chain_id: chainId,
-        status: ad.status === "draft" || ad.status === "pending_fee" ? "active" : ad.status,
+        status: "active",
       })
       .eq("id", adId)
       .select("*")
@@ -105,14 +111,14 @@ Deno.serve(async (req) => {
       adId,
       fromUserId: userId,
       chainId,
-      amountUsdc: fees.listingFeeUsdc,
+      amountUsdc: expectedFee,
       txHash,
       status: "confirmed",
       idempotencyKey: `listing_fee:${adId}`,
       notes: "anti-spam listing fee",
     });
 
-    return json({ ad: updated, amount_usdc: fees.listingFeeUsdc });
+    return json({ ad: updated, amount_usdc: expectedFee });
   } catch (e) {
     console.error("ad-listing-fee", e);
     return json({ error: (e as Error).message }, 500);
