@@ -215,19 +215,25 @@ export type Database = {
       }
       circle_sessions: {
         Row: {
+          device_id: string | null
           refresh_token: string
           updated_at: string
           user_id: string
+          user_token: string | null
         }
         Insert: {
+          device_id?: string | null
           refresh_token: string
           updated_at?: string
           user_id: string
+          user_token?: string | null
         }
         Update: {
+          device_id?: string | null
           refresh_token?: string
           updated_at?: string
           user_id?: string
+          user_token?: string | null
         }
         Relationships: []
       }
