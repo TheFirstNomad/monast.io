@@ -82,25 +82,36 @@ async function idempotencyKeyFor(seed: string): Promise<string> {
 async function getFreshUserSession(admin: any, userId: string) {
   const { data: session } = await admin
     .from("circle_sessions")
-    .select("refresh_token")
+    .select("refresh_token, user_token, device_id")
     .eq("user_id", userId)
     .maybeSingle();
-  if (!session?.refresh_token) {
+  // Circle rejects a partial refresh with a bare 403 "userToken is invalid",
+  // so never call it without all three pieces of the session.
+  if (!session?.refresh_token || !session?.user_token || !session?.device_id) {
     throw new Error("Your wallet session expired. Please sign in with Google again.");
   }
 
   const refreshed = await circle("/users/token/refresh", {
     method: "POST",
-    body: JSON.stringify({ refreshToken: session.refresh_token }),
+    headers: { "X-User-Token": session.user_token },
+    body: JSON.stringify({
+      refreshToken: session.refresh_token,
+      deviceId: session.device_id,
+      idempotencyKey: crypto.randomUUID(),
+    }),
   });
   const data = refreshed?.data ?? {};
-  if (data.refreshToken) {
-    await admin
-      .from("circle_sessions")
-      .update({ refresh_token: data.refreshToken, updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
-  }
   if (!data.userToken) throw new Error("Circle did not return a wallet session");
+
+  await admin
+    .from("circle_sessions")
+    .update({
+      user_token: data.userToken,
+      refresh_token: data.refreshToken ?? session.refresh_token,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
   return {
     userToken: data.userToken as string,
     encryptionKey: (data.encryptionKey ?? data.deviceEncryptionKey ?? "") as string,

@@ -142,6 +142,9 @@ Deno.serve(async (req) => {
       // Circle's Social Login refresh token (14-day life). Persisted so paying
       // later can mint a fresh userToken without another Google round-trip.
       const refreshToken = payload?.refreshToken ? String(payload.refreshToken) : null;
+      // Circle's /users/token/refresh requires the deviceId the session was
+      // minted with, so it is stored next to the refresh token.
+      const sessionDeviceId = payload?.deviceId ? String(payload.deviceId) : null;
       if (!userToken) return json({ error: "userToken is required" }, 400);
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rawEmail)) {
         return json({ error: "A Google email is required" }, 400);
@@ -178,6 +181,8 @@ Deno.serve(async (req) => {
           {
             user_id: authUserId,
             refresh_token: refreshToken,
+            user_token: userToken,
+            device_id: sessionDeviceId,
             updated_at: new Date().toISOString(),
           },
           { onConflict: "user_id" },
