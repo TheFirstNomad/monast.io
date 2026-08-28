@@ -237,7 +237,9 @@ Deno.serve(async (req) => {
           tokenId: CIRCLE_USDC_TOKEN_ID,
           // Exact decimal string from integer micro-USDC - never a float.
           amounts: [formatUsdc(toBaseUnits(amountUsdc))],
-          fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+          // REST field: the nested SDK-style `fee` object is ignored here, which
+          // makes Circle treat the fee as unset and demand gasPrice/gasLimit.
+          feeLevel: "MEDIUM",
         }),
       });
 
