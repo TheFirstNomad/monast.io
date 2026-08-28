@@ -12,7 +12,7 @@ import { useSeo } from "@/hooks/useSeo";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2, ShieldCheck } from "lucide-react";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { sendUsdcPayment, resolvePayingWallet } from "@/lib/payments/sendUsdc";
+import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { getFunctionErrorMessage } from "@/lib/functionErrors";
 
 /**
