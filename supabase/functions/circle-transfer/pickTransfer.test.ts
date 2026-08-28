@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { pickTransfer, type CircleTx } from "./index.ts";
+import { pickTransfer, type CircleTx } from "./pickTransfer.ts";
 
 const DEST = "0x064d44a684f41239bcb6425b1d7441343afbf837";
 

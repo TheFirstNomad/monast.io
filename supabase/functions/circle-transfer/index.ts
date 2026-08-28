@@ -14,6 +14,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { loadFeeSettings, formatUsdc, toBaseUnits } from "../_shared/fees.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
+import { pickTransfer, type CircleTx } from "./pickTransfer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -116,46 +117,6 @@ async function getFreshUserSession(admin: any, userId: string) {
     userToken: data.userToken as string,
     encryptionKey: (data.encryptionKey ?? data.deviceEncryptionKey ?? "") as string,
   };
-}
-
-export interface CircleTx {
-  id?: string;
-  state?: string;
-  txHash?: string | null;
-  amounts?: string[];
-  destinationAddress?: string;
-  errorReason?: string | null;
-  errorDetails?: string | null;
-}
-
-/**
- * Finds the outbound transfer for a given payment by matching wallet,
- * destination and amount. Prefers a completed transfer, then one still in
- * flight, so a caller can either settle immediately or keep polling.
- * Exported for tests.
- */
-export function pickTransfer(txs: CircleTx[], destinationAddress: string, amountUsdc: number): CircleTx | null {
-  const wanted = formatUsdc(toBaseUnits(amountUsdc));
-  const dest = destinationAddress.toLowerCase();
-  const matches = txs.filter((t) => {
-    const amount = t.amounts?.[0];
-    if (!amount) return false;
-    let same = false;
-    try {
-      same = toBaseUnits(amount) === toBaseUnits(wanted);
-    } catch {
-      same = false;
-    }
-    return same && (t.destinationAddress ?? "").toLowerCase() === dest;
-  });
-  const rank = (t: CircleTx) => {
-    const s = String(t.state ?? "").toUpperCase();
-    if (t.txHash && (s === "COMPLETE" || s === "CONFIRMED")) return 0;
-    if (["FAILED", "CANCELLED", "DENIED", "EXPIRED"].includes(s)) return 2;
-    return 1;
-  };
-  matches.sort((a, b) => rank(a) - rank(b));
-  return matches[0] ?? null;
 }
 
 async function findTransfer(input: {
