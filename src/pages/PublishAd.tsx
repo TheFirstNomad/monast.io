@@ -91,6 +91,29 @@ const PublishAd = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccess, pendingHash, ad]);
 
+  // Self-heal: a Circle transfer can complete while the browser loses track of
+  // it, leaving a paid listing stuck in `pending_fee`. On load we ask Circle
+  // whether the fee was already sent and publish the listing if it was, instead
+  // of asking the seller to pay again.
+  useEffect(() => {
+    if (!ad || !user || !circleWallet) return;
+    if (ad.status !== "pending_fee" || user.id !== ad.seller_id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const found = await resolveCirclePayment("listing_fee", ad.id);
+        if (cancelled || !found.txHash) return;
+        toast.info("We found your listing fee payment - publishing now…");
+        await verifyFee(found.txHash);
+      } catch {
+        /* nothing recoverable - the seller can still pay normally */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ad?.id, ad?.status, user?.id, circleWallet]);
+
+
   const pay = async () => {
     if (!user || !ad) return;
     // Circle wallets sign through Circle's SDK; the fee verifier is unchanged.
