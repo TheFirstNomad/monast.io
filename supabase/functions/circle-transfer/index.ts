@@ -118,6 +118,69 @@ async function getFreshUserSession(admin: any, userId: string) {
   };
 }
 
+export interface CircleTx {
+  id?: string;
+  state?: string;
+  txHash?: string | null;
+  amounts?: string[];
+  destinationAddress?: string;
+  errorReason?: string | null;
+  errorDetails?: string | null;
+}
+
+/**
+ * Finds the outbound transfer for a given payment by matching wallet,
+ * destination and amount. Prefers a completed transfer, then one still in
+ * flight, so a caller can either settle immediately or keep polling.
+ * Exported for tests.
+ */
+export function pickTransfer(txs: CircleTx[], destinationAddress: string, amountUsdc: number): CircleTx | null {
+  const wanted = formatUsdc(toBaseUnits(amountUsdc));
+  const dest = destinationAddress.toLowerCase();
+  const matches = txs.filter((t) => {
+    const amount = t.amounts?.[0];
+    if (!amount) return false;
+    let same = false;
+    try {
+      same = toBaseUnits(amount) === toBaseUnits(wanted);
+    } catch {
+      same = false;
+    }
+    return same && (t.destinationAddress ?? "").toLowerCase() === dest;
+  });
+  const rank = (t: CircleTx) => {
+    const s = String(t.state ?? "").toUpperCase();
+    if (t.txHash && (s === "COMPLETE" || s === "CONFIRMED")) return 0;
+    if (["FAILED", "CANCELLED", "DENIED", "EXPIRED"].includes(s)) return 2;
+    return 1;
+  };
+  matches.sort((a, b) => rank(a) - rank(b));
+  return matches[0] ?? null;
+}
+
+async function findTransfer(input: {
+  userToken: string;
+  walletId: string;
+  destinationAddress: string;
+  amountUsdc: number;
+}): Promise<CircleTx | null> {
+  const qs = new URLSearchParams({
+    walletIds: input.walletId,
+    pageSize: "50",
+    // Circle's user-transaction list is newest-first by default.
+    operation: "TRANSFER",
+    transactionDirection: "OUTBOUND",
+  });
+  const res = await circle(`/user/transactions?${qs.toString()}`, {
+    method: "GET",
+    headers: { "X-User-Token": input.userToken },
+  });
+  const txs: CircleTx[] = res?.data?.transactions ?? [];
+  return pickTransfer(txs, input.destinationAddress, input.amountUsdc);
+}
+
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
