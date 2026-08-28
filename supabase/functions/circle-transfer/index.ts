@@ -14,6 +14,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { loadFeeSettings, formatUsdc, toBaseUnits } from "../_shared/fees.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
+import { pickTransfer, type CircleTx } from "./pickTransfer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -118,6 +119,29 @@ async function getFreshUserSession(admin: any, userId: string) {
   };
 }
 
+async function findTransfer(input: {
+  userToken: string;
+  walletId: string;
+  destinationAddress: string;
+  amountUsdc: number;
+}): Promise<CircleTx | null> {
+  const qs = new URLSearchParams({
+    walletIds: input.walletId,
+    pageSize: "50",
+    // Circle's user-transaction list is newest-first by default.
+    operation: "TRANSFER",
+    transactionDirection: "OUTBOUND",
+  });
+  const res = await circle(`/user/transactions?${qs.toString()}`, {
+    method: "GET",
+    headers: { "X-User-Token": input.userToken },
+  });
+  const txs: CircleTx[] = res?.data?.transactions ?? [];
+  return pickTransfer(txs, input.destinationAddress, input.amountUsdc);
+}
+
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -141,7 +165,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action ?? "");
 
-    if (action === "createChallenge") {
+    if (action === "createChallenge" || action === "resolve") {
       if (!CIRCLE_USDC_TOKEN_ID) {
         return json(
           { error: "Circle-wallet payments are not configured yet (missing USDC token id)." },
@@ -196,7 +220,7 @@ Deno.serve(async (req) => {
           amountUsdc = Number(ad.listing_fee_usdc) > 0
             ? Number(ad.listing_fee_usdc)
             : fees.listingFeeUsdc;
-          if (!(Number(ad.listing_fee_usdc) > 0)) {
+          if (action === "createChallenge" && !(Number(ad.listing_fee_usdc) > 0)) {
             const { error: quoteError } = await admin
               .from("ads")
               .update({ listing_fee_usdc: amountUsdc })
@@ -227,6 +251,27 @@ Deno.serve(async (req) => {
 
       const session = await getFreshUserSession(admin, userId);
 
+      // Recovery path: Circle already holds the truth about this payment. Look
+      // the transfer up by wallet + destination + amount instead of relying on
+      // the browser having captured a transaction id, so a challenge result
+      // that arrives without an id can never orphan money the user already sent.
+      if (action === "resolve") {
+        const found = await findTransfer({
+          userToken: session.userToken,
+          walletId: profile.circle_wallet_id,
+          destinationAddress,
+          amountUsdc,
+        });
+        return json({
+          chainId,
+          amountUsdc,
+          transactionId: found?.id ?? null,
+          status: found?.state ?? null,
+          txHash: found?.txHash ?? null,
+          message: found?.errorReason ?? found?.errorDetails ?? null,
+        });
+      }
+
       const transfer = await circle("/user/transactions/transfer", {
         method: "POST",
         headers: { "X-User-Token": session.userToken },
@@ -245,7 +290,8 @@ Deno.serve(async (req) => {
 
       // Circle's transfer-challenge response only carries a challengeId - the
       // transaction itself is created when the PIN challenge is executed, so
-      // the client reads the transaction id from the challenge result.
+      // the client reads the transaction id from the challenge result, and
+      // falls back to the `resolve` action above when it is absent.
       const challengeId = transfer?.data?.challengeId;
       if (!challengeId) return json({ error: "Circle did not return a payment challenge" }, 502);
 
@@ -280,3 +326,4 @@ Deno.serve(async (req) => {
     return json({ error: (err as Error).message }, 500);
   }
 });
+

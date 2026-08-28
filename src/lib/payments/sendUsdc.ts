@@ -40,6 +40,13 @@ export async function sendUsdcPayment(input: {
     return input.selfCustodySend();
   }
 
+  // Never charge twice: if an earlier attempt already moved the money in Circle
+  // (a challenge that completed without handing back a transaction id), settle
+  // with that transfer instead of starting a new one.
+  const existing = await resolveCirclePayment(input.purpose, input.referenceId).catch(() => null);
+  if (existing?.txHash) return { txHash: existing.txHash };
+
+
   const { data, error } = await supabase.functions.invoke("circle-transfer", {
     body: {
       action: "createChallenge",
@@ -60,10 +67,18 @@ export async function sendUsdcPayment(input: {
     encryptionKey: data.encryptionKey,
   });
 
-  const transactionId = challengeResult?.data?.id;
+  // Circle does not always hand the transaction id back through the challenge
+  // result. When it doesn't, ask the server to look the transfer up in Circle
+  // so an approved payment can never be orphaned.
+  let transactionId: string | undefined = challengeResult?.data?.id;
+  if (!transactionId) {
+    const resolved = await resolveCirclePayment(input.purpose, input.referenceId);
+    if (resolved.txHash) return { txHash: resolved.txHash };
+    transactionId = resolved.transactionId ?? undefined;
+  }
   if (!transactionId) {
     throw new Error(
-      "Payment was confirmed but Circle didn't return a transaction id to track it - check Transactions shortly.",
+      "Payment was approved but Circle hasn't published the transaction yet - reopen this page in a moment and it will finish automatically.",
     );
   }
 
@@ -86,3 +101,35 @@ export async function sendUsdcPayment(input: {
   }
   throw new Error("Payment is taking longer than expected - check Transactions shortly.");
 }
+
+export interface ResolvedCirclePayment {
+  transactionId: string | null;
+  status: string | null;
+  txHash: string | null;
+  message: string | null;
+}
+
+/**
+ * Asks the backend whether Circle already holds a transfer for this payment.
+ * Used both as a fallback after a challenge that returns no transaction id and
+ * as a self-heal when a page loads with the payment still unsettled.
+ */
+export async function resolveCirclePayment(
+  purpose: PaymentPurpose,
+  referenceId: string,
+): Promise<ResolvedCirclePayment> {
+  const { data, error } = await supabase.functions.invoke("circle-transfer", {
+    body: { action: "resolve", purpose, referenceId },
+  });
+  if (error) {
+    throw new Error(await getFunctionErrorMessage(error, "Could not check your payment"));
+  }
+  if (data?.error) throw new Error(data.error);
+  return {
+    transactionId: data?.transactionId ?? null,
+    status: data?.status ?? null,
+    txHash: data?.txHash ?? null,
+    message: data?.message ?? null,
+  };
+}
+
