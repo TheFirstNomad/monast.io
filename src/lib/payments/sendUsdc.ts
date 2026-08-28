@@ -40,6 +40,13 @@ export async function sendUsdcPayment(input: {
     return input.selfCustodySend();
   }
 
+  // Never charge twice: if an earlier attempt already moved the money in Circle
+  // (a challenge that completed without handing back a transaction id), settle
+  // with that transfer instead of starting a new one.
+  const existing = await resolveCirclePayment(input.purpose, input.referenceId).catch(() => null);
+  if (existing?.txHash) return { txHash: existing.txHash };
+
+
   const { data, error } = await supabase.functions.invoke("circle-transfer", {
     body: {
       action: "createChallenge",
