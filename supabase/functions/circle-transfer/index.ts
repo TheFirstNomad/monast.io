@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action ?? "");
 
-    if (action === "createChallenge") {
+    if (action === "createChallenge" || action === "resolve") {
       if (!CIRCLE_USDC_TOKEN_ID) {
         return json(
           { error: "Circle-wallet payments are not configured yet (missing USDC token id)." },
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
           amountUsdc = Number(ad.listing_fee_usdc) > 0
             ? Number(ad.listing_fee_usdc)
             : fees.listingFeeUsdc;
-          if (!(Number(ad.listing_fee_usdc) > 0)) {
+          if (action === "createChallenge" && !(Number(ad.listing_fee_usdc) > 0)) {
             const { error: quoteError } = await admin
               .from("ads")
               .update({ listing_fee_usdc: amountUsdc })
@@ -227,6 +227,27 @@ Deno.serve(async (req) => {
 
       const session = await getFreshUserSession(admin, userId);
 
+      // Recovery path: Circle already holds the truth about this payment. Look
+      // the transfer up by wallet + destination + amount instead of relying on
+      // the browser having captured a transaction id, so a challenge result
+      // that arrives without an id can never orphan money the user already sent.
+      if (action === "resolve") {
+        const found = await findTransfer({
+          userToken: session.userToken,
+          walletId: profile.circle_wallet_id,
+          destinationAddress,
+          amountUsdc,
+        });
+        return json({
+          chainId,
+          amountUsdc,
+          transactionId: found?.id ?? null,
+          status: found?.state ?? null,
+          txHash: found?.txHash ?? null,
+          message: found?.errorReason ?? found?.errorDetails ?? null,
+        });
+      }
+
       const transfer = await circle("/user/transactions/transfer", {
         method: "POST",
         headers: { "X-User-Token": session.userToken },
@@ -245,7 +266,8 @@ Deno.serve(async (req) => {
 
       // Circle's transfer-challenge response only carries a challengeId - the
       // transaction itself is created when the PIN challenge is executed, so
-      // the client reads the transaction id from the challenge result.
+      // the client reads the transaction id from the challenge result, and
+      // falls back to the `resolve` action above when it is absent.
       const challengeId = transfer?.data?.challengeId;
       if (!challengeId) return json({ error: "Circle did not return a payment challenge" }, 502);
 
@@ -280,3 +302,4 @@ Deno.serve(async (req) => {
     return json({ error: (err as Error).message }, 500);
   }
 });
+
