@@ -50,17 +50,22 @@ export async function sendUsdcPayment(input: {
   if (error) {
     throw new Error(await getFunctionErrorMessage(error, "Could not start payment"));
   }
-  if (data?.error || !data?.challengeId || !data?.transactionId) {
+  if (data?.error || !data?.challengeId) {
     throw new Error(data?.error ?? "Circle did not return the payment details");
   }
 
-  await runCircleChallenge({
+  const challengeResult = await runCircleChallenge({
     challengeId: data.challengeId,
     userToken: data.userToken,
     encryptionKey: data.encryptionKey,
   });
 
-  const transactionId = String(data.transactionId);
+  const transactionId = challengeResult?.data?.id;
+  if (!transactionId) {
+    throw new Error(
+      "Payment was confirmed but Circle didn't return a transaction id to track it - check Transactions shortly.",
+    );
+  }
 
   // Circle broadcasts asynchronously - poll until a txHash exists, which is
   // what the verification endpoints need.

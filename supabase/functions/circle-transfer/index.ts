@@ -243,14 +243,14 @@ Deno.serve(async (req) => {
         }),
       });
 
+      // Circle's transfer-challenge response only carries a challengeId - the
+      // transaction itself is created when the PIN challenge is executed, so
+      // the client reads the transaction id from the challenge result.
       const challengeId = transfer?.data?.challengeId;
-      const transactionId = transfer?.data?.id;
       if (!challengeId) return json({ error: "Circle did not return a payment challenge" }, 502);
-      if (!transactionId) return json({ error: "Circle did not return a transaction id" }, 502);
 
       return json({
         challengeId,
-        transactionId,
         userToken: session.userToken,
         encryptionKey: session.encryptionKey,
         chainId,
