@@ -22,6 +22,17 @@ export const ERC20_TRANSFER_ABI = [
   },
 ] as const;
 
+export const ERC20_BALANCE_ABI = [
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+] as const;
+
+
 // Helper kept for any legacy call-sites; wagmi `useWriteContract` is preferred.
 export function encodeTransfer(to: string, amount: bigint): string {
   const selector = "a9059cbb";

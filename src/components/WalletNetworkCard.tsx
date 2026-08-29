@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+
 import { useChainId, useSwitchChain } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,9 +88,15 @@ export const WalletNetworkCard = ({ userId, payoutWallet, onPayoutWalletChange, 
           This wallet was created automatically when you signed in with Google.
           Escrow releases and refunds go here.
         </p>
+        <Link to="/wallet">
+          <Button size="sm" variant="secondary" className="gap-2">
+            <Wallet className="w-4 h-4" /> Open wallet (balance, send, receive)
+          </Button>
+        </Link>
       </div>
     );
   }
+
 
   const useConnectedWallet = async () => {
     if (!address) {
@@ -235,15 +243,17 @@ export const WalletNetworkCard = ({ userId, payoutWallet, onPayoutWalletChange, 
           <Row label="RPC URL" value={ARC.rpc} />
           <Row label="USDC contract" value={ARC.usdc} href={`${ARC.explorer}/address/${ARC.usdc}`} />
           <Row label="Explorer" value={ARC.explorer} href={ARC.explorer} />
-          {payoutWallet && (
-            <Row
-              label="Your balance"
-              value={`${ARC.explorer}/address/${payoutWallet}`}
-              href={`${ARC.explorer}/address/${payoutWallet}`}
-            />
-          )}
         </div>
+
+        {payoutWallet && (
+          <Link to="/wallet" className="inline-block pt-1">
+            <Button size="sm" variant="secondary" className="gap-2">
+              <Wallet className="w-4 h-4" /> See balance, send and receive
+            </Button>
+          </Link>
+        )}
       </div>
+
     </div>
   );
 };

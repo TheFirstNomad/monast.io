@@ -17,6 +17,7 @@ import Auth from "./pages/Auth";
 import Messages from "./pages/Messages";
 import MessageThread from "./pages/MessageThread";
 import Transactions from "./pages/Transactions";
+import Wallet from "./pages/Wallet";
 import SellerProfile from "./pages/SellerProfile";
 import NotFound from "./pages/NotFound";
 import AgentDocs from "./pages/AgentDocs";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:adId/:otherId" element={<MessageThread />} />
               <Route path="/transactions" element={<Transactions />} />
+              <Route path="/wallet" element={<Wallet />} />
               <Route path="/seller/:id" element={<SellerProfile />} />
               <Route path="/agents" element={<AgentDocs />} />
               <Route path="/pricing" element={<Pricing />} />
