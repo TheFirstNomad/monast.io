@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Package, LogOut, Sparkles, Banknote, Pencil } from "lucide-react";
+import { Plus, Package, LogOut, Sparkles, Banknote, Pencil, Wallet as WalletIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
@@ -88,13 +88,26 @@ const Dashboard = () => {
         )}
 
 
-        <div className="bg-card border border-border rounded-xl p-4 mb-6 flex items-center gap-3">
-          <Package className="w-5 h-5 text-primary" />
-          <div>
-            <div className="text-xs text-muted-foreground">My Ads</div>
-            <div className="text-lg font-bold text-foreground">{myAds.length}</div>
+        <div className="grid sm:grid-cols-2 gap-3 mb-6">
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+            <Package className="w-5 h-5 text-primary" />
+            <div>
+              <div className="text-xs text-muted-foreground">My Ads</div>
+              <div className="text-lg font-bold text-foreground">{myAds.length}</div>
+            </div>
           </div>
+          <Link
+            to="/wallet"
+            className="bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors"
+          >
+            <WalletIcon className="w-5 h-5 text-emerald-500" />
+            <div>
+              <div className="text-xs text-muted-foreground">USDC wallet</div>
+              <div className="text-sm font-semibold text-foreground">Balance, send &amp; receive</div>
+            </div>
+          </Link>
         </div>
+
 
         <EscrowsList />
 

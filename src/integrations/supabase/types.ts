@@ -220,6 +220,7 @@ export type Database = {
           updated_at: string
           user_id: string
           user_token: string | null
+          user_token_expires_at: string | null
         }
         Insert: {
           device_id?: string | null
@@ -227,6 +228,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           user_token?: string | null
+          user_token_expires_at?: string | null
         }
         Update: {
           device_id?: string | null
@@ -234,6 +236,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_token?: string | null
+          user_token_expires_at?: string | null
         }
         Relationships: []
       }

@@ -28,6 +28,11 @@ export const USER_LIMITS: Record<string, number> = {
   "record-payment": 20,
   "promote-checkout": 20,
   "circle-transfer": 20,
+  // Read-only wallet calls (balance, activity, transfer status polling).
+  "circle-transfer-read": 180,
+  // Money leaving the platform: deliberately tight.
+  "circle-withdraw": 5,
+
 };
 const DEFAULT_LIMIT = 20;
 
