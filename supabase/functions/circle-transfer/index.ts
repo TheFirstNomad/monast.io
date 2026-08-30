@@ -157,15 +157,31 @@ async function listTransfers(userToken: string, walletId: string): Promise<Circl
   const qs = new URLSearchParams({
     walletIds: walletId,
     pageSize: "50",
-    // Circle's user-transaction list is newest-first by default.
+    // Circle's transaction list is newest-first by default.
     operation: "TRANSFER",
   });
-  const res = await circle(`/user/transactions?${qs.toString()}`, {
+  // NOTE: the `/user/...` prefix exists only for CREATING a transfer. Reading
+  // transactions is `/transactions` with the user token - `/user/transactions`
+  // returns 404 "Resource not found", which used to blank activity and break
+  // payment recovery.
+  const res = await circle(`/transactions?${qs.toString()}`, {
     method: "GET",
     headers: { "X-User-Token": userToken },
   });
-  return res?.data?.transactions ?? [];
+  const payload = res?.data ?? {};
+  const list = payload.transactions ?? payload.transaction ?? [];
+  return Array.isArray(list) ? list : [list];
 }
+
+/** One transaction by id, tolerant of either Circle response shape. */
+async function getTransaction(userToken: string, transactionId: string) {
+  const res = await circle(`/transactions/${transactionId}`, {
+    method: "GET",
+    headers: { "X-User-Token": userToken },
+  });
+  return res?.data?.transaction ?? res?.data ?? null;
+}
+
 
 async function findTransfer(input: {
   userToken: string;
