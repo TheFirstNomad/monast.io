@@ -42,3 +42,23 @@ Deno.test("prefers a live transfer over a failed one", () => {
   ];
   assertEquals(pickTransfer(txs, DEST, 0.15)?.id, "live");
 });
+
+// Withdrawal recovery: a challenge that returns no transaction id must still
+// find the user's own completed 10 USDC send.
+Deno.test("recovers a withdrawal by destination and amount", () => {
+  const txs: CircleTx[] = [
+    { id: "fee", state: "COMPLETE", txHash: "0xfee", amounts: ["0.15"], destinationAddress: DEST },
+    { id: "withdrawal", state: "COMPLETE", txHash: "0xwd", amounts: ["10.000000"], destinationAddress: DEST },
+  ];
+  const found = pickTransfer(txs, DEST, 10);
+  assertEquals(found?.id, "withdrawal");
+  assertEquals(found?.txHash, "0xwd");
+});
+
+Deno.test("does not recover a withdrawal of a different amount", () => {
+  const txs: CircleTx[] = [
+    { id: "withdrawal", state: "COMPLETE", txHash: "0xwd", amounts: ["10"], destinationAddress: DEST },
+  ];
+  assertEquals(pickTransfer(txs, DEST, 10.000001), null);
+});
+
