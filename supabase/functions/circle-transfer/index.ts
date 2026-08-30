@@ -524,9 +524,16 @@ Deno.serve(async (req) => {
 
     return json({ error: "Unknown action" }, 400);
   } catch (err) {
+    // Log the raw Circle detail, show the user plain language: a string like
+    // `Circle /transactions 404: {"code":-1,...}` is meaningless to them.
     console.error("circle-transfer error", err);
-    return json({ error: (err as Error).message }, 500);
+    const raw = (err as Error).message ?? "";
+    const friendly = /^Circle \//.test(raw)
+      ? "Your wallet provider could not complete that request. Please try again in a moment."
+      : raw || "Something went wrong with your wallet";
+    return json({ error: friendly }, 500);
   }
+
 
 });
 
