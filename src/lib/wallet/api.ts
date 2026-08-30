@@ -70,20 +70,23 @@ export async function withdrawFromCircleWallet(input: {
   });
 
   // Circle does not always hand the transaction id back with the challenge
-  // result. Recover it from the wallet's own activity so an approved transfer
-  // is never orphaned (and is never sent twice).
-  let transactionId = result?.data?.id;
+  // result. Let the backend match the transfer by destination + exact
+  // micro-USDC amount so an approved transfer is never orphaned (and is never
+  // sent twice - the idempotency key is derived from the same request).
+  let transactionId = result?.data?.id as string | undefined;
   if (!transactionId) {
-    const recent = await fetchCircleActivity().catch(() => []);
-    const match = recent.find(
-      (t) =>
-        String(t.direction).toUpperCase() === "OUTBOUND" &&
-        (t.counterparty ?? "").toLowerCase() === input.destinationAddress.toLowerCase() &&
-        Math.round(t.amountUsdc * 1e6) === Math.round(input.amountUsdc * 1e6),
-    );
-    if (match?.txHash) return { txHash: match.txHash };
-    transactionId = match?.id ?? undefined;
+    const found = await call<{ transactionId: string | null; txHash: string | null }>(
+      {
+        action: "resolveWithdraw",
+        destinationAddress: input.destinationAddress,
+        amountUsdc: input.amountUsdc,
+      },
+      "Could not confirm the transfer",
+    ).catch(() => null);
+    if (found?.txHash) return { txHash: found.txHash };
+    transactionId = found?.transactionId ?? undefined;
   }
+
   if (!transactionId) {
     throw new Error(
       "The transfer was approved but Circle has not published it yet - it will appear in your activity shortly.",
