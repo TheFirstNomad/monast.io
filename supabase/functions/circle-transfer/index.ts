@@ -391,19 +391,45 @@ Deno.serve(async (req) => {
     if (action === "status") {
       const transactionId = String(body?.transactionId ?? "");
       if (!transactionId) return json({ error: "Missing transactionId" }, 400);
-      const t = await withUserSession(admin, userId, async (s) => {
-        const tx = await circle(`/user/transactions/${transactionId}`, {
-          method: "GET",
-          headers: { "X-User-Token": s.userToken },
-        });
-        return tx?.data?.transaction;
-      });
+      const t = await withUserSession(admin, userId, (s) => getTransaction(s.userToken, transactionId));
       return json({
         status: t?.state ?? "PENDING",
         txHash: t?.txHash ?? null,
         message: t?.errorReason ?? t?.errorDetails ?? null,
       });
     }
+
+    // Withdrawal recovery: the challenge can complete without handing back a
+    // transaction id, and the money still moves. Look the transfer up by
+    // destination + amount so the UI can follow it to a hash instead of
+    // pretending the transfer failed.
+    if (action === "resolveWithdraw") {
+      const to = String(body?.destinationAddress ?? "").trim();
+      const amount = Number(body?.amountUsdc);
+      if (!/^0x[0-9a-fA-F]{40}$/.test(to)) return json({ error: "Invalid destination address" }, 400);
+      if (!Number.isFinite(amount) || amount <= 0) return json({ error: "Invalid amount" }, 400);
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("circle_wallet_id")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!profile?.circle_wallet_id) return json({ error: "No Circle wallet on file" }, 400);
+      const found = await withUserSession(admin, userId, (s) =>
+        findTransfer({
+          userToken: s.userToken,
+          walletId: profile.circle_wallet_id as string,
+          destinationAddress: to,
+          amountUsdc: amount,
+        }),
+      );
+      return json({
+        transactionId: found?.id ?? null,
+        status: found?.state ?? null,
+        txHash: found?.txHash ?? null,
+        message: found?.errorReason ?? found?.errorDetails ?? null,
+      });
+    }
+
 
     // ---- Wallet home: balance, activity, withdraw -------------------------
     if (action === "balance" || action === "activity" || action === "withdraw") {
