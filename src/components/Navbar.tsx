@@ -45,7 +45,7 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
   const { address, connect, connecting, disconnect } = useWallet();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { count: favCount } = useFavorites();
   const { isArbitrator, isModerator, has } = useRoles();
 
@@ -60,6 +60,13 @@ export const Navbar = () => {
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
   const signedIn = Boolean(address || user);
+  // A session with no connected address is a monast (Google) wallet account -
+  // it must never be shown a "Connect" prompt.
+  const socialSignedIn = Boolean(user && !address);
+  const handle = user?.email ? user.email.split("@")[0] : "Account";
+  const accountLabel = address ? short : socialSignedIn ? handle : "Sign in";
+  const handleSignOut = address ? disconnect : signOut;
+
 
   const accountLinks = [
     { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
