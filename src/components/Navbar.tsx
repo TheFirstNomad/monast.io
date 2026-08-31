@@ -272,17 +272,30 @@ export const Navbar = () => {
           ))}
 
           {signedIn ? (
-            <Button variant="outline" size="sm" onClick={disconnect} className="w-full gap-2">
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full gap-2">
               <LogOut className="w-4 h-4" />
-              {address ? `Sign out (${short})` : "Sign out"}
+              {address ? `Sign out (${short})` : `Sign out (${handle})`}
             </Button>
-
           ) : (
-            <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
-              <Wallet className="w-4 h-4" />
-              {connecting ? "Signing in..." : "Connect Wallet"}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate("/auth");
+                }}
+                className="w-full gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                Continue with Google
+              </Button>
+              <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
+                <Wallet className="w-4 h-4" />
+                {connecting ? "Signing in..." : "Connect wallet"}
+              </Button>
+            </div>
           )}
+
         </div>
       )}
     </nav>
