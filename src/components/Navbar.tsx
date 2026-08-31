@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   ChevronDown,
 
+  Mail,
   Tag,
   Store,
 } from "lucide-react";
