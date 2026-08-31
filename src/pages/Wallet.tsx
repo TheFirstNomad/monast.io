@@ -57,20 +57,35 @@ const Wallet = () => {
     };
   }, [user]);
 
+  // Live sync: poll fast while the tab is visible, pause when hidden so we
+  // never burn Circle calls in a background tab, and refetch on focus.
+  const [tabVisible, setTabVisible] = useState(
+    typeof document === "undefined" ? true : document.visibilityState === "visible",
+  );
+  useEffect(() => {
+    const onVisibility = () => setTabVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
   // Circle wallets: balance and activity come from the backend in parallel.
   const circleBalance = useQuery({
     queryKey: ["circle-balance", user?.id],
     queryFn: fetchCircleBalance,
     enabled: !!user && isCircleWallet,
-    refetchInterval: 30_000,
-    staleTime: 10_000,
+    refetchInterval: tabVisible ? 5_000 : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
   const circleActivity = useQuery({
     queryKey: ["circle-activity", user?.id],
     queryFn: fetchCircleActivity,
     enabled: !!user && isCircleWallet,
-    refetchInterval: 45_000,
-    staleTime: 15_000,
+    refetchInterval: tabVisible ? 10_000 : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   // Self-custody wallets: read USDC straight from Arc.
@@ -80,7 +95,12 @@ const Wallet = () => {
     functionName: "balanceOf",
     args: address && !isCircleWallet ? [address as `0x${string}`] : undefined,
     chainId: ARC.id,
-    query: { enabled: !!address && !isCircleWallet, refetchInterval: 30_000 },
+    query: {
+      enabled: !!address && !isCircleWallet,
+      refetchInterval: tabVisible ? 5_000 : false,
+      refetchOnWindowFocus: true,
+      staleTime: 0,
+    },
   });
 
   const balance: number | null = isCircleWallet
