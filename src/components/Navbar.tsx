@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   ChevronDown,
 
+  Mail,
   Tag,
   Store,
 } from "lucide-react";
@@ -45,7 +46,7 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
   const { address, connect, connecting, disconnect } = useWallet();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { count: favCount } = useFavorites();
   const { isArbitrator, isModerator, has } = useRoles();
 
@@ -60,6 +61,13 @@ export const Navbar = () => {
 
   const short = address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "";
   const signedIn = Boolean(address || user);
+  // A session with no connected address is a monast (Google) wallet account -
+  // it must never be shown a "Connect" prompt.
+  const socialSignedIn = Boolean(user && !address);
+  const handle = user?.email ? user.email.split("@")[0] : "Account";
+  const accountLabel = address ? short : socialSignedIn ? handle : "Sign in";
+  const handleSignOut = address ? disconnect : signOut;
+
 
   const accountLinks = [
     { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
@@ -115,32 +123,30 @@ export const Navbar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  aria-label={signedIn ? "Account menu" : "Connect wallet menu"}
+                  aria-label={signedIn ? "Account menu" : "Sign in menu"}
                   className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors"
                 >
-                  {address ? (
-                    <>
-                      <Wallet className="w-4 h-4 text-primary" />
-                      <span className="font-medium text-foreground">{short}</span>
-                    </>
+                  {socialSignedIn ? (
+                    <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+                      {handle.charAt(0).toUpperCase()}
+                    </span>
                   ) : (
-                    <>
-                      <Wallet className="w-4 h-4 text-emerald-500" />
-                      <span className="font-medium text-foreground">Connect</span>
-                    </>
+                    <Wallet className={`w-4 h-4 ${address ? "text-primary" : "text-emerald-500"}`} />
                   )}
+                  <span className="font-medium text-foreground max-w-[10rem] truncate">{accountLabel}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 {signedIn ? (
                   <>
-                    {address && (
-                      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                        Connected wallet
-                        <div className="text-sm font-semibold text-foreground">{short}</div>
-                      </DropdownMenuLabel>
-                    )}
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                      {address ? "Connected wallet" : "Signed in as"}
+                      <div className="text-sm font-semibold text-foreground truncate">
+                        {address ? short : user?.email ?? handle}
+                      </div>
+                    </DropdownMenuLabel>
+
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Account</DropdownMenuLabel>
                     {accountLinks.map(({ to, label, Icon }) => (
@@ -163,17 +169,21 @@ export const Navbar = () => {
                       </>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={disconnect}>
+                    <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="w-4 h-4 mr-2" /> Sign out
                     </DropdownMenuItem>
                   </>
                 ) : (
                   <>
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Sign in</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => navigate("/auth")}>
+                      <Mail className="w-4 h-4 mr-2" /> Continue with Google
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={connect} disabled={connecting}>
                       <Wallet className="w-4 h-4 mr-2" />
                       {connecting ? "Signing in…" : "Connect wallet"}
                     </DropdownMenuItem>
+
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Explore</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => navigate("/browse")}>
@@ -237,7 +247,7 @@ export const Navbar = () => {
               ? [
                   { group: "Account", links: accountLinks.map((l) => ({ to: l.to, label: l.label })) },
                 ]
-              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in with wallet" }] }]),
+              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in" }] }]),
             ...(showAdmin && adminLinks.length > 0
               ? [{ group: "Admin", links: adminLinks.map((l) => ({ to: l.to, label: l.label })) }]
               : []),
@@ -262,17 +272,30 @@ export const Navbar = () => {
           ))}
 
           {signedIn ? (
-            <Button variant="outline" size="sm" onClick={disconnect} className="w-full gap-2">
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full gap-2">
               <LogOut className="w-4 h-4" />
-              {address ? `Sign out (${short})` : "Sign out"}
+              {address ? `Sign out (${short})` : `Sign out (${handle})`}
             </Button>
-
           ) : (
-            <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
-              <Wallet className="w-4 h-4" />
-              {connecting ? "Signing in..." : "Connect Wallet"}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate("/auth");
+                }}
+                className="w-full gap-2"
+              >
+                <Mail className="w-4 h-4" />
+                Continue with Google
+              </Button>
+              <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
+                <Wallet className="w-4 h-4" />
+                {connecting ? "Signing in..." : "Connect wallet"}
+              </Button>
+            </div>
           )}
+
         </div>
       )}
     </nav>
