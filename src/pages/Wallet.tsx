@@ -110,6 +110,24 @@ const Wallet = () => {
       : null;
 
   const loadingBalance = isCircleWallet ? circleBalance.isLoading : onChain.isLoading;
+  const hasBalance = balance !== null;
+  const syncing = isCircleWallet
+    ? circleBalance.isFetching || circleActivity.isFetching
+    : onChain.isFetching;
+  const updatedAt = isCircleWallet ? circleBalance.dataUpdatedAt : onChain.dataUpdatedAt;
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 5_000);
+    return () => clearInterval(t);
+  }, []);
+  const lastUpdatedLabel = updatedAt
+    ? (() => {
+        const secs = Math.max(0, Math.round((now - updatedAt) / 1000));
+        if (secs < 10) return "just now";
+        if (secs < 60) return `${secs}s ago`;
+        return `${Math.round(secs / 60)}m ago`;
+      })()
+    : null;
 
   const refresh = useCallback(() => {
     if (isCircleWallet) {
