@@ -122,32 +122,30 @@ export const Navbar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  aria-label={signedIn ? "Account menu" : "Connect wallet menu"}
+                  aria-label={signedIn ? "Account menu" : "Sign in menu"}
                   className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors"
                 >
-                  {address ? (
-                    <>
-                      <Wallet className="w-4 h-4 text-primary" />
-                      <span className="font-medium text-foreground">{short}</span>
-                    </>
+                  {socialSignedIn ? (
+                    <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+                      {handle.charAt(0).toUpperCase()}
+                    </span>
                   ) : (
-                    <>
-                      <Wallet className="w-4 h-4 text-emerald-500" />
-                      <span className="font-medium text-foreground">Connect</span>
-                    </>
+                    <Wallet className={`w-4 h-4 ${address ? "text-primary" : "text-emerald-500"}`} />
                   )}
+                  <span className="font-medium text-foreground max-w-[10rem] truncate">{accountLabel}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 {signedIn ? (
                   <>
-                    {address && (
-                      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                        Connected wallet
-                        <div className="text-sm font-semibold text-foreground">{short}</div>
-                      </DropdownMenuLabel>
-                    )}
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                      {address ? "Connected wallet" : "Signed in as"}
+                      <div className="text-sm font-semibold text-foreground truncate">
+                        {address ? short : user?.email ?? handle}
+                      </div>
+                    </DropdownMenuLabel>
+
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Account</DropdownMenuLabel>
                     {accountLinks.map(({ to, label, Icon }) => (
