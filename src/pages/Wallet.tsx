@@ -142,9 +142,14 @@ const Wallet = () => {
             </div>
           </div>
           {(isCircleWallet ? circleBalance.error : onChain.error) && (
-            <p className="text-xs text-destructive mt-2">
-              {(circleBalance.error as Error)?.message ?? "Could not read your balance right now."}
-            </p>
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-secondary px-3 py-2">
+              <p className="text-xs text-muted-foreground">
+                Balance is taking a moment to load. Your funds are safe.
+              </p>
+              <Button size="sm" variant="outline" className="h-7 px-2 text-xs shrink-0" onClick={refresh}>
+                Try again
+              </Button>
+            </div>
           )}
         </div>
 
@@ -152,9 +157,10 @@ const Wallet = () => {
           <Skeleton className="h-40 w-full" />
         ) : !address ? (
           <div className="bg-card border border-border rounded-xl p-5 text-sm text-muted-foreground">
-            No wallet on this account yet. Sign in with Google to get a monast wallet, or connect your own
-            wallet from the top-right menu.
+            No wallet on this account yet. Connect a self-custody wallet from the top-right menu, or open
+            profile settings to finish setting up your monast wallet.
           </div>
+
         ) : (
           <>
             <ReceiveCard address={address} />
