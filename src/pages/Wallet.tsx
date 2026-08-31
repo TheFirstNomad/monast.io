@@ -157,11 +157,20 @@ const Wallet = () => {
                 <Check className="w-3 h-3" /> {ARC.label}
               </Badge>
               <Button size="sm" variant="ghost" className="gap-1.5 h-7 px-2" onClick={refresh}>
-                <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} /> Refresh
               </Button>
             </div>
           </div>
-          {(isCircleWallet ? circleBalance.error : onChain.error) && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span
+              className={`inline-block w-1.5 h-1.5 rounded-full ${
+                tabVisible ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"
+              }`}
+            />
+            {tabVisible ? "Live - updates automatically" : "Paused while this tab is in the background"}
+            {lastUpdatedLabel && <span>· updated {lastUpdatedLabel}</span>}
+          </div>
+          {!hasBalance && (isCircleWallet ? circleBalance.error : onChain.error) && (
             <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-secondary px-3 py-2">
               <p className="text-xs text-muted-foreground">
                 Balance is taking a moment to load. Your funds are safe.
