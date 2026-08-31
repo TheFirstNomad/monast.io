@@ -168,17 +168,21 @@ export const Navbar = () => {
                       </>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={disconnect}>
+                    <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="w-4 h-4 mr-2" /> Sign out
                     </DropdownMenuItem>
                   </>
                 ) : (
                   <>
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Sign in</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => navigate("/auth")}>
+                      <Mail className="w-4 h-4 mr-2" /> Continue with Google
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={connect} disabled={connecting}>
                       <Wallet className="w-4 h-4 mr-2" />
                       {connecting ? "Signing in…" : "Connect wallet"}
                     </DropdownMenuItem>
+
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Explore</DropdownMenuLabel>
                     <DropdownMenuItem onClick={() => navigate("/browse")}>
