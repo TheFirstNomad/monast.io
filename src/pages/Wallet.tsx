@@ -57,20 +57,35 @@ const Wallet = () => {
     };
   }, [user]);
 
+  // Live sync: poll fast while the tab is visible, pause when hidden so we
+  // never burn Circle calls in a background tab, and refetch on focus.
+  const [tabVisible, setTabVisible] = useState(
+    typeof document === "undefined" ? true : document.visibilityState === "visible",
+  );
+  useEffect(() => {
+    const onVisibility = () => setTabVisible(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
   // Circle wallets: balance and activity come from the backend in parallel.
   const circleBalance = useQuery({
     queryKey: ["circle-balance", user?.id],
     queryFn: fetchCircleBalance,
     enabled: !!user && isCircleWallet,
-    refetchInterval: 30_000,
-    staleTime: 10_000,
+    refetchInterval: tabVisible ? 5_000 : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
   const circleActivity = useQuery({
     queryKey: ["circle-activity", user?.id],
     queryFn: fetchCircleActivity,
     enabled: !!user && isCircleWallet,
-    refetchInterval: 45_000,
-    staleTime: 15_000,
+    refetchInterval: tabVisible ? 10_000 : false,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   // Self-custody wallets: read USDC straight from Arc.
@@ -80,7 +95,12 @@ const Wallet = () => {
     functionName: "balanceOf",
     args: address && !isCircleWallet ? [address as `0x${string}`] : undefined,
     chainId: ARC.id,
-    query: { enabled: !!address && !isCircleWallet, refetchInterval: 30_000 },
+    query: {
+      enabled: !!address && !isCircleWallet,
+      refetchInterval: tabVisible ? 5_000 : false,
+      refetchOnWindowFocus: true,
+      staleTime: 0,
+    },
   });
 
   const balance: number | null = isCircleWallet
@@ -90,6 +110,24 @@ const Wallet = () => {
       : null;
 
   const loadingBalance = isCircleWallet ? circleBalance.isLoading : onChain.isLoading;
+  const hasBalance = balance !== null;
+  const syncing = isCircleWallet
+    ? circleBalance.isFetching || circleActivity.isFetching
+    : onChain.isFetching;
+  const updatedAt = isCircleWallet ? circleBalance.dataUpdatedAt : onChain.dataUpdatedAt;
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 5_000);
+    return () => clearInterval(t);
+  }, []);
+  const lastUpdatedLabel = updatedAt
+    ? (() => {
+        const secs = Math.max(0, Math.round((now - updatedAt) / 1000));
+        if (secs < 10) return "just now";
+        if (secs < 60) return `${secs}s ago`;
+        return `${Math.round(secs / 60)}m ago`;
+      })()
+    : null;
 
   const refresh = useCallback(() => {
     if (isCircleWallet) {
@@ -137,11 +175,20 @@ const Wallet = () => {
                 <Check className="w-3 h-3" /> {ARC.label}
               </Badge>
               <Button size="sm" variant="ghost" className="gap-1.5 h-7 px-2" onClick={refresh}>
-                <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} /> Refresh
               </Button>
             </div>
           </div>
-          {(isCircleWallet ? circleBalance.error : onChain.error) && (
+          <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span
+              className={`inline-block w-1.5 h-1.5 rounded-full ${
+                tabVisible ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"
+              }`}
+            />
+            {tabVisible ? "Live - updates automatically" : "Paused while this tab is in the background"}
+            {lastUpdatedLabel && <span>· updated {lastUpdatedLabel}</span>}
+          </div>
+          {!hasBalance && (isCircleWallet ? circleBalance.error : onChain.error) && (
             <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-secondary px-3 py-2">
               <p className="text-xs text-muted-foreground">
                 Balance is taking a moment to load. Your funds are safe.
