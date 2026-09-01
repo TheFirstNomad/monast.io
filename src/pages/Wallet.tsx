@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ReceiveCard } from "@/components/wallet/ReceiveCard";
 import { SendUsdcCard } from "@/components/wallet/SendUsdcCard";
 import { ActivityList } from "@/components/wallet/ActivityList";
+import { FundEscrowCard } from "@/components/wallet/FundEscrowCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
@@ -211,6 +212,7 @@ const Wallet = () => {
         ) : (
           <>
             <ReceiveCard address={address} />
+            <FundEscrowCard userId={user.id} balance={balance} onFunded={refresh} />
             <SendUsdcCard isCircleWallet={isCircleWallet} balance={balance} onSent={refresh} />
             {isCircleWallet && (
               <ActivityList items={activity} loading={circleActivity.isLoading} />
