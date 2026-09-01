@@ -211,6 +211,7 @@ const Wallet = () => {
         ) : (
           <>
             <ReceiveCard address={address} />
+            <FundEscrowCard userId={user.id} balance={balance} onFunded={refresh} />
             <SendUsdcCard isCircleWallet={isCircleWallet} balance={balance} onSent={refresh} />
             {isCircleWallet && (
               <ActivityList items={activity} loading={circleActivity.isLoading} />
