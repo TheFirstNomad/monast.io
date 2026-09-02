@@ -29,6 +29,7 @@ import {
   Mail,
   Tag,
   Store,
+  ShoppingBag,
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -72,6 +73,7 @@ export const Navbar = () => {
   const accountLinks = [
     { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
     { to: "/wallet", label: "Wallet", Icon: Wallet },
+    { to: "/purchases", label: "My purchases", Icon: ShoppingBag },
 
     { to: "/settings", label: "Profile settings", Icon: User },
     { to: "/favorites", label: "Saved items", Icon: Heart },

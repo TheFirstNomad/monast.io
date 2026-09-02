@@ -30,6 +30,7 @@ import AdminReports from "./pages/AdminReports";
 import AdminRoles from "./pages/AdminRoles";
 import EscrowDetail from "./pages/EscrowDetail";
 import Favorites from "./pages/Favorites";
+import Purchases from "./pages/Purchases";
 import Settings from "./pages/Settings";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -52,6 +53,7 @@ const App = () => (
 
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/purchases" element={<Purchases />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:adId/:otherId" element={<MessageThread />} />
