@@ -9,7 +9,7 @@ import { DbAd } from "@/lib/types";
 import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil, Trash2 } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
-import { EscrowButton } from "@/components/EscrowButton";
+import { Shield as ShieldIcon } from "lucide-react";
 import { ReviewSection } from "@/components/ReviewSection";
 import { toast } from "sonner";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
