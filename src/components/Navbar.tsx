@@ -29,6 +29,7 @@ import {
   Mail,
   Tag,
   Store,
+  ShoppingBag,
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
