@@ -326,7 +326,12 @@ const AdDetail = () => {
                 </>
               ) : (
                 <>
-                  <EscrowButton adId={ad.id} sellerId={ad.seller_id} amount={Number(ad.price_usdc)} />
+                  <Link to={`/buy/${ad.id}`} className="block">
+                    <Button className="w-full gap-2 font-semibold py-5">
+                      <ShieldIcon className="w-4 h-4" />
+                      Buy with Escrow · {Number(ad.price_usdc).toLocaleString()} USDC
+                    </Button>
+                  </Link>
                   <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
                     <MessageCircle className="w-4 h-4" />
                     Chat with Seller
