@@ -53,6 +53,7 @@ const App = () => (
 
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/favorites" element={<Favorites />} />
+              <Route path="/purchases" element={<Purchases />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:adId/:otherId" element={<MessageThread />} />
