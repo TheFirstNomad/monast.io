@@ -31,6 +31,7 @@ import AdminRoles from "./pages/AdminRoles";
 import EscrowDetail from "./pages/EscrowDetail";
 import Favorites from "./pages/Favorites";
 import Purchases from "./pages/Purchases";
+import Buy from "./pages/Buy";
 import Settings from "./pages/Settings";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
