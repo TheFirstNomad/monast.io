@@ -58,6 +58,7 @@ const App = () => (
               <Route path="/purchases" element={<Purchases />} />
               <Route path="/buy/:adId" element={<Buy />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:adId/:otherId" element={<MessageThread />} />
               <Route path="/transactions" element={<Transactions />} />

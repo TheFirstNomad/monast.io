@@ -72,6 +72,7 @@ export const Navbar = () => {
 
   const accountLinks = [
     { to: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
+    { to: "/account", label: "My account", Icon: ShoppingBag },
     { to: "/wallet", label: "Wallet", Icon: Wallet },
     { to: "/purchases", label: "My purchases", Icon: ShoppingBag },
 
