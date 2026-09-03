@@ -7,14 +7,17 @@ import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/l
 import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { toast } from "sonner";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { sendUsdcPayment, resolvePayingWallet } from "@/lib/payments/sendUsdc";
+import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Props {
   escrowId: string;
   amount: number;
   onFunded?: () => void;
+  /** Start the payment as soon as the button appears (used right after checkout opens the escrow). */
+  autoStart?: boolean;
 }
+
 
 /**
  * Funds an existing escrow from the buyer's wallet - self-custody signs locally,
