@@ -7,29 +7,34 @@ import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/l
 import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { toast } from "sonner";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { sendUsdcPayment, resolvePayingWallet } from "@/lib/payments/sendUsdc";
+import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Props {
   escrowId: string;
   amount: number;
   onFunded?: () => void;
+  /** Start the payment as soon as the button appears (used right after checkout opens the escrow). */
+  autoStart?: boolean;
 }
+
 
 /**
  * Funds an existing escrow from the buyer's wallet - self-custody signs locally,
  * a Circle wallet signs through Circle - then the server verifies on-chain.
  */
-export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
+export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Props) => {
   const { address, connect } = useWallet();
   const { user } = useAuth();
   const [circleWallet, setCircleWallet] = useState(false);
+  const [walletResolved, setWalletResolved] = useState(false);
   const [circlePaying, setCirclePaying] = useState(false);
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync, isPending } = useWriteContract();
   const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
   const [verifying, setVerifying] = useState(false);
+  const [autoStarted, setAutoStarted] = useState(false);
   const { isSuccess, isLoading: mining } = useWaitForTransactionReceipt({ hash: pendingHash });
   const { treasury, error: treasuryError, loading: treasuryLoading } = useTreasuryAddress(
     "escrow",
@@ -41,10 +46,14 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
     if (!user) return;
     let cancelled = false;
     resolvePayingWallet(user.id).then((w) => {
-      if (!cancelled) setCircleWallet(w.isCircleWallet);
+      if (cancelled) return;
+      setCircleWallet(w.isCircleWallet);
+      setWalletResolved(true);
     });
     return () => { cancelled = true; };
   }, [user]);
+
+
 
   // Circle wallets cannot sign locally: the server starts the transfer, the SDK
   // signs it, and we hand the resulting hash to the same verifier.
@@ -119,6 +128,35 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
       setPendingHash(undefined);
     }
   };
+
+  // Self-heal: a Circle transfer that already moved the money (challenge closed
+  // before we captured the id) is settled into escrow instead of being lost.
+  useEffect(() => {
+    if (!circleWallet || !walletResolved || busy) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resolved = await resolveCirclePayment("escrow_fund", escrowId);
+        if (cancelled || !resolved.txHash) return;
+        toast.info("Finishing a payment you already approved…");
+        await confirmOnServer(resolved.txHash);
+      } catch {
+        // Nothing pending: the buyer simply hasn't paid yet.
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [circleWallet, walletResolved, escrowId]);
+
+  // Checkout hands off straight into payment so buyers never land on a pending row.
+  useEffect(() => {
+    if (!autoStart || autoStarted || !walletResolved || treasuryLoading || busy) return;
+    if (!circleWallet && !address) return;
+    setAutoStarted(true);
+    void fund();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, autoStarted, walletResolved, treasuryLoading, circleWallet, address]);
+
 
   useEffect(() => {
     if (!isSuccess || !pendingHash) return;
