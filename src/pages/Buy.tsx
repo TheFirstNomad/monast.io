@@ -43,6 +43,7 @@ const Buy = () => {
   const [loading, setLoading] = useState(true);
   const [escrow, setEscrow] = useState<EscrowRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [autoFund, setAutoFund] = useState(false);
 
   useSeo({
     title: ad ? `Buy ${ad.title} with USDC escrow | monast.io` : "Secure checkout | monast.io",
@@ -97,6 +98,9 @@ const Buy = () => {
       if (data?.error) { toast.error(data.error); return; }
       const created = data.escrow as EscrowRow;
       setEscrow(created);
+      // Hand off straight into the wallet payment so the buyer's USDC actually
+      // moves into escrow instead of leaving a pending row behind.
+      setAutoFund(true);
       if (created.status !== "created") navigate(`/escrow/${created.id}`);
     } catch (e: any) {
       toast.error(e?.message || "Could not open escrow");
@@ -192,6 +196,7 @@ const Buy = () => {
                 <EscrowFundButton
                   escrowId={escrow.id}
                   amount={amount}
+                  autoStart={autoFund}
                   onFunded={() => navigate(`/escrow/${escrow.id}`)}
                 />
                 <p className="text-xs text-muted-foreground text-center">
