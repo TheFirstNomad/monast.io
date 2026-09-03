@@ -33,6 +33,7 @@ import Favorites from "./pages/Favorites";
 import Purchases from "./pages/Purchases";
 import Buy from "./pages/Buy";
 import Settings from "./pages/Settings";
+import Account from "./pages/Account";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const App = () => (
