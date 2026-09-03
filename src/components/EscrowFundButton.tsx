@@ -129,6 +129,35 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
     }
   };
 
+  // Self-heal: a Circle transfer that already moved the money (challenge closed
+  // before we captured the id) is settled into escrow instead of being lost.
+  useEffect(() => {
+    if (!circleWallet || !walletResolved || busy) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resolved = await resolveCirclePayment("escrow_fund", escrowId);
+        if (cancelled || !resolved.txHash) return;
+        toast.info("Finishing a payment you already approved…");
+        await confirmOnServer(resolved.txHash);
+      } catch {
+        // Nothing pending: the buyer simply hasn't paid yet.
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [circleWallet, walletResolved, escrowId]);
+
+  // Checkout hands off straight into payment so buyers never land on a pending row.
+  useEffect(() => {
+    if (!autoStart || autoStarted || !walletResolved || treasuryLoading || busy) return;
+    if (!circleWallet && !address) return;
+    setAutoStarted(true);
+    void fund();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, autoStarted, walletResolved, treasuryLoading, circleWallet, address]);
+
+
   useEffect(() => {
     if (!isSuccess || !pendingHash) return;
     void confirmOnServer(pendingHash);
