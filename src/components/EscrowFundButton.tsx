@@ -23,16 +23,18 @@ interface Props {
  * Funds an existing escrow from the buyer's wallet - self-custody signs locally,
  * a Circle wallet signs through Circle - then the server verifies on-chain.
  */
-export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
+export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Props) => {
   const { address, connect } = useWallet();
   const { user } = useAuth();
   const [circleWallet, setCircleWallet] = useState(false);
+  const [walletResolved, setWalletResolved] = useState(false);
   const [circlePaying, setCirclePaying] = useState(false);
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync, isPending } = useWriteContract();
   const [pendingHash, setPendingHash] = useState<`0x${string}` | undefined>();
   const [verifying, setVerifying] = useState(false);
+  const [autoStarted, setAutoStarted] = useState(false);
   const { isSuccess, isLoading: mining } = useWaitForTransactionReceipt({ hash: pendingHash });
   const { treasury, error: treasuryError, loading: treasuryLoading } = useTreasuryAddress(
     "escrow",
@@ -44,10 +46,14 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded }: Props) => {
     if (!user) return;
     let cancelled = false;
     resolvePayingWallet(user.id).then((w) => {
-      if (!cancelled) setCircleWallet(w.isCircleWallet);
+      if (cancelled) return;
+      setCircleWallet(w.isCircleWallet);
+      setWalletResolved(true);
     });
     return () => { cancelled = true; };
   }, [user]);
+
+
 
   // Circle wallets cannot sign locally: the server starts the transfer, the SDK
   // signs it, and we hand the resulting hash to the same verifier.
