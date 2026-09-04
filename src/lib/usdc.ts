@@ -1,9 +1,9 @@
 // USDC defaults for the active marketplace chain.
 // Sourced from the central chain registry so we never drift from chains.ts.
-import { CHAINS } from "./chains";
+import { ACTIVE_CHAIN } from "./chains";
 
-// Default trading chain - Arc Testnet while Arc Mainnet is unreleased.
-const DEFAULT = CHAINS["arc-testnet"];
+// Default trading chain - Arc Testnet until Arc Mainnet USDC is configured.
+const DEFAULT = ACTIVE_CHAIN;
 
 export const USDC_ADDRESS: `0x${string}` = DEFAULT.usdc;
 export const USDC_DECIMALS = 6;
