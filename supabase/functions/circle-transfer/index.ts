@@ -24,14 +24,18 @@ const corsHeaders = {
 
 const CIRCLE_BASE = "https://api.circle.com/v1/w3s";
 const CIRCLE_API_KEY = Deno.env.get("CIRCLE_API_KEY")!;
-const CIRCLE_USDC_TOKEN_ID = Deno.env.get("CIRCLE_USDC_TOKEN_ID_ARC_TESTNET") ?? "";
+import {
+  circleUsdcTokenId,
+  defaultArcChainId,
+} from "../_shared/arc-chains.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Arc Testnet - the only chain monast.io settles on today. `ads` has no
-// chain_id column, so listing / promotion fees are always paid here.
-const ARC_CHAIN_ID = 5042002;
+// `ads` has no chain_id column, so listing / promotion fees are paid on the
+// configured default Arc chain (testnet until Arc mainnet is switched on).
+const ARC_CHAIN_ID = defaultArcChainId();
+const CIRCLE_USDC_TOKEN_ID = circleUsdcTokenId(ARC_CHAIN_ID);
 
 type Tier = "24h" | "7d" | "30d";
 // Must stay identical to TIERS in promote-checkout/index.ts, which is what
@@ -363,7 +367,7 @@ Deno.serve(async (req) => {
           idempotencyKey: await idempotencyKeyFor(`${purpose}:${referenceId}`),
           walletId: profile.circle_wallet_id,
           destinationAddress,
-          tokenId: CIRCLE_USDC_TOKEN_ID,
+          tokenId: circleUsdcTokenId(chainId),
           // Exact decimal string from integer micro-USDC - never a float.
           amounts: [formatUsdc(toBaseUnits(amountUsdc))],
           // REST field: the nested SDK-style `fee` object is ignored here, which

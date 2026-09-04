@@ -6,6 +6,7 @@
 // The entity secret itself never leaves the edge function environment.
 
 import { formatUsdc, toBaseUnits } from "./fees.ts";
+import { arcUsdcAddress, circleBlockchainId } from "./arc-chains.ts";
 
 const CIRCLE_BASE = "https://api.circle.com/v1/w3s";
 
@@ -105,31 +106,17 @@ export async function entitySecretCiphertext(): Promise<string> {
  * so a rename on Circle's side needs no redeploy.
  */
 export function circleBlockchain(chainId: number): string {
-  const arcTestnet = envVar("CIRCLE_ARC_TESTNET_BLOCKCHAIN") ?? "ARC-TESTNET";
-  const arcMainnet = envVar("CIRCLE_ARC_MAINNET_BLOCKCHAIN") ?? "ARC";
-  const map: Record<number, string> = {
-    5042002: arcTestnet,
-    5042001: arcMainnet,
-  };
-  const b = map[chainId];
-  if (!b) throw new Error(`No Circle blockchain mapping for chain ${chainId}`);
-  return b;
+  return circleBlockchainId(chainId);
 }
 
 /** USDC token contract per chain, lowercase.
  *  Source of truth: src/lib/chains.ts (frontend) and _shared/tx-verify.ts
  *  (deposit verification). These three MUST stay identical - this map is the
  *  address Circle uses to move real funds on release, refund and fee sweeps. */
-export const USDC_ADDRESS: Record<number, string> = {
-  5042002: "0x3600000000000000000000000000000000000000",
-};
-
+/** USDC token contract per chain, resolved from the shared Arc registry so
+ *  frontend, deposit verification and payouts can never drift apart. */
 export function usdcAddress(chainId: number): string {
-  const a = USDC_ADDRESS[chainId];
-  if (!a || /^0x0+$/.test(a)) {
-    throw new Error(`No USDC contract configured for chain ${chainId}`);
-  }
-  return a;
+  return arcUsdcAddress(chainId);
 }
 
 export async function createWalletSet(name: string) {
