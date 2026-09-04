@@ -4,6 +4,13 @@
 // and (when provided) came from `expectedFrom`.
 
 import { toBaseUnits } from "./fees.ts";
+import {
+  ARC_MAINNET_CHAIN_ID,
+  ARC_TESTNET_CHAIN_ID,
+  arcRpc,
+  arcUsdcAddress,
+  isArcMainnetLive,
+} from "./arc-chains.ts";
 
 
 interface ChainConf {
@@ -13,10 +20,17 @@ interface ChainConf {
 
 // monast.io is Arc-native. Only Arc chains are accepted here, so a payment
 // claimed on any other network is rejected rather than silently trusted.
-// Arc Mainnet stays commented out until its USDC contract is published.
-const CHAINS: Record<number, ChainConf> = {
-  5042002: { rpc: "https://rpc.testnet.arc.network", usdc: "0x3600000000000000000000000000000000000000" },
-};
+// Arc Public Mainnet becomes verifiable the moment its USDC contract is
+// configured (ARC_MAINNET_USDC_ADDRESS) - never before.
+function chainConf(chainId: number): ChainConf | null {
+  if (chainId === ARC_TESTNET_CHAIN_ID) {
+    return { rpc: arcRpc(chainId), usdc: arcUsdcAddress(chainId).toLowerCase() };
+  }
+  if (chainId === ARC_MAINNET_CHAIN_ID && isArcMainnetLive()) {
+    return { rpc: arcRpc(chainId), usdc: arcUsdcAddress(chainId).toLowerCase() };
+  }
+  return null;
+}
 
 
 
@@ -25,7 +39,9 @@ const CHAINS: Record<number, ChainConf> = {
 // Tunable per network once Arc's finality profile is better understood.
 const MIN_CONFIRMATIONS: Record<number, number> = {
   5042002: 3, // Arc Testnet
+  5042001: 3, // Arc Mainnet
 };
+
 const DEFAULT_MIN_CONFIRMATIONS = 12;
 
 const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
@@ -74,7 +90,7 @@ export interface VerifyResult {
 }
 
 export async function verifyUsdcTransfer(args: VerifyArgs): Promise<VerifyResult> {
-  const chain = CHAINS[args.chainId];
+  const chain = chainConf(args.chainId);
   if (!chain) return { ok: false, error: `unsupported chain ${args.chainId}` };
   if (!/^0x[0-9a-f]{64}$/i.test(args.txHash)) return { ok: false, error: "invalid tx_hash" };
 

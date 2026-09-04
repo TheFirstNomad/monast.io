@@ -1,9 +1,14 @@
 /**
  * Chain registry - single source of truth for supported networks.
- * monast.io is Arc-native: Arc Testnet is the only live network, and Arc
- * Mainnet ships disabled until its launch (and until its USDC contract is
- * published - a zero address here must never be selectable).
+ * monast.io is Arc-native. Arc Public Mainnet launches 16 September 2026 and
+ * stays disabled here until its USDC contract is published: set
+ * VITE_ARC_MAINNET_USDC (and optionally VITE_ARC_MAINNET_RPC) to switch the
+ * marketplace over. A zero address must never be selectable.
  */
+const MAINNET_USDC = (import.meta.env.VITE_ARC_MAINNET_USDC ?? "") as string;
+const MAINNET_RPC = (import.meta.env.VITE_ARC_MAINNET_RPC ?? "https://rpc.arc.network") as string;
+const MAINNET_READY =
+  /^0x[0-9a-fA-F]{40}$/.test(MAINNET_USDC) && !/^0x0+$/.test(MAINNET_USDC);
 export type ChainKey = "arc-testnet" | "arc-mainnet";
 
 export interface ChainEntry {
@@ -35,13 +40,20 @@ export const CHAINS: Record<ChainKey, ChainEntry> = {
     key: "arc-mainnet",
     label: "Arc Mainnet",
     network: "arc",
-    rpc: "https://rpc.arc.network",
-    usdc: "0x0000000000000000000000000000000000000000", // unpublished
+    rpc: MAINNET_RPC,
+    usdc: (MAINNET_READY
+      ? MAINNET_USDC.toLowerCase()
+      : "0x0000000000000000000000000000000000000000") as `0x${string}`,
     explorer: "https://arcscan.app",
-    enabled: false,
+    enabled: MAINNET_READY,
     appKitChain: "Arc",
   },
 };
+
+/** The chain the marketplace trades on today: mainnet once it is configured. */
+export const ACTIVE_CHAIN: ChainEntry = CHAINS["arc-mainnet"].enabled
+  ? CHAINS["arc-mainnet"]
+  : CHAINS["arc-testnet"];
 
 export const ENABLED_CHAINS = Object.values(CHAINS).filter((c) => c.enabled);
 export const ARC_CHAIN_IDS = Object.values(CHAINS).map((c) => c.id);
