@@ -90,7 +90,7 @@ export interface VerifyResult {
 }
 
 export async function verifyUsdcTransfer(args: VerifyArgs): Promise<VerifyResult> {
-  const chain = CHAINS[args.chainId];
+  const chain = chainConf(args.chainId);
   if (!chain) return { ok: false, error: `unsupported chain ${args.chainId}` };
   if (!/^0x[0-9a-f]{64}$/i.test(args.txHash)) return { ok: false, error: "invalid tx_hash" };
 
