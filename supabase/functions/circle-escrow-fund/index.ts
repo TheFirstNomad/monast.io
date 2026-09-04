@@ -6,6 +6,14 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
+import {
+  ARC_MAINNET_CHAIN_ID,
+  ARC_TESTNET_CHAIN_ID,
+  arcUsdcAddress,
+  circleBlockchainId,
+  defaultArcChainId,
+  isArcMainnetLive,
+} from "../_shared/arc-chains.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,10 +28,22 @@ const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // Circle blockchain id -> { evm chain id, USDC token contract }
-// Arc-native: only Arc networks are fundable.
-const ARC_TESTNET_BLOCKCHAIN = Deno.env.get("CIRCLE_ARC_TESTNET_BLOCKCHAIN") ?? "ARC-TESTNET";
+// Arc-native: only Arc networks are fundable. Arc Public Mainnet joins the map
+// automatically once its USDC contract and Circle token id are configured.
+const ARC_TESTNET_BLOCKCHAIN = circleBlockchainId(ARC_TESTNET_CHAIN_ID);
 const CIRCLE_CHAINS: Record<string, { chainId: number; usdc: string }> = {
-  [ARC_TESTNET_BLOCKCHAIN]: { chainId: 5042002, usdc: "0x3600000000000000000000000000000000000000" },
+  [ARC_TESTNET_BLOCKCHAIN]: {
+    chainId: ARC_TESTNET_CHAIN_ID,
+    usdc: arcUsdcAddress(ARC_TESTNET_CHAIN_ID),
+  },
+  ...(isArcMainnetLive()
+    ? {
+        [circleBlockchainId(ARC_MAINNET_CHAIN_ID)]: {
+          chainId: ARC_MAINNET_CHAIN_ID,
+          usdc: arcUsdcAddress(ARC_MAINNET_CHAIN_ID),
+        },
+      }
+    : {}),
 };
 
 async function circle(path: string, init: RequestInit = {}) {
@@ -65,7 +85,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const escrowId = String(body.escrow_id ?? "");
-    const blockchain = String(body.blockchain ?? ARC_TESTNET_BLOCKCHAIN).toUpperCase();
+    const blockchain = String(body.blockchain ?? circleBlockchainId(defaultArcChainId())).toUpperCase();
     if (!escrowId) return json({ error: "escrow_id required" }, 400);
     const chainConf = CIRCLE_CHAINS[blockchain];
     if (!chainConf) return json({ error: `Unsupported blockchain ${blockchain}` }, 400);

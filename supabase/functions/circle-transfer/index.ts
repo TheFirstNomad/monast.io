@@ -15,6 +15,7 @@ import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { loadFeeSettings, formatUsdc, toBaseUnits } from "../_shared/fees.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
 import { pickTransfer, type CircleTx } from "./pickTransfer.ts";
+import { circleUsdcTokenId, defaultArcChainId } from "../_shared/arc-chains.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,10 +25,6 @@ const corsHeaders = {
 
 const CIRCLE_BASE = "https://api.circle.com/v1/w3s";
 const CIRCLE_API_KEY = Deno.env.get("CIRCLE_API_KEY")!;
-import {
-  circleUsdcTokenId,
-  defaultArcChainId,
-} from "../_shared/arc-chains.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
