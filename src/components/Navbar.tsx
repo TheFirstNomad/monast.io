@@ -46,7 +46,7 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const { address, connect, connecting, disconnect } = useWallet();
+  const { address, connecting, disconnect } = useWallet();
   const { user, signOut } = useAuth();
   const { count: favCount } = useFavorites();
   const { isArbitrator, isModerator, has } = useRoles();
