@@ -251,7 +251,8 @@ export const Navbar = () => {
               ? [
                   { group: "Account", links: accountLinks.map((l) => ({ to: l.to, label: l.label })) },
                 ]
-              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in" }] }]),
+              : []),
+
             ...(showAdmin && adminLinks.length > 0
               ? [{ group: "Admin", links: adminLinks.map((l) => ({ to: l.to, label: l.label })) }]
               : []),
