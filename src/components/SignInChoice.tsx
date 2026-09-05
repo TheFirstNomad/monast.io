@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Wallet, ShieldCheck, Coins, Mail, Loader2 } from "lucide-react";
@@ -42,7 +43,9 @@ const readFunctionError = async (err: unknown): Promise<string> => {
 export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   const { connect, connecting, address } = useWallet();
   const { user } = useAuth();
-  const [mode, setMode] = useState<Mode>("wallet");
+  const [searchParams] = useSearchParams();
+  const requestedMethod = searchParams.get("method");
+  const [mode, setMode] = useState<Mode>(requestedMethod === "google" ? "email" : "wallet");
   const [googleLoading, setGoogleLoading] = useState(false);
   const handling = useRef(false);
 
@@ -196,13 +199,25 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   };
 
 
+  // Arriving from the header's explicit choice should not ask again: start the
+  // chosen flow straight away, exactly once.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (user || autoStarted.current) return;
+    if (requestedMethod !== "google" && requestedMethod !== "wallet") return;
+    autoStarted.current = true;
+    if (requestedMethod === "google") void continueWithGoogle();
+    else void connectSelfCustody();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedMethod, user]);
+
   return (
     <div className="text-center">
       <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
         {mode === "wallet" ? (
           <Wallet className="w-8 h-8 text-primary" />
         ) : (
-          <Mail className="w-8 h-8 text-primary" />
+          <GoogleMark className="w-8 h-8" />
         )}
       </div>
       <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to monast.io</h1>
@@ -229,7 +244,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
             mode === "email" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
           }`}
         >
-          <Mail className="w-4 h-4" /> Email
+          <GoogleMark className="w-4 h-4" /> Google
         </button>
       </div>
 
@@ -239,7 +254,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
             onClick={connectSelfCustody}
             disabled={connecting}
             size="lg"
-            className="w-full gap-2 font-semibold"
+            className="w-full h-12 gap-2 font-semibold"
           >
             <Wallet className="w-5 h-5" />
             {connecting
@@ -259,7 +274,7 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
             disabled={googleLoading}
             size="lg"
             variant="outline"
-            className="w-full gap-3 font-semibold"
+            className="w-full h-12 gap-3 font-semibold"
           >
             {googleLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -292,8 +307,8 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   );
 };
 
-const GoogleMark = () => (
-  <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+const GoogleMark = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
     <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.2-2.2H12v4.2h6.6c-.1 1.1-.9 2.8-2.6 3.9l-.1.1 3.8 3c2.4-2.2 3.8-5.5 3.8-9z" />
     <path fill="#34A853" d="M12 24c3.5 0 6.4-1.2 8.5-3.1l-4-3.1c-1.1.8-2.6 1.3-4.5 1.3-3.4 0-6.3-2.2-7.3-5.3l-.1.1-4 3.1C2.6 21.3 7 24 12 24z" />
     <path fill="#FBBC05" d="M4.7 13.8c-.3-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5V8.7l-4-3.1C.4 7.3 0 9.6 0 11.3s.4 4 1.1 5.7l3.6-3.2z" />
