@@ -287,17 +287,27 @@ export const Navbar = () => {
                 size="sm"
                 onClick={() => {
                   setMobileOpen(false);
-                  navigate("/auth");
+                  navigate("/auth?method=google");
                 }}
                 className="w-full gap-2"
               >
                 <Mail className="w-4 h-4" />
                 Continue with Google
               </Button>
-              <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={connecting}
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate("/auth?method=wallet");
+                }}
+                className="w-full gap-2"
+              >
                 <Wallet className="w-4 h-4" />
                 {connecting ? "Signing in..." : "Connect wallet"}
               </Button>
+
             </div>
           )}
 
