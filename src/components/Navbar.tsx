@@ -46,7 +46,7 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const { address, connect, connecting, disconnect } = useWallet();
+  const { address, connecting, disconnect } = useWallet();
   const { user, signOut } = useAuth();
   const { count: favCount } = useFavorites();
   const { isArbitrator, isModerator, has } = useRoles();
@@ -179,13 +179,14 @@ export const Navbar = () => {
                 ) : (
                   <>
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Sign in</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => navigate("/auth")}>
+                    <DropdownMenuItem onClick={() => navigate("/auth?method=google")}>
                       <Mail className="w-4 h-4 mr-2" /> Continue with Google
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={connect} disabled={connecting}>
+                    <DropdownMenuItem onClick={() => navigate("/auth?method=wallet")} disabled={connecting}>
                       <Wallet className="w-4 h-4 mr-2" />
                       {connecting ? "Signing in…" : "Connect wallet"}
                     </DropdownMenuItem>
+
 
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Explore</DropdownMenuLabel>
@@ -250,7 +251,8 @@ export const Navbar = () => {
               ? [
                   { group: "Account", links: accountLinks.map((l) => ({ to: l.to, label: l.label })) },
                 ]
-              : [{ group: "Account", links: [{ to: "/auth", label: "Sign in" }] }]),
+              : []),
+
             ...(showAdmin && adminLinks.length > 0
               ? [{ group: "Admin", links: adminLinks.map((l) => ({ to: l.to, label: l.label })) }]
               : []),
@@ -285,17 +287,27 @@ export const Navbar = () => {
                 size="sm"
                 onClick={() => {
                   setMobileOpen(false);
-                  navigate("/auth");
+                  navigate("/auth?method=google");
                 }}
                 className="w-full gap-2"
               >
                 <Mail className="w-4 h-4" />
                 Continue with Google
               </Button>
-              <Button variant="outline" size="sm" onClick={connect} disabled={connecting} className="w-full gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={connecting}
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate("/auth?method=wallet");
+                }}
+                className="w-full gap-2"
+              >
                 <Wallet className="w-4 h-4" />
                 {connecting ? "Signing in..." : "Connect wallet"}
               </Button>
+
             </div>
           )}
 
