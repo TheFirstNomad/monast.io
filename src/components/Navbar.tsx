@@ -90,17 +90,14 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
+    <nav className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl border-b border-border">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-14">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">M</span>
-            </div>
-            <span className="text-lg font-bold text-foreground hidden sm:block">MONAST</span>
+        <div className="flex items-center justify-between h-16">
+          <Link to="/" className="shrink-0 font-display text-2xl text-foreground">
+            Monast
           </Link>
 
-          <form onSubmit={submitSearch} className="hidden md:flex flex-1 max-w-xl mx-6">
+          <form onSubmit={submitSearch} className="hidden lg:flex flex-1 max-w-lg mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -108,33 +105,30 @@ export const Navbar = () => {
                 aria-label="Search listings"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for anything..."
-                className="w-full h-10 pl-10 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Search the market or ask an agent"
+                className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </form>
 
-          <div className="hidden md:flex items-center gap-2">
-            <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground px-2">
-              Pricing
-            </Link>
-
-
-
+          <div className="hidden md:flex items-center gap-1">
+            <Link to="/browse" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Browse</Link>
+            <Link to="/post-ad" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Sell</Link>
+            <Link to="/messages" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Messages</Link>
             {user && <NotificationsBell />}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   aria-label={signedIn ? "Account menu" : "Sign in menu"}
-                  className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-secondary hover:bg-accent transition-colors"
+                  className="flex items-center gap-2 text-sm px-2.5 h-9 rounded-lg border border-border bg-card hover:bg-accent transition-colors"
                 >
                   {socialSignedIn ? (
-                    <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full bg-accent text-primary text-[11px] font-bold flex items-center justify-center">
                       {handle.charAt(0).toUpperCase()}
                     </span>
                   ) : (
-                    <Wallet className={`w-4 h-4 ${address ? "text-primary" : "text-emerald-500"}`} />
+                    <Wallet className={`w-4 h-4 ${address ? "text-success" : "text-muted-foreground"}`} />
                   )}
                   <span className="font-medium text-foreground max-w-[10rem] truncate">{accountLabel}</span>
                   <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
@@ -202,22 +196,16 @@ export const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Link to="/post-ad">
-              <Button size="sm" className="gap-2 font-semibold">
-                <Plus className="w-4 h-4" />
-                Post an Ad
-              </Button>
-            </Link>
           </div>
 
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1">
+            <Button variant="ghost" size="icon" aria-label="Search" onClick={() => setMobileOpen(true)}><Search className="w-5 h-5" /></Button>
             <Link to="/post-ad">
-              <Button size="sm" className="gap-1 text-xs">
-                <Plus className="w-3.5 h-3.5" />
-                Post Ad
+              <Button size="sm" className="gap-1 text-xs px-3">
+                <Plus className="w-3.5 h-3.5" /> Sell
               </Button>
             </Link>
-            <button onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">
+            <button className="w-10 h-10 flex items-center justify-center" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">
               {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
@@ -232,7 +220,7 @@ export const Navbar = () => {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for anything..."
+               placeholder="Search the market or ask an agent"
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </form>

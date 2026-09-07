@@ -7,9 +7,10 @@ import { AdCard } from "@/components/AdCard";
 import { Spotlight } from "@/components/Spotlight";
 import { supabase } from "@/integrations/supabase/client";
 import { DbAd } from "@/lib/types";
-import { Plus, Shield, Zap, Globe } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
+import marketHero from "@/assets/monast-market-hero.jpg";
 
 const Index = () => {
   useSeo({
@@ -71,85 +72,84 @@ const Index = () => {
         />
       )}
 
-      <section className="hero-gradient py-16 md:py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-4 tracking-tight leading-tight">
-            Buy &amp; Sell Anything
-            <br />
-            <span className="text-primary-foreground/80">Worldwide with USDC on Arc</span>
+      <section className="relative min-h-[calc(100svh-4rem)] max-h-[860px] overflow-hidden border-b border-border">
+        <img src={marketHero} alt="A curated collection of goods available through Monast" width={1600} height={1000} className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/10" />
+        <div className="relative max-w-7xl mx-auto px-4 min-h-[calc(100svh-4rem)] max-h-[860px] flex flex-col justify-center py-12">
+          <div className="max-w-2xl">
+            <p className="text-xs font-medium text-primary mb-5">The global desk for anything</p>
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-medium text-foreground mb-5 leading-[0.98]">
+              Buy and sell anything.<br />Worldwide. In USDC.
           </h1>
-          <p className="text-base md:text-lg text-primary-foreground/70 mb-8 max-w-xl mx-auto">
-            The global marketplace where anyone can list anything and trade instantly with USDC escrow on Arc.
+          <p className="text-base md:text-lg text-foreground/70 mb-8 max-w-xl leading-relaxed">
+            List goods, work, or digital products. Payment sits in escrow until delivery is confirmed.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild size="lg" className="text-base px-8 py-6 font-bold bg-card text-primary hover:bg-card/90">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button asChild size="lg" className="text-base px-7 h-12">
               <Link to="/post-ad">
                 <Plus className="w-5 h-5 mr-2" />
-                Post an Ad
+                Sell an item
               </Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="text-base px-8 py-6 font-semibold border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 bg-transparent"
-            >
-              <Link to="/browse">Browse Ads</Link>
+            <Button asChild size="lg" variant="outline" className="text-base px-7 h-12 bg-background/20 backdrop-blur-sm">
+              <Link to="/browse">Browse the market <ArrowRight className="ml-1 w-4 h-4" /></Link>
             </Button>
+          </div>
+          <div className="grid grid-cols-3 gap-0 border-y border-border mt-10 max-w-2xl">
+            {[
+              ["01", "List", "Describe what you offer."],
+              ["02", "Fund escrow", "Buyer locks the payment."],
+              ["03", "Release", "Funds move on delivery."],
+            ].map(([number, title, body], index) => (
+              <div key={title} className={`py-4 pr-3 ${index > 0 ? "pl-4 border-l border-border" : ""}`}>
+                <span className="text-[10px] text-primary">{number}</span>
+                <div className="text-sm font-semibold text-foreground mt-1">{title}</div>
+                <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-4">Settled on Arc · USDC · Agent-ready</p>
           </div>
         </div>
       </section>
 
-      <section className="py-8 px-4 border-b border-border">
-        <div className="max-w-5xl mx-auto grid grid-cols-3 gap-4 text-center">
-          {[
-            { icon: Shield, label: "Escrow Protected" },
-            { icon: Zap, label: "Instant USDC Payments" },
-            { icon: Globe, label: "Worldwide Marketplace" },
-          ].map((b) => (
-            <div key={b.label} className="flex flex-col items-center gap-1.5">
-              <b.icon className="w-5 h-5 text-primary" />
-              <span className="text-xs md:text-sm font-medium text-muted-foreground">{b.label}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="py-10 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-xl font-bold text-foreground mb-6">Browse Categories</h2>
+      <section className="py-14 md:py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-end justify-between mb-6">
+            <div><p className="text-xs text-primary mb-2">Explore the market</p><h2 className="font-display text-3xl md:text-4xl text-foreground">Browse categories</h2></div>
+            <Link to="/browse" className="hidden sm:flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">All categories <ArrowRight className="w-4 h-4" /></Link>
+          </div>
           <CategoryGrid />
         </div>
       </section>
 
       <Spotlight />
 
-
-      <section className="py-10 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-foreground">Recent Listings</h2>
-            <Link to="/browse" className="text-sm text-primary font-medium hover:underline">
-              View all →
-            </Link>
+      <section className="py-14 md:py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-end justify-between mb-7">
+            <div><p className="text-xs text-primary mb-2">Fresh to the desk</p><h2 className="font-display text-3xl md:text-4xl text-foreground">Just listed</h2></div>
+            <Link to="/browse" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">View market <ArrowRight className="w-4 h-4" /></Link>
           </div>
           {recentAds.length === 0 ? (
-            <div className="text-center py-16 bg-card border border-border rounded-xl">
-              <p className="text-muted-foreground mb-4">No ads yet. Be the first to post!</p>
-              <Button asChild>
-                <Link to="/post-ad">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Post an Ad
-                </Link>
-              </Button>
+            <div className="relative overflow-hidden text-center py-20 bg-card border border-border rounded-xl">
+              <div className="mx-auto mb-5 w-28 aspect-[4/5] border border-border rounded-lg bg-secondary flex items-center justify-center"><Plus className="w-6 h-6 text-muted-foreground" /></div>
+              <p className="font-display text-2xl text-foreground mb-2">Be the first listing in this market.</p>
+              <p className="text-sm text-muted-foreground mb-5">Open the desk with something worth discovering.</p>
+              <Button asChild><Link to="/post-ad">Sell an item</Link></Button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {recentAds.map((ad) => (
-                <AdCard key={ad.id} ad={ad} />
-              ))}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+              {recentAds.map((ad) => <AdCard key={ad.id} ad={ad} />)}
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="px-4">
+        <div className="max-w-7xl mx-auto border-y border-border py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div><h2 className="font-display text-2xl text-foreground">Agents can search, offer, and pay through the Monast API.</h2><p className="text-sm text-muted-foreground mt-1">A commerce layer built for people and autonomous buyers.</p></div>
+          <Button asChild variant="outline"><Link to="/agent-docs">Read agent docs <ArrowRight className="w-4 h-4" /></Link></Button>
         </div>
       </section>
     </Layout>
