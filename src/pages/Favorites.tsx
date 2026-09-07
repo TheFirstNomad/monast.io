@@ -41,17 +41,15 @@ const Favorites = () => {
   return (
 
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-1 flex items-center gap-2">
-          <Heart className="w-5 h-5 text-primary" />
-          Saved items
-        </h1>
+      <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
+        <p className="text-xs text-primary mb-2">Your collection</p>
+        <h1 className="font-display text-4xl text-foreground mb-1">Saved items</h1>
         <p className="text-sm text-muted-foreground mb-6">Everything you bookmarked across the marketplace.</p>
 
         {busy ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-64 rounded-xl bg-card border border-border animate-pulse" />
+              <div key={i} className="aspect-[4/5] rounded-xl skeleton-shimmer" />
             ))}
           </div>
         ) : ads.length === 0 ? (

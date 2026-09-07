@@ -125,15 +125,13 @@ const Promote = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
         <Link to={`/ad/${ad.id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="w-4 h-4" /> Back to ad
         </Link>
 
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h1 className="text-2xl font-bold">Promote this ad</h1>
-        </div>
+        <p className="text-xs text-primary mb-2">Spotlight</p>
+        <h1 className="font-display text-4xl mb-2">Put this listing on the desk.</h1>
         <p className="text-sm text-muted-foreground mb-8">
           Pin <span className="text-foreground font-medium">{ad.title}</span> to the Spotlight and top of search.
         </p>
@@ -145,7 +143,7 @@ const Promote = () => {
               <button
                 key={t.id}
                 onClick={() => setTier(t.id)}
-                className={`text-left rounded-2xl border p-5 transition-all ${
+                className={`text-left rounded-xl border p-5 transition-all ${
                   active
                     ? "border-primary bg-primary/5 ring-2 ring-primary/30"
                     : "border-border bg-card hover:border-primary/40"
@@ -155,20 +153,20 @@ const Promote = () => {
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t.label}</span>
                   {t.highlight && <span className="text-[10px] font-bold text-primary uppercase">{t.highlight}</span>}
                 </div>
-                <div className="text-2xl font-bold font-mono tabular-nums">{t.price} <span className="text-xs font-medium text-muted-foreground">USDC</span></div>
+                <div className="text-2xl font-display price-nums">{t.price} <span className="text-xs font-sans font-medium text-muted-foreground">USDC</span></div>
                 <div className="text-xs text-muted-foreground mt-1">{t.duration}</div>
               </button>
             );
           })}
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 mb-6">
+        <div className="bg-card border border-border rounded-xl p-5 mb-6">
           <h2 className="font-semibold mb-3">Preview</h2>
-          <div className="flex gap-3 items-center bg-gradient-to-br from-card to-primary/5 border border-primary/30 rounded-xl p-3">
+          <div className="flex gap-3 items-center bg-secondary border border-primary/30 rounded-xl p-3">
             <img src={cover} alt={ad.title} className="w-20 h-20 object-cover rounded-lg" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 text-[10px] font-bold text-primary uppercase mb-1">
-                <Sparkles className="w-3 h-3" /> Featured
+                <Sparkles className="w-3 h-3" /> Spotlight
               </div>
               <div className="text-sm font-semibold truncate">{ad.title}</div>
               <div className="text-sm text-primary font-bold">{Number(ad.price_usdc).toLocaleString()} USDC</div>
@@ -176,11 +174,11 @@ const Promote = () => {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 mb-6 space-y-2 text-sm">
+        <div className="bg-card border border-border rounded-xl p-5 mb-6 space-y-2 text-sm">
           {[
             "Pinned to home Spotlight carousel",
             "Top placement in /browse and category pages",
-            "Highlighted card with Featured badge",
+            "Gold mark on your listing card",
             "Priority in Agent API responses",
           ].map((f) => (
             <div key={f} className="flex items-start gap-2">

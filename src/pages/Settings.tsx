@@ -96,8 +96,9 @@ const Settings = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-1">Profile settings</h1>
+      <div className="max-w-2xl mx-auto px-4 py-10 md:py-14">
+        <p className="text-xs text-primary mb-2">Account</p>
+        <h1 className="font-display text-4xl text-foreground mb-1">Profile settings</h1>
         <p className="text-sm text-muted-foreground mb-8">
           This is what buyers and sellers see on your listings.
         </p>
