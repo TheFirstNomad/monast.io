@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DbAd } from "@/lib/types";
-import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil, Trash2 } from "lucide-react";
+import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil, Trash2, LockKeyhole, PackageCheck, Banknote } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
 import { Shield as ShieldIcon } from "lucide-react";
@@ -164,7 +164,7 @@ const AdDetail = () => {
           dangerouslySetInnerHTML={{ __html: jsonLdHtml }}
         />
       )}
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:py-10">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
           <Link to="/" className="hover:text-foreground">Home</Link>
           <span>/</span>
@@ -173,14 +173,11 @@ const AdDetail = () => {
           </Link>
           <span>/</span>
           <span className="text-foreground truncate">{ad.title}</span>
-          <Link to="/agents" className="ml-auto inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20" title="Agents can buy this via the API">
-            Agent-friendly
-          </Link>
         </div>
 
-        <div className="grid md:grid-cols-5 gap-6">
-          <div className="md:col-span-3">
-            <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-secondary mb-3">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_420px] gap-8 lg:gap-12 items-start">
+          <div>
+            <button type="button" onClick={() => window.open(images[currentImage], "_blank", "noopener,noreferrer")} className="relative block w-full aspect-[4/3] rounded-xl overflow-hidden bg-secondary mb-3 cursor-zoom-in" aria-label="Open full-size image">
               <img src={images[currentImage]} alt={ad.title} className="w-full h-full object-cover" />
               {images.length > 1 && (
                 <>
@@ -203,7 +200,7 @@ const AdDetail = () => {
               <div className="absolute bottom-2 right-2 bg-card/80 backdrop-blur text-xs px-2 py-1 rounded">
                 {currentImage + 1}/{images.length}
               </div>
-            </div>
+            </button>
 
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">
@@ -222,9 +219,9 @@ const AdDetail = () => {
               </div>
             )}
 
-            <div className="mt-6">
-              <h2 className="text-lg font-semibold text-foreground mb-3">Description</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">{ad.description}</p>
+            <div className="mt-10 border-t border-border pt-8">
+              <h2 className="font-display text-2xl text-foreground mb-4">Description</h2>
+              <p className="text-foreground/70 text-base leading-7 whitespace-pre-line max-w-3xl">{ad.description}</p>
             </div>
 
             {Object.entries((ad as any).attributes ?? {}).filter(([, v]) => v).length > 0 && (
@@ -246,15 +243,15 @@ const AdDetail = () => {
             )}
           </div>
 
-          <div className="md:col-span-2 space-y-4">
-            <div className="bg-card rounded-xl border border-border p-5">
+          <div className="space-y-4 lg:sticky lg:top-24">
+            <div className="bg-card rounded-xl border border-border p-6 market-shadow">
               <div className="flex items-start justify-between gap-3 mb-1">
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-3xl price-nums font-semibold text-primary whitespace-nowrap">
                   {Number(ad.price_usdc).toLocaleString()} USDC
                 </div>
                 <FavoriteButton adId={ad.id} size="lg" />
               </div>
-              <h1 className="text-lg font-semibold text-foreground mb-3">{ad.title}</h1>
+              <h1 className="font-display text-2xl text-foreground mb-4 leading-tight">{ad.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
                   <MapPin className="w-3 h-3" />
@@ -265,6 +262,13 @@ const AdDetail = () => {
                 {user && user.id !== ad.seller_id && (
                   <ReportDialog targetType="ad" targetId={ad.id} className="ml-auto" />
                 )}
+              </div>
+              <div className="border-t border-border mt-5 pt-5">
+                <p className="text-xs font-semibold text-foreground mb-3">Payment protection</p>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {[{ icon: LockKeyhole, label: "Authorized" }, { icon: Shield, label: "In escrow" }, { icon: Banknote, label: "Released" }].map(({ icon: Icon, label }, i) => <div key={label} className="relative"><Icon className={`w-4 h-4 mx-auto mb-1 ${i === 1 ? "text-success" : "text-primary"}`} /><span className="text-[10px] text-muted-foreground">{label}</span></div>)}
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-3">Your payment stays protected until you confirm delivery.</p>
               </div>
             </div>
 
@@ -284,7 +288,7 @@ const AdDetail = () => {
                   <Link to={`/edit-ad/${ad.id}`} className="block">
                     <Button variant="outline" className="w-full gap-2 py-5">
                       <Pencil className="w-4 h-4" />
-                      Edit Listing
+                       Edit listing
                     </Button>
                   </Link>
                   {openEscrowId && (
@@ -298,7 +302,7 @@ const AdDetail = () => {
                     className="w-full gap-2 font-semibold py-5"
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    {marking ? "Marking..." : "Mark as Sold"}
+                     {marking ? "Marking..." : "Mark as sold"}
                   </Button>
                   {openEscrowId && (
                     <p className="text-xs text-muted-foreground text-center">
@@ -320,7 +324,7 @@ const AdDetail = () => {
                   <Link to={`/promote/${ad.id}`} className="block">
                     <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
                       <Sparkles className="w-4 h-4" />
-                      {ad.featured ? "Extend Featured Boost" : "Promote to Spotlight"}
+                       {ad.featured ? "Extend Spotlight" : "Promote to Spotlight"}
                     </Button>
                   </Link>
                 </>
@@ -329,16 +333,16 @@ const AdDetail = () => {
                   <Link to={`/buy/${ad.id}`} className="block">
                     <Button className="w-full gap-2 font-semibold py-5">
                       <ShieldIcon className="w-4 h-4" />
-                      Buy with Escrow · {Number(ad.price_usdc).toLocaleString()} USDC
+                      Buy with escrow
                     </Button>
                   </Link>
-                  <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
-                    <MessageCircle className="w-4 h-4" />
-                    Chat with Seller
-                  </Button>
-                  <Button variant="secondary" className="w-full gap-2 py-5" onClick={() => setOfferOpen(true)}>
+                   <Button variant="outline" className="w-full gap-2 py-5" onClick={() => setOfferOpen(true)}>
                     <Shield className="w-4 h-4" />
-                    Make Offer with Escrow
+                     Make offer
+                   </Button>
+                   <Button variant="ghost" className="w-full gap-2 py-5" onClick={() => setChatOpen(true)}>
+                     <MessageCircle className="w-4 h-4" />
+                     Message seller
                   </Button>
                 </>
               )}
@@ -349,7 +353,7 @@ const AdDetail = () => {
                 to={`/seller/${ad.seller_id}`}
                 className="block bg-card rounded-xl border border-border p-5 hover:border-primary/50 transition-colors"
               >
-                <h3 className="text-sm font-semibold text-foreground mb-3">Seller</h3>
+                 <h3 className="text-xs font-semibold text-muted-foreground mb-3">Seller</h3>
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                     <span className="text-primary font-bold text-sm">
@@ -362,18 +366,25 @@ const AdDetail = () => {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Star className="w-3 h-3 fill-primary text-primary" />
-                      {ad.seller.rating ?? "-"} · {ad.seller.total_ads ?? 0} ads
+                       {ad.seller.rating ?? "-"} rating · {ad.seller.total_ads ?? 0} completed trades
                     </div>
                   </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                 <div className="text-xs text-muted-foreground border-t border-border pt-3 flex justify-between">
+                   <span>
                   Member since{" "}
                   {new Date(ad.seller.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                   </span><span className="text-primary">View shop</span>
                 </div>
               </Link>
             )}
 
             <ReviewSection adId={ad.id} sellerId={ad.seller_id} adSold={ad.status === "sold"} />
+          </div>
+        </div>
+        <div className="mt-12 border-y border-border py-7">
+          <div className="grid grid-cols-3 max-w-xl mx-auto">
+            {[{ icon: LockKeyhole, title: "Paid" }, { icon: PackageCheck, title: "Delivered" }, { icon: CheckCircle2, title: "Released" }].map(({ icon: Icon, title }, i) => <div key={title} className={`text-center ${i > 0 ? "border-l border-border" : ""}`}><Icon className="w-4 h-4 text-primary mx-auto mb-2" /><p className="text-xs font-medium text-foreground">{title}</p></div>)}
           </div>
         </div>
       </div>

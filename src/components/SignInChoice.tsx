@@ -14,8 +14,6 @@ import {
 } from "@/lib/circle/client";
 import { toast } from "@/hooks/use-toast";
 
-type Mode = "wallet" | "email";
-
 /**
  * Edge function failures arrive as a generic "non-2xx status code" message.
  * The real reason lives in the response body, so read it when available.
@@ -45,7 +43,6 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const requestedMethod = searchParams.get("method");
-  const [mode, setMode] = useState<Mode>(requestedMethod === "google" ? "email" : "wallet");
   const [googleLoading, setGoogleLoading] = useState(false);
   const handling = useRef(false);
 
