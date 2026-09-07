@@ -4,11 +4,11 @@ import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
 import { DbAd, categories, conditions, categoryQueryValues } from "@/lib/types";
-import { Search, SlidersHorizontal, X, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal, X, MapPin, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/hooks/useSeo";
 
-type SortKey = "newest" | "price_asc" | "price_desc";
+type SortKey = "newest" | "price_asc" | "price_desc" | "featured";
 
 const Browse = () => {
   useSeo({
@@ -27,6 +27,7 @@ const Browse = () => {
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [featuredOnly, setFeaturedOnly] = useState(false);
   const [ads, setAds] = useState<DbAd[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,37 +49,35 @@ const Browse = () => {
     const max = Number(maxPrice);
     if (minPrice && !Number.isNaN(min)) q = q.gte("price_usdc", min);
     if (maxPrice && !Number.isNaN(max)) q = q.lte("price_usdc", max);
+    if (featuredOnly || sort === "featured") q = q.eq("featured", true);
 
     q.limit(60).then(({ data }) => {
       setAds((data as DbAd[]) || []);
       setLoading(false);
     });
-  }, [search, category, condition, location, minPrice, maxPrice, sort]);
+  }, [search, category, condition, location, minPrice, maxPrice, sort, featuredOnly]);
 
   const activeFilterCount = useMemo(
-    () => [category, condition, location, minPrice, maxPrice].filter(Boolean).length,
-    [category, condition, location, minPrice, maxPrice]
+    () => [category, condition, location, minPrice, maxPrice, featuredOnly].filter(Boolean).length,
+    [category, condition, location, minPrice, maxPrice, featuredOnly]
   );
 
   const clearAll = () => {
     setSearch(""); setCategory(""); setCondition("");
-    setLocation(""); setMinPrice(""); setMaxPrice(""); setSort("newest");
+    setLocation(""); setMinPrice(""); setMaxPrice(""); setFeaturedOnly(false); setSort("newest");
   };
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold text-foreground mb-1">Browse marketplace listings</h1>
-        <p className="text-sm text-muted-foreground mb-5">
-          Every listing settles in USDC escrow on Arc. Funds release only when the buyer confirms.
-        </p>
-        <div className="flex items-center gap-3 mb-6">
+      <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
+        <div className="mb-8"><p className="text-xs text-primary mb-2">Global marketplace</p><h1 className="font-display text-4xl md:text-5xl text-foreground mb-2">The market</h1><p className="text-sm text-muted-foreground">Goods, work, and digital products from sellers worldwide.</p></div>
+        <div className="flex items-center gap-3 mb-5 lg:hidden">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="search"
               aria-label="Search listings"
-              placeholder="Search ads..."
+              placeholder="Search the market"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -93,6 +92,7 @@ const Browse = () => {
             <option value="newest">Newest</option>
             <option value="price_asc">Price ↑</option>
             <option value="price_desc">Price ↓</option>
+            <option value="featured">Featured</option>
           </select>
           <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} className="gap-2 shrink-0">
             <SlidersHorizontal className="w-4 h-4" />
@@ -100,15 +100,15 @@ const Browse = () => {
           </Button>
         </div>
 
-        {showFilters && (
-          <div className="bg-card border border-border rounded-xl p-4 mb-6 space-y-4">
+        <div className="grid lg:grid-cols-[240px_minmax(0,1fr)] gap-8 items-start">
+        <aside className={`${showFilters ? "block" : "hidden"} lg:block bg-card border border-border rounded-xl p-5 space-y-6 lg:sticky lg:top-24`}>
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Category</label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-col gap-1">
                 <FilterChip active={!category} onClick={() => setCategory("")}>All</FilterChip>
                 {categories.map((c) => (
                   <FilterChip key={c.name} active={category === c.name} onClick={() => setCategory(c.name)}>
-                    {c.icon} {c.name}
+                     {c.name}
                   </FilterChip>
                 ))}
               </div>
@@ -116,7 +116,7 @@ const Browse = () => {
 
             <div>
               <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Condition</label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-col gap-1">
                 <FilterChip active={!condition} onClick={() => setCondition("")}>All</FilterChip>
                 {conditions.map((c) => (
                   <FilterChip key={c} active={condition === c} onClick={() => setCondition(c)}>{c}</FilterChip>
@@ -160,37 +160,50 @@ const Browse = () => {
                 />
               </div>
             </div>
-          </div>
-        )}
+            <label className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm text-foreground cursor-pointer">
+              Featured only
+              <input type="checkbox" checked={featuredOnly} onChange={(e) => setFeaturedOnly(e.target.checked)} className="accent-primary" />
+            </label>
+            {activeFilterCount > 0 && <Button variant="ghost" size="sm" onClick={clearAll} className="w-full">Clear all filters</Button>}
+        </aside>
 
-        {activeFilterCount > 0 && (
+        <div className="min-w-0">
+          <div className="hidden lg:flex items-center gap-3 mb-5">
+            <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><input type="search" aria-label="Search listings" placeholder="Search the market" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary" /></div>
+            <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="h-10 px-3 rounded-lg bg-card border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary" aria-label="Sort"><option value="newest">Newest</option><option value="price_asc">Price: low to high</option><option value="price_desc">Price: high to low</option><option value="featured">Featured</option></select>
+          </div>
+
+        {(activeFilterCount > 0 || search) && (
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="text-xs text-muted-foreground">Filters:</span>
+            {search && <ActiveTag onClear={() => setSearch("")}>Search: {search}</ActiveTag>}
             {category && <ActiveTag onClear={() => setCategory("")}>{category}</ActiveTag>}
             {condition && <ActiveTag onClear={() => setCondition("")}>{condition}</ActiveTag>}
             {location && <ActiveTag onClear={() => setLocation("")}>📍 {location}</ActiveTag>}
             {minPrice && <ActiveTag onClear={() => setMinPrice("")}>≥ {minPrice} USDC</ActiveTag>}
             {maxPrice && <ActiveTag onClear={() => setMaxPrice("")}>≤ {maxPrice} USDC</ActiveTag>}
+            {featuredOnly && <ActiveTag onClear={() => setFeaturedOnly(false)}>Featured</ActiveTag>}
             <button onClick={clearAll} className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">Clear all</button>
           </div>
         )}
 
         <div className="text-sm text-muted-foreground mb-4">
-          {loading ? "Loading…" : `${ads.length} ad${ads.length === 1 ? "" : "s"} found`}
+          {loading ? "Loading market…" : `${ads.length} result${ads.length === 1 ? "" : "s"}`}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {ads.map((ad) => (
-            <AdCard key={ad.id} ad={ad} />
-          ))}
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 md:gap-5">
+          {loading ? Array.from({ length: 6 }).map((_, i) => <div key={i} className="space-y-3"><div className="aspect-[4/5] rounded-xl skeleton-shimmer" /><div className="h-4 w-24 rounded skeleton-shimmer" /><div className="h-3 w-4/5 rounded skeleton-shimmer" /></div>) : ads.map((ad) => <AdCard key={ad.id} ad={ad} />)}
         </div>
 
         {!loading && ads.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground mb-4">No ads match your filters.</p>
+          <div className="text-center py-20 border border-border rounded-xl bg-card mt-4">
+            <PackageOpen className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
+            <p className="font-display text-2xl text-foreground mb-2">No listings at this desk.</p>
+            <p className="text-sm text-muted-foreground mb-4">Try a broader search or clear your filters.</p>
             <Button variant="outline" onClick={clearAll}>Clear filters</Button>
           </div>
         )}
+        </div>
+        </div>
       </div>
     </Layout>
   );
@@ -199,8 +212,8 @@ const Browse = () => {
 const FilterChip = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
   <button
     onClick={onClick}
-    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-      active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"
+    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
+      active ? "bg-accent text-primary border-primary/30" : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted"
     }`}
   >
     {children}
