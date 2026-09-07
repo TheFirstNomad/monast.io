@@ -59,13 +59,16 @@ const Messages = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <h1 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-          <MessageCircle className="w-5 h-5" /> Messages
+      <div className="max-w-3xl mx-auto px-4 py-10 md:py-14">
+        <p className="text-xs text-primary mb-2">Conversations</p>
+        <h1 className="font-display text-4xl text-foreground mb-7 flex items-center gap-3">
+          Messages
         </h1>
         {convs.length === 0 ? (
-          <div className="text-center py-12 bg-card border border-border rounded-xl text-muted-foreground text-sm">
-            No conversations yet
+          <div className="text-center py-20 bg-card border border-border rounded-xl">
+            <MessageCircle className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
+            <p className="font-display text-2xl text-foreground">No conversations yet.</p>
+            <p className="text-sm text-muted-foreground mt-2">Messages with buyers and sellers will appear here.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -73,7 +76,7 @@ const Messages = () => {
               <Link
                 key={`${c.ad_id}-${c.other_id}`}
                 to={`/messages/${c.ad_id}/${c.other_id}`}
-                className="flex items-center gap-3 bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition"
+                className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 min-h-20 hover:border-foreground/20 transition-colors"
               >
                 <img src={c.ad_image || "/placeholder.svg"} alt="" className="w-12 h-12 rounded-lg object-cover bg-secondary" />
                 <div className="flex-1 min-w-0">

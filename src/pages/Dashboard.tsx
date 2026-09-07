@@ -44,7 +44,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -53,7 +53,7 @@ const Dashboard = () => {
               </span>
             </div>
             <div>
-              <div className="font-semibold text-foreground">{profile?.display_name || "My Dashboard"}</div>
+              <div className="font-display text-3xl text-foreground">{profile?.display_name || "Your desk"}</div>
               <div className="text-sm text-muted-foreground truncate max-w-[220px]">{user.email}</div>
             </div>
           </div>
@@ -61,7 +61,7 @@ const Dashboard = () => {
             <Link to="/post-ad">
               <Button size="sm" className="gap-2">
                 <Plus className="w-4 h-4" />
-                Post Ad
+                 Sell an item
               </Button>
             </Link>
             <Button size="sm" variant="outline" onClick={signOut} className="gap-2">
@@ -88,19 +88,19 @@ const Dashboard = () => {
         )}
 
 
-        <div className="grid sm:grid-cols-2 gap-3 mb-6">
+        <div className="grid sm:grid-cols-2 gap-3 mb-8">
           <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
             <Package className="w-5 h-5 text-primary" />
             <div>
-              <div className="text-xs text-muted-foreground">My Ads</div>
-              <div className="text-lg font-bold text-foreground">{myAds.length}</div>
+              <div className="text-xs text-muted-foreground">Listings</div>
+              <div className="text-xl price-nums font-semibold text-foreground">{myAds.length}</div>
             </div>
           </div>
           <Link
             to="/wallet"
             className="bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors"
           >
-            <WalletIcon className="w-5 h-5 text-emerald-500" />
+            <WalletIcon className="w-5 h-5 text-primary" />
             <div>
               <div className="text-xs text-muted-foreground">USDC wallet</div>
               <div className="text-sm font-semibold text-foreground">Balance, send &amp; receive</div>
@@ -113,7 +113,7 @@ const Dashboard = () => {
 
         <OffersInbox />
 
-        <h2 className="text-lg font-bold text-foreground mb-4">My Ads</h2>
+        <h2 className="font-display text-2xl text-foreground mb-4">Your listings</h2>
         {myAds.length === 0 ? (
           <div className="text-center py-12 bg-card border border-border rounded-xl">
             <p className="text-muted-foreground mb-4">You haven't posted any ads yet.</p>
@@ -129,7 +129,7 @@ const Dashboard = () => {
             {myAds.map((ad) => (
               <div
                 key={ad.id}
-                className="flex items-center gap-4 bg-card border border-border rounded-xl p-3"
+                className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 min-h-24"
               >
                 <Link to={`/ad/${ad.id}`} className="flex items-center gap-4 flex-1 min-w-0 group">
                   <img
@@ -141,7 +141,7 @@ const Dashboard = () => {
                     <div className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                       {ad.title}
                     </div>
-                    <div className="text-primary font-bold text-sm">
+                    <div className="text-primary price-nums font-semibold text-sm">
                       {Number(ad.price_usdc).toLocaleString()} USDC
                     </div>
                     <div className="text-xs text-muted-foreground">{ad.location}</div>

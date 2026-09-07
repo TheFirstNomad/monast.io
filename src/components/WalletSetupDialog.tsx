@@ -3,7 +3,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShieldCheck, Sparkles, Wallet } from "lucide-react";
+import { Loader2, ShieldCheck, Wallet, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { runCircleChallenge } from "@/lib/circle/client";
 import { toast } from "@/hooks/use-toast";
@@ -106,18 +106,17 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-primary" />
-            Set up your Arc wallet
+            Set up your Monast wallet
           </DialogTitle>
           <DialogDescription>
-            Circle mints you a non-custodial wallet on Arc, where every monast.io trade
-            settles in USDC. Signed in with Google, non-custodial by design.
+            Three short steps create a wallet for secure marketplace payments.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <FeatureRow icon={<Sparkles className="w-4 h-4" />} text="Auto-provisioned in seconds" />
-          <FeatureRow icon={<ShieldCheck className="w-4 h-4" />} text="Secured by your Google account - non-custodial, held in Circle's enclave" />
-          <FeatureRow icon={<Wallet className="w-4 h-4" />} text="An Arc address ready to receive USDC" />
+        <div className="grid gap-2 py-2">
+          <FeatureRow number="01" icon={<Check className="w-4 h-4" />} text="Verify your account" />
+          <FeatureRow number="02" icon={<ShieldCheck className="w-4 h-4" />} text="Secure your wallet with Circle" />
+          <FeatureRow number="03" icon={<Wallet className="w-4 h-4" />} text="Receive and pay in USDC" />
         </div>
 
         {phase === "provisioning" && (
@@ -162,8 +161,9 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
   );
 };
 
-const FeatureRow = ({ icon, text }: { icon: React.ReactNode; text: string }) => (
-  <div className="flex items-start gap-3 text-sm">
+const FeatureRow = ({ number, icon, text }: { number: string; icon: React.ReactNode; text: string }) => (
+  <div className="flex items-center gap-3 text-sm rounded-xl border border-border bg-card p-4">
+    <span className="text-[10px] text-muted-foreground">{number}</span>
     <div className="w-7 h-7 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
       {icon}
     </div>
