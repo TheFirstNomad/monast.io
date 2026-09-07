@@ -36,9 +36,9 @@ interface PurchaseRow {
 }
 
 const STATUS_COLOR: Record<EscrowStatus, string> = {
-  created: "bg-yellow-500/10 text-yellow-500",
-  funded: "bg-blue-500/10 text-blue-500",
-  released: "bg-green-500/10 text-green-500",
+  created: "bg-muted text-muted-foreground",
+  funded: "bg-success/10 text-success",
+  released: "bg-success/10 text-success",
   refunded: "bg-muted text-muted-foreground",
   disputed: "bg-red-500/10 text-red-500",
   cancelled: "bg-muted text-muted-foreground",
@@ -127,7 +127,7 @@ const Purchases = () => {
     const amount = Number(p.amount_usdc);
     const split = splitSale(amount);
     return (
-      <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+      <div className="bg-card border border-border rounded-xl p-5 space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <Link
@@ -146,7 +146,7 @@ const Purchases = () => {
         </div>
 
         <div className="flex items-baseline gap-2">
-          <span className="font-mono text-lg font-semibold text-foreground">
+          <span className="price-nums text-xl font-semibold text-primary whitespace-nowrap">
             {amount.toLocaleString()} USDC
           </span>
           <span className="text-xs text-muted-foreground">
@@ -225,12 +225,9 @@ const Purchases = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
         <div className="flex items-start justify-between gap-4 mb-1">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-primary" />
-            <h1 className="text-2xl font-bold">My purchases</h1>
-          </div>
+           <div><p className="text-xs text-primary mb-2">Buyer desk</p><h1 className="font-display text-4xl">Purchases</h1></div>
           <Button variant="ghost" size="sm" onClick={manualRefresh} disabled={refreshing}>
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
           </Button>

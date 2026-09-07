@@ -10,7 +10,7 @@ const FOOTER_LINKS: { heading: string; links: { to: string; label: string }[] }[
       { to: "/browse", label: "Browse listings" },
 
 
-      { to: "/post-ad", label: "Post a free ad" },
+      { to: "/post-ad", label: "Sell an item" },
       { to: "/favorites", label: "Saved items" },
     ],
   },
@@ -18,7 +18,7 @@ const FOOTER_LINKS: { heading: string; links: { to: string; label: string }[] }[
     heading: "Sell",
     links: [
       { to: "/dashboard", label: "Seller dashboard" },
-      { to: "/pricing", label: "Featured pricing" },
+      { to: "/pricing", label: "Spotlight" },
       { to: "/settings", label: "Profile settings" },
     ],
   },

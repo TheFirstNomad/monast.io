@@ -177,8 +177,8 @@ const AdDetail = () => {
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_420px] gap-8 lg:gap-12 items-start">
           <div>
-            <button type="button" onClick={() => window.open(images[currentImage], "_blank", "noopener,noreferrer")} className="relative block w-full aspect-[4/3] rounded-xl overflow-hidden bg-secondary mb-3 cursor-zoom-in" aria-label="Open full-size image">
-              <img src={images[currentImage]} alt={ad.title} className="w-full h-full object-cover" />
+            <div className="relative block w-full aspect-[4/3] rounded-xl overflow-hidden bg-secondary mb-3">
+              <img onClick={() => window.open(images[currentImage], "_blank", "noopener,noreferrer")} src={images[currentImage]} alt={ad.title} className="w-full h-full object-cover cursor-zoom-in" />
               {images.length > 1 && (
                 <>
                   <button
@@ -200,7 +200,7 @@ const AdDetail = () => {
               <div className="absolute bottom-2 right-2 bg-card/80 backdrop-blur text-xs px-2 py-1 rounded">
                 {currentImage + 1}/{images.length}
               </div>
-            </button>
+            </div>
 
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto">

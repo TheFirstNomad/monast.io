@@ -27,7 +27,6 @@ import {
   ChevronDown,
 
   Mail,
-  Tag,
   Store,
   ShoppingBag,
 } from "lucide-react";
@@ -187,10 +186,6 @@ export const Navbar = () => {
                     <DropdownMenuItem onClick={() => navigate("/browse")}>
                       <Store className="w-4 h-4 mr-2" /> Browse listings
                     </DropdownMenuItem>
-
-                    <DropdownMenuItem onClick={() => navigate("/pricing")}>
-                      <Tag className="w-4 h-4 mr-2" /> Pricing
-                    </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
@@ -231,8 +226,6 @@ export const Navbar = () => {
               links: [
                 { to: "/", label: "Home" },
                 { to: "/browse", label: "Browse" },
-                
-                { to: "/pricing", label: "Pricing" },
               ],
             },
             ...(signedIn

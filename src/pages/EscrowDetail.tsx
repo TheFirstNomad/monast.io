@@ -109,11 +109,9 @@ const EscrowDetail = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-2 mb-2">
-          <Shield className="w-5 h-5 text-primary" />
-          <h1 className="text-2xl font-bold">Escrow</h1>
-        </div>
+      <div className="max-w-3xl mx-auto px-4 py-10 md:py-14">
+        <p className="text-xs text-primary mb-2">Protected order</p>
+        <div className="flex items-center gap-2 mb-2"><h1 className="font-display text-4xl">Escrow receipt</h1></div>
         <p className="text-sm text-muted-foreground mb-6">
           For <Link to={`/ad/${escrow.ad_id}`} className="text-foreground font-medium hover:underline">{adTitle || "ad"}</Link>
         </p>
@@ -137,16 +135,16 @@ const EscrowDetail = () => {
           </div>
         )}
 
-        <div className="bg-card border border-border rounded-2xl p-5 mb-4 space-y-3">
+        <div className="bg-card border border-border rounded-xl p-6 mb-4 space-y-4 market-shadow">
           <Row k="Status" v={<span className="font-medium text-foreground">{ESCROW_STATUS_LABEL[escrow.status]}</span>} />
-          <Row k="Amount in escrow" v={<span className="font-mono">{amount.toLocaleString()} USDC</span>} />
+          <Row k="Amount in escrow" v={<span className="price-nums text-primary font-semibold">{amount.toLocaleString()} USDC</span>} />
           <Row
             k={`Platform fee (${SALE_FEE_LABEL})`}
-            v={<span className="font-mono">{fee.toLocaleString()} USDC</span>}
+            v={<span className="price-nums">{fee.toLocaleString()} USDC</span>}
           />
           <Row
             k="Seller receives on release"
-            v={<span className="font-mono font-medium text-foreground">{net.toLocaleString()} USDC</span>}
+            v={<span className="price-nums font-medium text-foreground">{net.toLocaleString()} USDC</span>}
           />
           <Row k="Role" v={isBuyer ? "You are the buyer" : isSeller ? "You are the seller" : "Observer"} />
           <Row k="Created" v={new Date(escrow.created_at).toLocaleString()} />
