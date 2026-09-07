@@ -238,7 +238,7 @@ const Account = () => {
                 Sold {new Date(a.sold_at || a.created_at).toLocaleDateString()}
               </div>
             </div>
-            <span className="shrink-0 text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded">
+            <span className="shrink-0 text-xs bg-success/10 text-success px-2 py-1 rounded-full">
               Sold
             </span>
           </Link>

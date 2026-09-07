@@ -180,7 +180,7 @@ const Purchases = () => {
         )}
         {p.status === "released" && p.released_at && (
           <p className="text-xs text-muted-foreground flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
             Completed {new Date(p.released_at).toLocaleString()}
           </p>
         )}

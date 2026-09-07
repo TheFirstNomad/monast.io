@@ -110,15 +110,15 @@ const EscrowDetail = () => {
   return (
     <Layout>
       <div className="max-w-3xl mx-auto px-4 py-10 md:py-14">
-        <p className="text-xs text-primary mb-2">Protected order</p>
-        <div className="flex items-center gap-2 mb-2"><h1 className="font-display text-4xl">Escrow receipt</h1></div>
+        <p className="text-xs text-primary mb-2">Protected order receipt</p>
+        <div className="flex items-center gap-2 mb-2"><h1 className="font-display text-4xl">Escrow</h1></div>
         <p className="text-sm text-muted-foreground mb-6">
           For <Link to={`/ad/${escrow.ad_id}`} className="text-foreground font-medium hover:underline">{adTitle || "ad"}</Link>
         </p>
 
         {(isBuyer || isSeller) && (
           <div
-            className={`rounded-2xl border p-3 mb-4 text-sm ${
+            className={`rounded-xl border p-4 mb-4 text-sm ${
               isBuyer
                 ? "border-primary/40 bg-primary/5 text-foreground"
                 : "border-border bg-card text-foreground"
@@ -199,7 +199,7 @@ const EscrowDetail = () => {
         )}
 
         {(isBuyer || isSeller) && (
-          <div className="bg-card border border-border rounded-2xl p-5 mb-4 space-y-3">
+          <div className="bg-card border border-border rounded-xl p-5 mb-4 space-y-3">
             <div className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4 text-primary" />
               <h2 className="font-semibold">Delivery & communication</h2>
@@ -289,7 +289,7 @@ const EscrowDetail = () => {
           )}
 
           {canRequestCancel && showCancelForm && (
-            <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
+            <div className="bg-card border border-border rounded-xl p-4 space-y-3">
               <p className="text-sm text-muted-foreground">
                 {escrow.status === "created"
                   ? "Nothing has been paid yet, so this cancels straight away at no cost."
