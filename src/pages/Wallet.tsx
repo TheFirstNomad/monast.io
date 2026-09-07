@@ -146,16 +146,17 @@ const Wallet = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
+      <div className="max-w-3xl mx-auto px-4 py-10 md:py-14 space-y-5">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Your wallet</h1>
+          <p className="text-xs text-primary mb-2">Funds</p>
+          <h1 className="font-display text-4xl text-foreground">Your wallet</h1>
           <p className="text-sm text-muted-foreground">
             USDC on {ARC.label}. Receive payments, and withdraw to any wallet you own.
           </p>
         </div>
 
         {/* Balance */}
-        <div className="bg-card border border-border rounded-xl p-5">
+         <div className="bg-card border border-border rounded-xl p-6 market-shadow">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -165,7 +166,7 @@ const Wallet = () => {
               {loadingBalance || loadingWallet ? (
                 <Skeleton className="h-9 w-40 mt-2" />
               ) : (
-                <div className="text-3xl font-bold text-foreground mt-1">
+                 <div className="text-4xl price-nums font-semibold text-foreground mt-2">
                   {(balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 6 })}{" "}
                   <span className="text-base font-semibold text-muted-foreground">USDC</span>
                 </div>
@@ -183,7 +184,7 @@ const Wallet = () => {
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span
               className={`inline-block w-1.5 h-1.5 rounded-full ${
-                tabVisible ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"
+                 tabVisible ? "bg-success animate-pulse" : "bg-muted-foreground"
               }`}
             />
             {tabVisible ? "Live - updates automatically" : "Paused while this tab is in the background"}

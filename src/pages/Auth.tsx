@@ -57,11 +57,12 @@ const Auth = () => {
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto px-4 py-16">
+      <div className="max-w-md mx-auto px-4 py-16 md:py-24">
+        <Link to="/" className="block text-center font-display text-3xl text-foreground mb-10">Monast</Link>
         <SignInChoice onDone={() => navigate("/dashboard", { replace: true })} />
 
         <div className="mt-8 text-xs text-muted-foreground text-center">
-          <Link to="/" className="hover:text-foreground">← Back to home</Link>
+          <Link to="/" className="hover:text-foreground">Back to the market</Link>
         </div>
       </div>
 

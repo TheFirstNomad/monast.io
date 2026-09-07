@@ -46,17 +46,17 @@ export const OffersInbox = () => {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-bold text-foreground mb-3">Offers Received</h2>
+       <h2 className="font-display text-2xl text-foreground mb-3">Offers received</h2>
       <div className="space-y-2">
         {offers.map((o) => (
-          <div key={o.id} className="bg-card border border-border rounded-xl p-3 flex items-center gap-3">
+          <div key={o.id} className="bg-card border border-border rounded-xl p-4 min-h-20 flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <Link to={`/ad/${o.ad_id}`} className="text-sm font-medium text-foreground truncate hover:underline block">
                 {o.ad?.title || "Ad"}
               </Link>
               <div className="text-xs text-muted-foreground">
                 {o.buyer?.display_name || "Buyer"} offered{" "}
-                <span className="text-primary font-semibold">{Number(o.amount_usdc).toLocaleString()} USDC</span>
+                 <span className="text-primary price-nums font-semibold">{Number(o.amount_usdc).toLocaleString()} USDC</span>
                 {o.ad?.price_usdc && <span> (listed {Number(o.ad.price_usdc).toLocaleString()})</span>}
               </div>
             </div>

@@ -14,8 +14,6 @@ import {
 } from "@/lib/circle/client";
 import { toast } from "@/hooks/use-toast";
 
-type Mode = "wallet" | "email";
-
 /**
  * Edge function failures arrive as a generic "non-2xx status code" message.
  * The real reason lives in the response body, so read it when available.
@@ -45,7 +43,6 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const requestedMethod = searchParams.get("method");
-  const [mode, setMode] = useState<Mode>(requestedMethod === "google" ? "email" : "wallet");
   const [googleLoading, setGoogleLoading] = useState(false);
   const handling = useRef(false);
 
@@ -213,88 +210,29 @@ export const SignInChoice = ({ onDone }: { onDone?: () => void }) => {
 
   return (
     <div className="text-center">
-      <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-        {mode === "wallet" ? (
-          <Wallet className="w-8 h-8 text-primary" />
-        ) : (
-          <GoogleMark className="w-8 h-8" />
-        )}
+      <h1 className="font-display text-4xl text-foreground mb-3">Your place at the desk.</h1>
+      <p className="text-sm text-muted-foreground mb-8">Choose how you want to enter Monast.</p>
+
+      <div className="space-y-3">
+        <Button onClick={continueWithGoogle} disabled={googleLoading} size="lg" variant="outline" className="w-full h-12 gap-3 font-semibold bg-card">
+          {googleLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <GoogleMark />}
+          {googleLoading ? "Signing you in..." : "Continue with Google"}
+        </Button>
+        <Button onClick={connectSelfCustody} disabled={connecting} size="lg" variant="outline" className="w-full h-12 gap-3 font-semibold bg-card">
+          <Wallet className="w-5 h-5 text-primary" />
+          {connecting ? (address ? "Confirm signature in your wallet..." : "Opening wallet...") : "Continue with wallet"}
+        </Button>
       </div>
-      <h1 className="text-2xl font-bold text-foreground mb-2">Sign in to monast.io</h1>
-      <p className="text-muted-foreground mb-6">
-        {mode === "wallet"
-          ? "Connect your wallet and sign a message. You pay and get paid in USDC on Arc. monast.io never holds your keys."
-          : "One tap with the Google account you are already signed in to. We set up a non-custodial Circle wallet on Arc for you automatically - Google is the only sign-in you need."}
+      <p className="text-xs text-muted-foreground mt-4">
+        Google creates a secure Circle wallet. Your own wallet remains fully self-custodied.
       </p>
 
-      <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-muted mb-6">
-        <button
-          type="button"
-          onClick={() => setMode("wallet")}
-          className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition-colors ${
-            mode === "wallet" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          <Wallet className="w-4 h-4" /> Wallet
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("email")}
-          className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition-colors ${
-            mode === "email" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          <GoogleMark className="w-4 h-4" /> Google
-        </button>
-      </div>
-
-      {mode === "wallet" ? (
-        <>
-          <Button
-            onClick={connectSelfCustody}
-            disabled={connecting}
-            size="lg"
-            className="w-full h-12 gap-2 font-semibold"
-          >
-            <Wallet className="w-5 h-5" />
-            {connecting
-              ? address
-                ? "Confirm signature in your wallet..."
-                : "Opening wallet..."
-              : "Connect wallet"}
-          </Button>
-          <p className="text-xs text-muted-foreground mt-3">
-            MetaMask, OKX Wallet, Trust Wallet, Base App and Binance Wallet.
-          </p>
-        </>
-      ) : (
-        <>
-          <Button
-            onClick={continueWithGoogle}
-            disabled={googleLoading}
-            size="lg"
-            variant="outline"
-            className="w-full h-12 gap-3 font-semibold"
-          >
-            {googleLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <GoogleMark />
-            )}
-            {googleLoading ? "Signing you in..." : "Continue with Google"}
-          </Button>
-          <p className="text-xs text-muted-foreground mt-3">
-            No password, no code to type. Uses the Google account on this browser.
-          </p>
-        </>
-      )}
-
-      <div className="mt-10 grid gap-3 text-left">
+      <div className="mt-10 grid grid-cols-2 gap-3 text-left border-t border-border pt-8">
         {[
           { Icon: ShieldCheck, title: "No password, no seed phrase to hand over", body: "Your signature or your Google account is the login. Nothing to leak." },
           { Icon: Coins, title: "USDC on Arc", body: "Escrow holds the buyer's funds until the item is confirmed delivered." },
         ].map(({ Icon, title, body }) => (
-          <div key={title} className="flex gap-3 rounded-xl border border-border bg-card p-3">
+          <div key={title} className="flex gap-3">
             <Icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <div>
               <div className="text-sm font-semibold text-foreground">{title}</div>

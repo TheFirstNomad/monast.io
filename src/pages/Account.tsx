@@ -50,9 +50,9 @@ interface SoldAdRow {
 }
 
 const STATUS_COLOR: Record<EscrowStatus, string> = {
-  created: "bg-yellow-500/10 text-yellow-500",
-  funded: "bg-blue-500/10 text-blue-500",
-  released: "bg-green-500/10 text-green-500",
+  created: "bg-muted text-muted-foreground",
+  funded: "bg-success/10 text-success",
+  released: "bg-success/10 text-success",
   refunded: "bg-muted text-muted-foreground",
   disputed: "bg-red-500/10 text-red-500",
   cancelled: "bg-muted text-muted-foreground",
@@ -238,7 +238,7 @@ const Account = () => {
                 Sold {new Date(a.sold_at || a.created_at).toLocaleDateString()}
               </div>
             </div>
-            <span className="shrink-0 text-xs bg-green-500/10 text-green-500 px-2 py-1 rounded">
+            <span className="shrink-0 text-xs bg-success/10 text-success px-2 py-1 rounded-full">
               Sold
             </span>
           </Link>
@@ -248,12 +248,9 @@ const Account = () => {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
         <div className="flex items-start justify-between gap-4 mb-1">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-primary" />
-            <h1 className="text-2xl font-bold">My account</h1>
-          </div>
+          <div><p className="text-xs text-primary mb-2">Account overview</p><h1 className="font-display text-4xl">Orders and sales</h1></div>
           <Button variant="ghost" size="sm" onClick={manualRefresh} disabled={refreshing}>
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
           </Button>
@@ -262,7 +259,7 @@ const Account = () => {
           Your orders, payments, and sales - buyer and seller activity in one place.
         </p>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
           <Stat icon={Package} label="In escrow" value={String(inEscrow)} />
           <Stat
             icon={Wallet}
@@ -307,10 +304,10 @@ const Stat = ({
   value: string;
 }) => (
   <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
-    <Icon className="w-5 h-5 text-primary shrink-0" />
+    <Icon className="w-4 h-4 text-primary shrink-0" />
     <div className="min-w-0">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-sm font-bold text-foreground truncate">{value}</div>
+      <div className="text-sm price-nums font-semibold text-foreground truncate">{value}</div>
     </div>
   </div>
 );

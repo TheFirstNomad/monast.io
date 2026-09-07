@@ -2,66 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Geist";
+  src: url("./assets/fonts/geist-regular.ttf") format("truetype");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("./assets/fonts/geist-semibold.ttf") format("truetype");
+  font-weight: 600 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("./assets/fonts/newsreader-regular.ttf") format("truetype");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("./assets/fonts/newsreader-semibold.ttf") format("truetype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 5%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 5%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
-    --primary: 142 71% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 10%;
+    --background: 220 19% 5%;
+    --foreground: 42 23% 94%;
+    --card: 218 16% 11%;
+    --card-foreground: 42 23% 94%;
+    --popover: 216 16% 9%;
+    --popover-foreground: 42 23% 94%;
+    --primary: 37 44% 60%;
+    --primary-foreground: 220 19% 5%;
+    --secondary: 218 16% 8%;
+    --secondary-foreground: 42 23% 94%;
+    --muted: 218 12% 14%;
+    --muted-foreground: 32 4% 45%;
+    --accent: 37 25% 16%;
+    --accent-foreground: 42 23% 94%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 142 71% 45%;
+    --success: 144 52% 48%;
+    --success-foreground: 220 19% 5%;
+    --warning: 38 82% 58%;
+    --warning-foreground: 220 19% 5%;
+    --border: 0 0% 100% / 0.07;
+    --input: 0 0% 100% / 0.1;
+    --ring: 37 44% 60%;
     --radius: 0.75rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 142 71% 45%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 142 71% 95%;
-    --sidebar-accent-foreground: 142 71% 25%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 142 71% 45%;
+    --sidebar-background: 218 16% 8%;
+    --sidebar-foreground: 42 23% 94%;
+    --sidebar-primary: 37 44% 60%;
+    --sidebar-primary-foreground: 220 19% 5%;
+    --sidebar-accent: 218 12% 14%;
+    --sidebar-accent-foreground: 42 23% 94%;
+    --sidebar-border: 0 0% 100% / 0.07;
+    --sidebar-ring: 37 44% 60%;
   }
 
   .dark {
-    --background: 220 20% 7%;
-    --foreground: 0 0% 95%;
-    --card: 220 18% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 220 18% 10%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 142 71% 45%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 15%;
-    --secondary-foreground: 0 0% 90%;
-    --muted: 220 15% 15%;
-    --muted-foreground: 0 0% 55%;
-    --accent: 220 15% 18%;
-    --accent-foreground: 0 0% 90%;
+    --background: 220 19% 5%;
+    --foreground: 42 23% 94%;
+    --card: 218 16% 11%;
+    --card-foreground: 42 23% 94%;
+    --popover: 216 16% 9%;
+    --popover-foreground: 42 23% 94%;
+    --primary: 37 44% 60%;
+    --primary-foreground: 220 19% 5%;
+    --secondary: 218 16% 8%;
+    --secondary-foreground: 42 23% 94%;
+    --muted: 218 12% 14%;
+    --muted-foreground: 32 4% 45%;
+    --accent: 37 25% 16%;
+    --accent-foreground: 42 23% 94%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 142 71% 45%;
-    --sidebar-background: 220 18% 10%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 142 71% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 15%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 142 71% 45%;
+    --success: 144 52% 48%;
+    --success-foreground: 220 19% 5%;
+    --warning: 38 82% 58%;
+    --warning-foreground: 220 19% 5%;
+    --border: 0 0% 100% / 0.07;
+    --input: 0 0% 100% / 0.1;
+    --ring: 37 44% 60%;
+    --sidebar-background: 218 16% 8%;
+    --sidebar-foreground: 42 23% 94%;
+    --sidebar-primary: 37 44% 60%;
+    --sidebar-primary-foreground: 220 19% 5%;
+    --sidebar-accent: 218 12% 14%;
+    --sidebar-accent-foreground: 42 23% 94%;
+    --sidebar-border: 0 0% 100% / 0.07;
+    --sidebar-ring: 37 44% 60%;
   }
 }
 
@@ -72,7 +112,18 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: 0;
+  }
+
+  h1, h2.display-type, .font-display {
+    font-family: "Newsreader", Georgia, serif;
+    letter-spacing: 0;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.28);
+    color: hsl(var(--foreground));
   }
 
   html {
@@ -81,11 +132,32 @@
 }
 
 @layer utilities {
-  .hero-gradient {
-    background: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(160 70% 40%) 50%, hsl(180 60% 35%) 100%);
-  }
-
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-border;
+  }
+
+  .font-display { font-family: "Newsreader", Georgia, serif; }
+  .price-nums { font-variant-numeric: tabular-nums; }
+  .market-shadow { box-shadow: 0 18px 60px hsl(220 30% 2% / 0.28); }
+  .fine-divider { border-color: hsl(0 0% 100% / 0.07); }
+
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, hsl(var(--muted)) 20%, hsl(var(--foreground) / 0.07) 50%, hsl(var(--muted)) 80%);
+    background-size: 240% 100%;
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-sweep {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

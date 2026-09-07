@@ -106,8 +106,9 @@ const Transactions = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Transactions</h1>
+      <div className="max-w-4xl mx-auto px-4 py-10 md:py-14">
+        <p className="text-xs text-primary mb-2">Ledger</p>
+        <h1 className="font-display text-4xl text-foreground mb-7">Transactions</h1>
         <Tabs defaultValue="purchases">
           <TabsList className="mb-4">
             <TabsTrigger value="purchases">Purchases ({purchases.length})</TabsTrigger>

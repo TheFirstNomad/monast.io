@@ -138,14 +138,15 @@ const Buy = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 py-10 md:py-14 space-y-6">
         <Link to={`/ad/${ad.id}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4" />
           Back to listing
         </Link>
 
         <header className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground">Secure checkout</h1>
+          <p className="text-xs text-primary">Protected purchase</p>
+          <h1 className="font-display text-4xl text-foreground">Secure checkout</h1>
           <p className="text-sm text-muted-foreground">
             Pay in USDC on Arc. Your funds stay locked until delivery is confirmed.
           </p>
@@ -163,14 +164,14 @@ const Buy = () => {
               {ad.seller?.display_name || "Anonymous seller"}
               {ad.location ? ` · ${ad.location}` : ""}
             </p>
-            <p className="mt-2 text-lg font-bold text-primary">{amount.toLocaleString()} USDC</p>
+            <p className="mt-2 text-lg price-nums font-semibold text-primary whitespace-nowrap">{amount.toLocaleString()} USDC</p>
           </div>
         </section>
 
         <section className="bg-card border border-border rounded-xl p-5 space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Item price</span>
-            <span className="text-foreground font-medium">{amount.toLocaleString()} USDC</span>
+            <span className="text-foreground price-nums font-medium">{amount.toLocaleString()} USDC</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Buyer fee</span>
@@ -178,7 +179,7 @@ const Buy = () => {
           </div>
           <div className="flex justify-between border-t border-border pt-3">
             <span className="font-semibold text-foreground">You pay</span>
-            <span className="font-bold text-primary">{amount.toLocaleString()} USDC</span>
+            <span className="price-nums font-semibold text-primary">{amount.toLocaleString()} USDC</span>
           </div>
           <p className="text-xs text-muted-foreground">
             The seller pays a {SALE_FEE_LABEL} platform fee on release. Nothing is charged to you beyond the item price plus network gas.

@@ -16,9 +16,9 @@ interface EscrowRow {
 }
 
 const STATUS_COLOR: Record<EscrowStatus, string> = {
-  created: "bg-yellow-500/10 text-yellow-500",
-  funded: "bg-blue-500/10 text-blue-500",
-  released: "bg-green-500/10 text-green-500",
+  created: "bg-muted text-muted-foreground",
+  funded: "bg-success/10 text-success",
+  released: "bg-success/10 text-success",
   refunded: "bg-muted text-muted-foreground",
   disputed: "bg-red-500/10 text-red-500",
   cancelled: "bg-muted text-muted-foreground",
@@ -56,7 +56,7 @@ export const EscrowsList = () => {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-        <Shield className="w-5 h-5 text-primary" /> My Escrows
+        <Shield className="w-5 h-5 text-primary" /> Escrow activity
       </h2>
       <div className="space-y-2">
         {rows.map((e) => {
@@ -65,14 +65,14 @@ export const EscrowsList = () => {
             <Link
               key={e.id}
               to={`/escrow/${e.id}`}
-              className="flex items-center justify-between bg-card border border-border rounded-xl p-3 hover:border-primary/50 transition-colors"
+              className="flex items-center justify-between bg-card border border-border rounded-xl p-4 min-h-20 hover:border-foreground/20 transition-colors"
             >
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-foreground truncate">
                   {e.ad_title || "Ad"}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {role} · {Number(e.amount_usdc).toLocaleString()} USDC
+                  {role} · <span className="price-nums">{Number(e.amount_usdc).toLocaleString()} USDC</span>
                 </div>
               </div>
               <span className={`text-xs px-2 py-1 rounded ${STATUS_COLOR[e.status]}`}>
