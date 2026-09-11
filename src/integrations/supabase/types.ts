@@ -1038,6 +1038,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agent_rate_limit_hit: {
+        Args: { _bucket: string; _endpoint: string; _limit: number }
+        Returns: {
+          allowed: boolean
+          lim: number
+          used: number
+        }[]
+      }
+      agent_record_payment: {
+        Args: {
+          _ad_id: string
+          _agent_id: string
+          _amount: number
+          _buyer_id: string
+          _chain_id: number
+          _seller_id: string
+          _tx_hash: string
+        }
+        Returns: {
+          ad_id: string
+          amount_usdc: number
+          buyer_id: string
+          chain_id: number
+          created_at: string
+          id: string
+          seller_id: string
+          tx_hash: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "payments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      agent_reputation_delta: {
+        Args: { _agent_id: string; _delta: number }
+        Returns: number
+      }
       cleanup_admin_sig_nonces: { Args: never; Returns: undefined }
       cleanup_agent_rate_limits: { Args: never; Returns: undefined }
       has_role: {
