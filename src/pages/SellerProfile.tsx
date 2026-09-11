@@ -6,6 +6,8 @@ import { AdCard } from "@/components/AdCard";
 import { ReportDialog } from "@/components/ReportDialog";
 import { DbAd } from "@/lib/types";
 import { Star } from "lucide-react";
+import { useSeo } from "@/hooks/useSeo";
+
 import { useAuth } from "@/hooks/useAuth";
 
 interface Profile {
@@ -32,7 +34,7 @@ const SellerProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ads, setAds] = useState<DbAd[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(false || true);
+  const [loading, setLoading] = useState(true);
 
   // Public seller pages are shareable, so they carry their own metadata.
   const sellerName = profile?.display_name || "Seller";
