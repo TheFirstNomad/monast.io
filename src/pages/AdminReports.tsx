@@ -1,3 +1,4 @@
+import { AdminGate } from "@/components/AdminGate";
 import { useCallback, useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
