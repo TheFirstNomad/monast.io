@@ -9,6 +9,7 @@
 //
 // POST { action: "createChallenge", purpose, referenceId }
 // POST { action: "status", transactionId }
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
@@ -532,7 +533,7 @@ Deno.serve(async (req) => {
     const friendly = /^Circle \//.test(raw)
       ? "Your wallet provider could not complete that request. Please try again in a moment."
       : raw || "Something went wrong with your wallet";
-    return json({ error: friendly }, 500);
+    return json({ error: friendly }, statusFromError(err));
   }
 
 

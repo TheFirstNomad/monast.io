@@ -5,7 +5,10 @@ interface SeoInput {
   description?: string;
   canonicalPath?: string;
   noindex?: boolean;
+  /** Absolute or root-relative image used for social previews. */
+  image?: string;
 }
+
 
 function upsertMeta(selector: string, attr: "name" | "property", key: string, content: string) {
   let el = document.head.querySelector<HTMLMetaElement>(selector);
@@ -22,7 +25,7 @@ function upsertMeta(selector: string, attr: "name" | "property", key: string, co
  * mirrors. Client-side rendered, but crawlers that execute JS (Google, Bing,
  * and AI agents fetching with a headless browser) pick it up.
  */
-export function useSeo({ title, description, canonicalPath, noindex }: SeoInput) {
+export function useSeo({ title, description, canonicalPath, noindex, image }: SeoInput) {
   useEffect(() => {
     document.title = title;
 
@@ -46,11 +49,19 @@ export function useSeo({ title, description, canonicalPath, noindex }: SeoInput)
     link.href = href;
     upsertMeta('meta[property="og:url"]', "property", "og:url", href);
 
+    if (image) {
+      const abs = image.startsWith("http") ? image : `${window.location.origin}${image}`;
+      upsertMeta('meta[property="og:image"]', "property", "og:image", abs);
+      upsertMeta('meta[name="twitter:image"]', "name", "twitter:image", abs);
+      upsertMeta('meta[name="twitter:card"]', "name", "twitter:card", "summary_large_image");
+    }
+
     const robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
     if (noindex) {
       upsertMeta('meta[name="robots"]', "name", "robots", "noindex, nofollow");
     } else if (robots) {
       robots.setAttribute("content", "index, follow");
     }
-  }, [title, description, canonicalPath, noindex]);
+  }, [title, description, canonicalPath, noindex, image]);
 }
+

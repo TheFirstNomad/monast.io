@@ -4,6 +4,7 @@
 //
 // The status only moves after the transfer has been accepted by Circle, so a
 // released escrow always has money in flight behind it.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
@@ -96,7 +97,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("escrow-release", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

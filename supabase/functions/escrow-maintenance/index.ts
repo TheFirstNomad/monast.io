@@ -10,6 +10,7 @@
 //
 // Escrows in dispute, or where the seller declined the cancellation, are never
 // touched here - those need a human arbitrator.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
@@ -174,7 +175,7 @@ Deno.serve(async (req) => {
     return json({ released, refunded, failures, reconcile, healed, ran_at: nowIso });
   } catch (e) {
     console.error("escrow-maintenance", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

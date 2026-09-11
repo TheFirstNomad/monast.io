@@ -3,6 +3,7 @@
 // on-chain, records the promotion, and flips ads.featured/featured_until via
 // service role (bypassing the prevent_seller_featured_change trigger, which
 // only blocks authenticated users).
+import { statusFromError } from "../_shared/http-error.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
@@ -96,7 +97,7 @@ Deno.serve(async (req) => {
     revenue = await getTreasury(admin, "revenue", chainId);
   } catch (e) {
     if (isTreasuryMissing(e)) return json({ error: (e as Error).message, configured: false }, 503);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 
   // Bind the proof to this user's own wallet so a stranger's transaction hash

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
 // Live paths: self-custody wallet sign-in and email + Circle wallet sign-in,
-// both leading to listing -> escrow. Swap and the Arc App Kit stay parked on
-// disk and must not be reachable from any live screen.
+// both leading to listing -> escrow. The swap surface was removed outright, so
+// nothing on disk may reference it again.
 const read = (p: string) => readFileSync(p, "utf8");
 
 const LIVE_FILES = [
@@ -16,7 +16,8 @@ const LIVE_FILES = [
   "src/pages/EscrowDetail.tsx",
 ];
 
-const PARKED = ["SwapPanel", "SwapDialog", "pages/Swap", "arcAppKit"];
+const PARKED = ["SwapPanel", "SwapDialog", "pages/Swap", "swapTokens"];
+
 
 describe("parked features stay unreachable", () => {
   it("no live file imports a parked component", () => {

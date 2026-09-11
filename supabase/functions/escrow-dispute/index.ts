@@ -1,5 +1,6 @@
 // Either party can flag a funded escrow as `disputed`. Manual admin resolution
 // in v1 - a future function will resolve to released or refunded.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
@@ -61,7 +62,7 @@ Deno.serve(async (req) => {
     return json({ escrow: updated });
   } catch (e) {
     console.error("escrow-dispute", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

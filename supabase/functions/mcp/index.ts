@@ -9,8 +9,10 @@
 // Tools wrap the Agent API surface (see /agent-api).
 
 import {
-  authenticateAgent, checkRateLimit, corsHeaders, logActivity, svcClient, todaySpendUsdc,
+  adjustAgentReputation, authenticateAgent, checkRateLimit, corsHeaders, logActivity,
+  recordAgentPayment, svcClient, todaySpendUsdc,
 } from "../_shared/agent-auth.ts";
+
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 
 const PROTOCOL_VERSION = "2024-11-05";
@@ -69,18 +71,19 @@ const TOOLS = [
   },
   {
     name: "submit_payment",
-    description: "Record an on-chain USDC payment (Arc) as proof of settlement.",
+    description: "Record an on-chain USDC payment (Arc) as proof of settlement. The seller and amount are derived server-side from the ad or your accepted offer, then verified against the transaction.",
     inputSchema: {
       type: "object",
       properties: {
-        ad_id: { type: "string" }, seller_id: { type: "string" },
-        amount_usdc: { type: "number", exclusiveMinimum: 0 },
-        tx_hash: { type: "string" }, chain_id: { type: "integer" },
+        ad_id: { type: "string" },
+        tx_hash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" },
+        chain_id: { type: "integer" },
       },
-      required: ["ad_id", "seller_id", "amount_usdc", "tx_hash", "chain_id"],
+      required: ["ad_id", "tx_hash", "chain_id"],
       additionalProperties: false,
     },
   },
+
   {
     name: "list_messages",
     description: "List the calling agent's recent messages.",
@@ -191,10 +194,15 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
     }
     case "cancel_offer": {
       if (!agent.owner_user_id) return toolError("standalone agents cannot cancel offers");
+      const offerId = String(args?.offer_id ?? "");
+      const { data: before } = await svc.from("offers")
+        .select("status").eq("id", offerId).eq("buyer_id", agent.owner_user_id).maybeSingle();
       const { data, error } = await svc.from("offers")
         .update({ status: "cancelled" })
-        .eq("id", String(args?.offer_id)).eq("buyer_id", agent.owner_user_id).select("*").single();
+        .eq("id", offerId).eq("buyer_id", agent.owner_user_id).select("*").single();
       if (error) return toolError(error.message);
+      // Published penalty for walking away from an accepted offer.
+      if (before?.status === "accepted") await adjustAgentReputation(svc, agent.id, -5);
       return toolResult(data);
     }
     case "submit_payment": {
@@ -219,14 +227,14 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
         expectedFrom: agent.wallet_address,
       });
       if (!check.ok) return toolError(`payment verification failed: ${check.error}`);
-      const { data, error } = await svc.from("payments").insert({
-        ad_id: adId, seller_id: ad.seller_id, buyer_id: agent.owner_user_id,
-        amount_usdc: expected, tx_hash: txHash, chain_id: chainId,
-      }).select("*").single();
-      if (error) return toolError(error.code === "23505" ? "tx_hash already recorded" : error.message);
-      await svc.from("agents").update({ reputation_score: agent.reputation_score + 1 }).eq("id", agent.id);
-      await svc.from("ads").update({ status: "sold", sold_at: new Date().toISOString() }).eq("id", adId);
-      return toolResult(data);
+      // Cap check, insert, sold flag and reputation happen in one transaction.
+      const res = await recordAgentPayment(svc, {
+        agentId: agent.id, adId, sellerId: ad.seller_id, buyerId: agent.owner_user_id,
+        amountUsdc: expected, txHash, chainId,
+      });
+      if (res.status !== 200) return toolError(JSON.stringify(res.body));
+      return toolResult(res.body);
+
     }
     case "list_messages": {
       if (!agent.owner_user_id) return toolError("standalone agents cannot read messages yet");

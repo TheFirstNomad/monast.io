@@ -6,6 +6,7 @@
 // Only accounts holding the arbitrator or admin role may call this. The payout
 // runs through the same runPayout path as buyer-initiated release/refund, so an
 // arbitrated outcome cannot bypass the fee split or the one-payout guarantee.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { authorize } from "../_shared/role-auth.ts";
@@ -126,7 +127,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("admin-disputes", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

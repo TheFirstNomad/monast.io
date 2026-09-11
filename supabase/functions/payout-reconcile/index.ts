@@ -1,6 +1,7 @@
 // Standalone reconciliation endpoint. Same cron token as escrow-maintenance,
 // so it can be triggered on its own schedule or manually for verification  - 
 // never callable from the browser.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { reconcilePayouts } from "../_shared/reconcile.ts";
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
     return json({ ...report, ran_at: new Date().toISOString() });
   } catch (e) {
     console.error("payout-reconcile", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 
