@@ -1,5 +1,6 @@
 // Verifies that the buyer's USDC deposit landed at the escrow treasury on-chain,
 // then flips the escrow row from `created` to `funded`.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
@@ -149,7 +150,7 @@ Deno.serve(async (req) => {
     return json({ escrow: updated });
   } catch (e) {
     console.error("escrow-confirm-funded", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

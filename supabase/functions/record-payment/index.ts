@@ -1,4 +1,5 @@
 // Verifies a USDC payment on-chain, records it, and marks the ad sold.
+import { statusFromError } from "../_shared/http-error.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";

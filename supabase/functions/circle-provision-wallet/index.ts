@@ -2,6 +2,7 @@
 // Idempotent: safe to call after every email login. If the current auth user
 // already has a `profiles.circle_user_id`, we short-circuit and return an
 // initialization challenge for PIN setup instead of creating a new user.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
@@ -151,7 +152,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("circle-provision-wallet error", err);
-    return json({ error: (err as Error).message }, 500);
+    return json({ error: (err as Error).message }, statusFromError(err));
   }
 });
 

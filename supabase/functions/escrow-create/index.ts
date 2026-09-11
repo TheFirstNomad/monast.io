@@ -1,6 +1,7 @@
 // Creates a new escrow row for a buyer/ad pair. Idempotent per (ad_id, buyer_id)
 // while an escrow is in "created" or "funded" state - a second call returns the
 // existing row instead of creating a duplicate.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
     return json({ escrow: inserted, reused: false });
   } catch (e) {
     console.error("escrow-create", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

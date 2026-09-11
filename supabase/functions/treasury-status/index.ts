@@ -1,6 +1,7 @@
 // Owner-only treasury overview: the provisioned wallets, their live USDC
 // balances from Circle, and how much of the escrow wallet is user money that is
 // still owed (funded escrows) versus platform revenue.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { verifyAdmin } from "../_shared/admin-auth.ts";
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("treasury-status", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

@@ -7,6 +7,7 @@
 //  - Seller may approve (triggering a full refund via escrow-refund), decline, or
 //    mark the item delivered, which converts an unresolved cancellation into a
 //    dispute rather than letting either side act unilaterally.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
@@ -155,7 +156,7 @@ Deno.serve(async (req) => {
     return json(refundBody, res.status);
   } catch (e) {
     console.error("escrow-cancel", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

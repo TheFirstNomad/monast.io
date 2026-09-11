@@ -1,6 +1,7 @@
 // Owner-only revenue withdrawal. Moves USDC out of the REVENUE treasury wallet
 // to any address the owner supplies. The escrow wallet is deliberately not
 // reachable from here - user funds have no withdrawal path.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { verifyAdmin } from "../_shared/admin-auth.ts";
@@ -128,7 +129,7 @@ Deno.serve(async (req) => {
     return json({ circle_transaction_id: tx.id, amount_usdc: amount, destination_address: to });
   } catch (e) {
     console.error("treasury-withdraw", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

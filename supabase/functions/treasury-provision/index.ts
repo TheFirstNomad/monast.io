@@ -7,6 +7,7 @@
 //
 // GET  -> current treasury state (addresses, balances)
 // POST -> provision missing wallets for the requested chain ids
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { verifyAdmin } from "../_shared/admin-auth.ts";
@@ -127,7 +128,7 @@ Deno.serve(async (req) => {
     return json({ wallet_set_id: walletSetId, wallets: created });
   } catch (e) {
     console.error("treasury-provision", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

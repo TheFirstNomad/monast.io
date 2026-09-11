@@ -2,6 +2,7 @@
 // been confirmed on-chain as a transfer to the revenue treasury wallet.
 //
 // POST { ad_id, tx_hash, chain_id? }
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
@@ -121,7 +122,7 @@ Deno.serve(async (req) => {
     return json({ ad: updated, amount_usdc: expectedFee });
   } catch (e) {
     console.error("ad-listing-fee", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

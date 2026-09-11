@@ -1,6 +1,7 @@
 // Refund path. Returns 100% of the escrowed USDC to the buyer - no platform fee
 // is ever charged on a deal that did not complete. Callable by the seller, or by
 // the buyer once the seller has failed to answer a cancellation request in time.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { notify } from "../_shared/notify.ts";
@@ -116,7 +117,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("escrow-refund", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

@@ -6,6 +6,7 @@
 //
 // POST { action: "list" }
 // POST { action: "grant" | "revoke", email?, user_id?, role }
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { verifyAdmin } from "../_shared/admin-auth.ts";
@@ -82,7 +83,7 @@ Deno.serve(async (req) => {
     return json({ ok: true, user_id: userId, role, granted: false });
   } catch (e) {
     console.error("admin-roles", e);
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, statusFromError(e));
   }
 });
 

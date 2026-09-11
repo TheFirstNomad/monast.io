@@ -10,6 +10,7 @@
 //     exchanges for a session.
 //
 // Self-custody (SIWE) sign-in is untouched by this function.
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
@@ -334,6 +335,6 @@ Deno.serve(async (req) => {
     return json({ error: "Unknown action" }, 400);
   } catch (err) {
     console.error("circle-social error", err);
-    return json({ error: (err as Error).message }, 500);
+    return json({ error: (err as Error).message }, statusFromError(err));
   }
 });
