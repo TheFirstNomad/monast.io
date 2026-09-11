@@ -46,8 +46,10 @@ export async function circleFetch(path: string, init: RequestInit = {}) {
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(`Circle ${path} ${res.status}: ${JSON.stringify(body)}`);
+    console.error(`Circle request failed [${res.status}] ${path}: ${JSON.stringify(body)}`);
+    throw withUpstreamStatus(`Circle ${path} ${res.status}: ${JSON.stringify(body)}`, res.status);
   }
+
   return body;
 }
 
