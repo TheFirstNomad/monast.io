@@ -15,6 +15,8 @@ import { toast } from "sonner";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ReportDialog } from "@/components/ReportDialog";
+import { useSeo } from "@/hooks/useSeo";
+
 
 const AdDetail = () => {
   const { id } = useParams();
@@ -29,6 +31,18 @@ const AdDetail = () => {
   // must not be able to close the listing out from under them.
   const OPEN_ESCROW_STATUSES = ["created", "funded", "disputed"];
   const [openEscrowId, setOpenEscrowId] = useState<string | null>(null);
+
+  // Listings are the most shared pages on the site, so each one gets its own
+  // title, description, canonical URL and preview image.
+  useSeo({
+    title: ad ? `${ad.title} - ${Number(ad.price_usdc).toLocaleString()} USDC | Monast` : "Listing | Monast",
+    description: ad
+      ? `${ad.title} in ${ad.category} - ${ad.condition}, ${ad.location}. Pay ${Number(ad.price_usdc).toLocaleString()} USDC into onchain escrow, released only when you confirm delivery.`
+      : "View this listing on Monast, the escrow marketplace settled in USDC on Arc.",
+    canonicalPath: id ? `/ad/${id}` : undefined,
+    image: ad?.images?.[0],
+  });
+
 
   const markSold = async () => {
     if (!ad) return;
