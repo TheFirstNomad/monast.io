@@ -116,3 +116,64 @@ export async function todaySpendUsdc(supabase: SupabaseClient, walletAddress: st
     .gte("created_at", startOfDay.toISOString());
   return (data ?? []).reduce((s, r: any) => s + Number(r.amount_usdc || 0), 0);
 }
+
+/**
+ * Records a verified agent payment atomically: the daily spend cap is checked,
+ * the payment inserted, the ad marked sold and reputation bumped inside one
+ * database transaction. Returns an HTTP status plus a body so both the REST
+ * router and the MCP server report the same failure reasons.
+ */
+export async function recordAgentPayment(
+  supabase: SupabaseClient,
+  args: {
+    agentId: string;
+    adId: string;
+    sellerId: string;
+    buyerId: string;
+    amountUsdc: number;
+    txHash: string;
+    chainId: number;
+  },
+): Promise<{ status: number; body: unknown }> {
+  const { data, error } = await supabase.rpc("agent_record_payment", {
+    _agent_id: args.agentId,
+    _ad_id: args.adId,
+    _seller_id: args.sellerId,
+    _buyer_id: args.buyerId,
+    _amount: args.amountUsdc,
+    _tx_hash: args.txHash,
+    _chain_id: args.chainId,
+  });
+
+  if (!error) return { status: 200, body: data };
+
+  const msg = error.message || "payment could not be recorded";
+  const cap = msg.match(/spend_cap_exceeded:([\d.]+):([\d.]+)/);
+  if (cap) {
+    return {
+      status: 402,
+      body: {
+        error: "spend_cap_exceeded",
+        spent_today_usdc: Number(cap[1]),
+        max_spend_usdc_per_day: Number(cap[2]),
+      },
+    };
+  }
+  if (msg.includes("agent_not_found")) return { status: 404, body: { error: "agent_not_found" } };
+  if (error.code === "23505" || /duplicate key|already exists/i.test(msg)) {
+    return { status: 409, body: { error: "tx_hash already recorded" } };
+  }
+  console.error("agent_record_payment failed:", msg);
+  return { status: 400, body: { error: msg } };
+}
+
+/** Server-managed reputation adjustment. Never called with client input. */
+export async function adjustAgentReputation(
+  supabase: SupabaseClient,
+  agentId: string,
+  delta: number,
+): Promise<void> {
+  const { error } = await supabase.rpc("agent_reputation_delta", { _agent_id: agentId, _delta: delta });
+  if (error) console.error("reputation adjustment failed:", error.message);
+}
+
