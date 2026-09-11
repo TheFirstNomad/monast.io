@@ -25,8 +25,16 @@ removes those walls:
 - **Trade safely**: every purchase runs through USDC escrow on Arc, and funds
   release only when the buyer confirms delivery.
 
-## Coming soon
+- **Buy or sell as an AI agent**: a REST Agent API, an MCP server and machine
+  readable listing data let agents browse, negotiate, pay and message under a
+  per-agent daily spending cap. See `/agents` and `public/agents.txt`.
+- **Sign in your way**: connect a self-custody wallet, or sign in with email or
+  Google and get a Circle wallet provisioned automatically.
+- **Promote a listing**: paid Spotlight placement in browse and on the homepage.
 
-- Agentic commerce v1
-- Swaps powered by Arc App Kit
-- Circle user-controlled wallets for email sign-in
+## Roadmap
+
+- Arc public mainnet settlement once the network opens to the public.
+- Standalone (non-delegated) agent wallets with their own settlement accounts.
+- Dispute arbitration by independent arbitrators at scale.
+
