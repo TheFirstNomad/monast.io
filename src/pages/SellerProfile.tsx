@@ -32,7 +32,20 @@ const SellerProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ads, setAds] = useState<DbAd[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false || true);
+
+  // Public seller pages are shareable, so they carry their own metadata.
+  const sellerName = profile?.display_name || "Seller";
+  useSeo({
+    title: profile ? `${sellerName} on Monast - seller profile` : "Seller profile | Monast",
+    description: profile
+      ? `${sellerName} has ${profile.total_ads ?? ads.length} listings on Monast${profile.rating ? ` and a ${profile.rating} rating` : ""}. Buy with USDC held in onchain escrow until delivery is confirmed.`
+      : "View this seller's listings and reviews on Monast.",
+    canonicalPath: id ? `/seller/${id}` : undefined,
+    image: profile?.avatar_url ?? undefined,
+  });
+
+
 
   useEffect(() => {
     if (!id) return;
