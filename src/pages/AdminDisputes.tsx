@@ -73,20 +73,20 @@ const AdminDisputes = () => {
     load();
   };
 
-  if (!rolesLoading && (!user || !isArbitrator)) {
+  // Nothing privileged renders until the role lookup has settled.
+  if (rolesLoading || !user || !isArbitrator) {
     return (
-      <Layout>
-        <div className="container max-w-2xl py-20 text-center space-y-4">
-          <ShieldCheck className="h-10 w-10 mx-auto text-muted-foreground" />
-          <h1 className="text-2xl font-bold">Arbitrators only</h1>
-          <p className="text-muted-foreground">
-            This queue is limited to accounts holding the arbitrator role. Ask the platform owner to
-            grant it from the roles console.
-          </p>
-        </div>
-      </Layout>
+      <AdminGate
+        loading={rolesLoading}
+        allowed={false}
+        title="Arbitrators only"
+        message="This queue is limited to accounts holding the arbitrator role. Ask the platform owner to grant it from the roles console."
+      >
+        {null}
+      </AdminGate>
     );
   }
+
 
   return (
     <Layout>

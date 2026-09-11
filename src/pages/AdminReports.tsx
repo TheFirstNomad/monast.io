@@ -99,19 +99,20 @@ const AdminReports = () => {
     load();
   };
 
-  if (!rolesLoading && (!user || !isModerator)) {
+  // Nothing privileged renders until the role lookup has settled.
+  if (rolesLoading || !user || !isModerator) {
     return (
-      <Layout>
-        <div className="container max-w-2xl py-20 text-center space-y-4">
-          <ShieldCheck className="h-10 w-10 mx-auto text-muted-foreground" />
-          <h1 className="text-2xl font-bold">Moderators only</h1>
-          <p className="text-muted-foreground">
-            This queue needs the moderator or arbitrator role. Ask the platform owner to grant it.
-          </p>
-        </div>
-      </Layout>
+      <AdminGate
+        loading={rolesLoading}
+        allowed={false}
+        title="Moderators only"
+        message="This queue needs the moderator or arbitrator role. Ask the platform owner to grant it."
+      >
+        {null}
+      </AdminGate>
     );
   }
+
 
   return (
     <Layout>
