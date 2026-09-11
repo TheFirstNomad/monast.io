@@ -9,6 +9,7 @@
 //
 // POST { action: "createChallenge", purpose, referenceId }
 // POST { action: "status", transactionId }
+import { statusFromError } from "../_shared/http-error.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
