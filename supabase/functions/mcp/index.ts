@@ -9,8 +9,10 @@
 // Tools wrap the Agent API surface (see /agent-api).
 
 import {
-  authenticateAgent, checkRateLimit, corsHeaders, logActivity, svcClient, todaySpendUsdc,
+  adjustAgentReputation, authenticateAgent, checkRateLimit, corsHeaders, logActivity,
+  recordAgentPayment, svcClient, todaySpendUsdc,
 } from "../_shared/agent-auth.ts";
+
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 
 const PROTOCOL_VERSION = "2024-11-05";
@@ -69,18 +71,19 @@ const TOOLS = [
   },
   {
     name: "submit_payment",
-    description: "Record an on-chain USDC payment (Arc) as proof of settlement.",
+    description: "Record an on-chain USDC payment (Arc) as proof of settlement. The seller and amount are derived server-side from the ad or your accepted offer, then verified against the transaction.",
     inputSchema: {
       type: "object",
       properties: {
-        ad_id: { type: "string" }, seller_id: { type: "string" },
-        amount_usdc: { type: "number", exclusiveMinimum: 0 },
-        tx_hash: { type: "string" }, chain_id: { type: "integer" },
+        ad_id: { type: "string" },
+        tx_hash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" },
+        chain_id: { type: "integer" },
       },
-      required: ["ad_id", "seller_id", "amount_usdc", "tx_hash", "chain_id"],
+      required: ["ad_id", "tx_hash", "chain_id"],
       additionalProperties: false,
     },
   },
+
   {
     name: "list_messages",
     description: "List the calling agent's recent messages.",
