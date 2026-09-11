@@ -23,7 +23,6 @@ export const USER_LIMITS: Record<string, number> = {
   "escrow-dispute": 10,
   "escrow-cancel": 10,
   "treasury-withdraw": 5,
-  "circle-escrow-fund": 20,
   "ad-listing-fee": 20,
   "record-payment": 20,
   "promote-checkout": 20,
