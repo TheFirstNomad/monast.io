@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
   // Load ad + seller wallet.
   const { data: ad, error: adErr } = await admin
     .from("ads").select("id, seller_id, price_usdc, status").eq("id", adId).maybeSingle();
-  if (adErr) return json({ error: adErr.message }, 500);
+  if (adErr) return json({ error: adErr.message }, statusFromError(new Error(adErr.message)));
   if (!ad) return json({ error: "Ad not found" }, 404);
 
   // Determine expected amount: accepted offer for buyer OR ad price.

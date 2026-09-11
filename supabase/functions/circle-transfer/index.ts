@@ -532,7 +532,7 @@ Deno.serve(async (req) => {
     const friendly = /^Circle \//.test(raw)
       ? "Your wallet provider could not complete that request. Please try again in a moment."
       : raw || "Something went wrong with your wallet";
-    return json({ error: friendly }, 500);
+    return json({ error: friendly }, statusFromError(err));
   }
 
 
