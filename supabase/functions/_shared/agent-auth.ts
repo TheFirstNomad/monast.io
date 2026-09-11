@@ -64,6 +64,11 @@ export async function authenticateAgent(req: Request, supabase: SupabaseClient):
 const WRITE_LIMIT = 30;       // per minute
 const READ_LIMIT = 600;       // per minute
 
+/**
+ * Atomic rate limit. The counter row is inserted first and counted second
+ * inside one database function, so two simultaneous requests can never both
+ * observe a stale under-limit count and slip through.
+ */
 export async function checkRateLimit(
   supabase: SupabaseClient,
   agentId: string,
@@ -72,17 +77,20 @@ export async function checkRateLimit(
 ): Promise<{ ok: boolean; used: number; limit: number }> {
   const limit = method === "GET" ? READ_LIMIT : WRITE_LIMIT;
   const bucket = `agent:${agentId}:${method === "GET" ? "read" : "write"}`;
-  const since = new Date(Date.now() - 60_000).toISOString();
-  const { count } = await supabase
-    .from("agent_rate_limits")
-    .select("id", { count: "exact", head: true })
-    .eq("bucket_key", bucket)
-    .gte("created_at", since);
-  const used = count ?? 0;
-  if (used >= limit) return { ok: false, used, limit };
-  await supabase.from("agent_rate_limits").insert({ bucket_key: bucket, endpoint });
-  return { ok: true, used: used + 1, limit };
+  const { data, error } = await supabase.rpc("agent_rate_limit_hit", {
+    _bucket: bucket,
+    _endpoint: endpoint,
+    _limit: limit,
+  });
+  if (error) {
+    console.error("rate limit check failed:", error.message);
+    // Fail closed: a broken limiter must not become an open door.
+    return { ok: false, used: limit, limit };
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  return { ok: Boolean(row?.allowed), used: Number(row?.used ?? 0), limit };
 }
+
 
 export async function logActivity(
   supabase: SupabaseClient,
