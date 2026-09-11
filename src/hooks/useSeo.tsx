@@ -5,7 +5,10 @@ interface SeoInput {
   description?: string;
   canonicalPath?: string;
   noindex?: boolean;
+  /** Absolute or root-relative image used for social previews. */
+  image?: string;
 }
+
 
 function upsertMeta(selector: string, attr: "name" | "property", key: string, content: string) {
   let el = document.head.querySelector<HTMLMetaElement>(selector);
