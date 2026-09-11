@@ -7,6 +7,8 @@
 
 import { formatUsdc, toBaseUnits } from "./fees.ts";
 import { arcUsdcAddress, circleBlockchainId } from "./arc-chains.ts";
+import { withUpstreamStatus } from "./http-error.ts";
+
 
 const CIRCLE_BASE = "https://api.circle.com/v1/w3s";
 
