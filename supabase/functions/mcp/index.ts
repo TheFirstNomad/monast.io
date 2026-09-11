@@ -194,10 +194,15 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
     }
     case "cancel_offer": {
       if (!agent.owner_user_id) return toolError("standalone agents cannot cancel offers");
+      const offerId = String(args?.offer_id ?? "");
+      const { data: before } = await svc.from("offers")
+        .select("status").eq("id", offerId).eq("buyer_id", agent.owner_user_id).maybeSingle();
       const { data, error } = await svc.from("offers")
         .update({ status: "cancelled" })
-        .eq("id", String(args?.offer_id)).eq("buyer_id", agent.owner_user_id).select("*").single();
+        .eq("id", offerId).eq("buyer_id", agent.owner_user_id).select("*").single();
       if (error) return toolError(error.message);
+      // Published penalty for walking away from an accepted offer.
+      if (before?.status === "accepted") await adjustAgentReputation(svc, agent.id, -5);
       return toolResult(data);
     }
     case "submit_payment": {
@@ -222,14 +227,14 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
         expectedFrom: agent.wallet_address,
       });
       if (!check.ok) return toolError(`payment verification failed: ${check.error}`);
-      const { data, error } = await svc.from("payments").insert({
-        ad_id: adId, seller_id: ad.seller_id, buyer_id: agent.owner_user_id,
-        amount_usdc: expected, tx_hash: txHash, chain_id: chainId,
-      }).select("*").single();
-      if (error) return toolError(error.code === "23505" ? "tx_hash already recorded" : error.message);
-      await svc.from("agents").update({ reputation_score: agent.reputation_score + 1 }).eq("id", agent.id);
-      await svc.from("ads").update({ status: "sold", sold_at: new Date().toISOString() }).eq("id", adId);
-      return toolResult(data);
+      // Cap check, insert, sold flag and reputation happen in one transaction.
+      const res = await recordAgentPayment(svc, {
+        agentId: agent.id, adId, sellerId: ad.seller_id, buyerId: agent.owner_user_id,
+        amountUsdc: expected, txHash, chainId,
+      });
+      if (res.status !== 200) return toolError(JSON.stringify(res.body));
+      return toolResult(res.body);
+
     }
     case "list_messages": {
       if (!agent.owner_user_id) return toolError("standalone agents cannot read messages yet");
