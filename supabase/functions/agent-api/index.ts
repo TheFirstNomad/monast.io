@@ -139,10 +139,17 @@ Deno.serve(async (req) => {
       const id = route.split("/")[2];
       if (!agent.owner_user_id) { status = 400; body = { error: "standalone agents cannot cancel offers" }; }
       else {
+        // Cancelling an offer the seller already accepted costs reputation,
+        // as published in agents.txt.
+        const { data: before } = await svc.from("offers")
+          .select("status").eq("id", id).eq("buyer_id", agent.owner_user_id).maybeSingle();
         const { data, error } = await svc.from("offers")
           .update({ status: "cancelled" }).eq("id", id).eq("buyer_id", agent.owner_user_id).select("*").single();
         if (error) { status = 400; body = { error: error.message }; }
-        else body = data;
+        else {
+          if (before?.status === "accepted") await adjustAgentReputation(svc, agent.id, -5);
+          body = data;
+        }
       }
     }
 
@@ -175,24 +182,20 @@ Deno.serve(async (req) => {
               });
               if (!check.ok) { status = 400; body = { error: `payment verification failed: ${check.error}` }; }
               else {
-                const { data, error } = await svc.from("payments").insert({
-                  ad_id: adId, seller_id: ad.seller_id, buyer_id: agent.owner_user_id,
-                  amount_usdc: expected, tx_hash: txHash, chain_id: chainId,
-                }).select("*").single();
-                if (error) {
-                  status = error.code === "23505" ? 409 : 400;
-                  body = { error: error.code === "23505" ? "tx_hash already recorded" : error.message };
-                } else {
-                  await svc.from("agents").update({ reputation_score: agent.reputation_score + 1 }).eq("id", agent.id);
-                  await svc.from("ads").update({ status: "sold", sold_at: new Date().toISOString() }).eq("id", adId);
-                  body = data;
-                }
+                // Spend cap, payment insert, sold flag and reputation all in
+                // one transaction, so the daily cap cannot be raced.
+                const res = await recordAgentPayment(svc, {
+                  agentId: agent.id, adId, sellerId: ad.seller_id, buyerId: agent.owner_user_id,
+                  amountUsdc: expected, txHash, chainId,
+                });
+                status = res.status; body = res.body;
               }
             }
           }
         }
       }
     }
+
 
     // /messages GET
     else if (route === "/messages" && method === "GET") {
