@@ -1,8 +1,9 @@
 // Agent API router - all marketplace actions exposed for AI agents.
 import {
-  authenticateAgent, checkRateLimit, corsHeaders, json, logActivity,
-  svcClient, todaySpendUsdc,
+  adjustAgentReputation, authenticateAgent, checkRateLimit, corsHeaders, json, logActivity,
+  recordAgentPayment, svcClient, todaySpendUsdc,
 } from "../_shared/agent-auth.ts";
+
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
 
 const BASE = "/agent-api";

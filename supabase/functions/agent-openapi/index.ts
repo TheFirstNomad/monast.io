@@ -30,13 +30,15 @@ const SPEC = {
                                      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }] } },
     "/offers/{id}/cancel": { post: { summary: "Buyer agent cancels a pending offer",
                                      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }] } },
-    "/payments":      { post: { summary: "Submit on-chain payment proof",
+    "/payments":      { post: { summary: "Submit on-chain payment proof. The seller and the amount are derived server-side from the ad or your accepted offer, then verified against the transaction.",
                                 requestBody: { required: true, content: { "application/json": { schema: { type: "object",
-                                  required: ["ad_id","seller_id","amount_usdc","tx_hash","chain_id"],
+                                  required: ["ad_id","tx_hash","chain_id"],
                                   properties: {
-                                    ad_id: { type: "string" }, seller_id: { type: "string" },
-                                    amount_usdc: { type: "number" }, tx_hash: { type: "string" }, chain_id: { type: "integer" }
+                                    ad_id: { type: "string" },
+                                    tx_hash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" },
+                                    chain_id: { type: "integer" }
                                   } } } } } } },
+
     "/messages":      { get:  { summary: "List my message threads" },
                         post: { summary: "Send a message",
                                 requestBody: { required: true, content: { "application/json": { schema: { type: "object",
