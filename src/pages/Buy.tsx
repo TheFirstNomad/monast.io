@@ -46,7 +46,7 @@ const Buy = () => {
   const [escrow, setEscrow] = useState<EscrowRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [autoFund, setAutoFund] = useState(false);
-  const { ready: walletReady } = useCircleWallet();
+  const { ready: walletReady, checking: walletChecking } = useCircleWallet();
 
   useSeo({
     title: ad ? `Buy ${ad.title} with USDC escrow | monast.io` : "Secure checkout | monast.io",
@@ -189,7 +189,7 @@ const Buy = () => {
           </p>
         </section>
 
-        {!ownListing && !unavailable && !walletReady && (
+        {!ownListing && !unavailable && (walletChecking || !walletReady) && (
           <CircleOnboardingCard reason="Create your Monast wallet to pay this escrow in USDC." />
         )}
 
@@ -198,6 +198,8 @@ const Buy = () => {
             <p className="text-sm text-muted-foreground">This is your own listing, so you cannot buy it.</p>
           ) : unavailable ? (
             <p className="text-sm text-muted-foreground">This listing is no longer available for purchase.</p>
+          ) : walletChecking ? (
+            <p className="text-sm text-muted-foreground">Checking your wallet...</p>
           ) : !walletReady ? (
             <p className="text-sm text-muted-foreground">
               Set up your wallet above to continue with this purchase.
