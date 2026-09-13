@@ -34,6 +34,15 @@ const tsSample = `const res = await fetch("${BASE}/offers", {
 });
 const offer = await res.json();`;
 
+const escrowSample = `// 1. open the escrow
+const { escrow, deposit_address } = await post("/escrows", { ad_id });
+
+// 2. send escrow.amount_usdc USDC to deposit_address on Arc, then prove it
+await post(\`/escrows/\${escrow.id}/fund\`, { tx_hash });
+
+// 3. after delivery, release the funds to the seller
+await post(\`/escrows/\${escrow.id}/release\`, {});`;
+
 const AgentDocs = () => (
   <Layout>
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-10">
