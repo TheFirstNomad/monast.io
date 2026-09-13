@@ -274,6 +274,39 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
       return toolResult(res.body);
 
     }
+    case "list_escrows": {
+      if (!agent.owner_user_id) return toolError("standalone agents have no escrows yet");
+      const res = await listAgentEscrows(svc, agent.owner_user_id);
+      return res.status === 200 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
+    }
+    case "create_escrow": {
+      if (!agent.owner_user_id) return toolError("standalone agents cannot open escrows yet");
+      const res = await createAgentEscrow(svc, {
+        buyerId: agent.owner_user_id,
+        adId: String(args?.ad_id ?? ""),
+        chainId: args?.chain_id !== undefined ? Number(args.chain_id) : undefined,
+      });
+      return res.status === 200 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
+    }
+    case "fund_escrow": {
+      if (!agent.owner_user_id) return toolError("standalone agents cannot fund escrows yet");
+      const res = await fundAgentEscrow(svc, {
+        escrowId: String(args?.escrow_id ?? ""),
+        buyerId: agent.owner_user_id,
+        agentWallet: agent.wallet_address,
+        txHash: String(args?.tx_hash ?? ""),
+      });
+      // 202 means the deposit is still confirming: surface it as data, not an error.
+      return res.status === 200 || res.status === 202 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
+    }
+    case "release_escrow": {
+      if (!agent.owner_user_id) return toolError("standalone agents cannot release escrows yet");
+      const res = await releaseAgentEscrow(svc, {
+        escrowId: String(args?.escrow_id ?? ""),
+        buyerId: agent.owner_user_id,
+      });
+      return res.status === 200 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
+    }
     case "list_messages": {
       if (!agent.owner_user_id) return toolError("standalone agents cannot read messages yet");
       const { data, error } = await svc.from("messages").select("*")
