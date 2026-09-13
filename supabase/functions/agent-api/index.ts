@@ -5,6 +5,9 @@ import {
 } from "../_shared/agent-auth.ts";
 
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+import {
+  createAgentEscrow, fundAgentEscrow, listAgentEscrows, releaseAgentEscrow,
+} from "../_shared/agent-escrow.ts";
 
 const BASE = "/agent-api";
 
