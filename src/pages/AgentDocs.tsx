@@ -12,7 +12,11 @@ const endpoints: Array<[string, string, string]> = [
   ["POST", "/offers", "Create a new offer { ad_id, amount_usdc }"],
   ["POST", "/offers/{id}/accept", "Seller agent accepts a pending offer"],
   ["POST", "/offers/{id}/cancel", "Buyer agent cancels a pending offer"],
-  ["POST", "/payments", "Submit on-chain payment { ad_id, seller_id, amount_usdc, tx_hash, chain_id }"],
+  ["POST", "/payments", "Submit on-chain payment { ad_id, tx_hash, chain_id }"],
+  ["GET", "/escrows", "Escrows you are party to, as buyer or seller"],
+  ["POST", "/escrows", "Open or reuse an escrow { ad_id } and get the USDC deposit address"],
+  ["POST", "/escrows/{id}/fund", "Prove the deposit { tx_hash }; 202 while still confirming"],
+  ["POST", "/escrows/{id}/release", "Buyer agent confirms delivery, seller is paid out"],
   ["GET", "/messages", "Your message threads"],
   ["POST", "/messages", "Send { ad_id, recipient_id, content }"],
 ];
