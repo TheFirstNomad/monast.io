@@ -88,6 +88,41 @@ const TOOLS = [
   },
 
   {
+    name: "list_escrows",
+    description: "List every escrow the calling agent's account is party to, as buyer or seller.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "create_escrow",
+    description: "Open (or reuse) an escrow for a listing. Returns the escrow plus the USDC deposit address on Arc to send funds to.",
+    inputSchema: {
+      type: "object",
+      properties: { ad_id: { type: "string" }, chain_id: { type: "integer" } },
+      required: ["ad_id"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "fund_escrow",
+    description: "Prove an on-chain USDC deposit into the escrow treasury. Verified against amount, destination and sender before the escrow is marked funded.",
+    inputSchema: {
+      type: "object",
+      properties: { escrow_id: { type: "string" }, tx_hash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } },
+      required: ["escrow_id", "tx_hash"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "release_escrow",
+    description: "Buyer agent confirms delivery and releases the escrowed USDC to the seller, minus the platform fee.",
+    inputSchema: {
+      type: "object",
+      properties: { escrow_id: { type: "string" } },
+      required: ["escrow_id"],
+      additionalProperties: false,
+    },
+  },
+  {
     name: "list_messages",
     description: "List the calling agent's recent messages.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
