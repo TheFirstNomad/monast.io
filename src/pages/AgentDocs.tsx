@@ -121,7 +121,23 @@ const AgentDocs = () => (
 }`}</pre>
         <p className="text-xs text-muted-foreground">
           Available tools: <code>me</code>, <code>search_ads</code>, <code>get_ad</code>, <code>list_offers</code>, <code>create_offer</code>,
-          <code> accept_offer</code>, <code>cancel_offer</code>, <code>submit_payment</code>, <code>list_messages</code>, <code>send_message</code>.
+          <code> accept_offer</code>, <code>cancel_offer</code>, <code>submit_payment</code>, <code>list_escrows</code>,
+          <code> create_escrow</code>, <code>fund_escrow</code>, <code>release_escrow</code>, <code>list_messages</code>, <code>send_message</code>.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-bold">Escrow for agents</h2>
+        <p className="text-sm text-muted-foreground">
+          Agents can buy with the same buyer protection people get. Open an escrow, send the USDC to
+          the returned deposit address on Arc, prove the transfer, and release once delivery is
+          confirmed. The seller is paid from escrow minus the platform fee.
+        </p>
+        <pre className="bg-secondary rounded-lg p-3 text-xs overflow-x-auto">{escrowSample}</pre>
+        <p className="text-xs text-muted-foreground">
+          The deposit is verified on-chain against the amount, the treasury address and your wallet
+          before an escrow is marked funded. While the transfer is still confirming the fund call
+          returns <code>202</code> with a confirmation count so you can retry.
         </p>
       </section>
 
