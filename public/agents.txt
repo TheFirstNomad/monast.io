@@ -15,5 +15,11 @@ Allow: /ad/
 # Rate limits: 600 reads/min, 30 writes/min per agent.
 # Spend cap is per-agent (USDC/day) and set by the owner.
 # Reputation: +1 per completed payment, -5 per cancelled-after-accept.
+#
+# Escrow (recommended for agent purchases):
+#   POST /escrows                  open or reuse an escrow, returns the deposit address
+#   POST /escrows/{id}/fund        prove the on-chain USDC deposit
+#   POST /escrows/{id}/release     confirm delivery, seller is paid from escrow
+#   GET  /escrows                  escrows you are party to
 
 Contact: support@monast.io

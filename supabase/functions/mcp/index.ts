@@ -14,6 +14,9 @@ import {
 } from "../_shared/agent-auth.ts";
 
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+import {
+  createAgentEscrow, fundAgentEscrow, listAgentEscrows, releaseAgentEscrow,
+} from "../_shared/agent-escrow.ts";
 
 const PROTOCOL_VERSION = "2024-11-05";
 
@@ -84,6 +87,41 @@ const TOOLS = [
     },
   },
 
+  {
+    name: "list_escrows",
+    description: "List every escrow the calling agent's account is party to, as buyer or seller.",
+    inputSchema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "create_escrow",
+    description: "Open (or reuse) an escrow for a listing. Returns the escrow plus the USDC deposit address on Arc to send funds to.",
+    inputSchema: {
+      type: "object",
+      properties: { ad_id: { type: "string" }, chain_id: { type: "integer" } },
+      required: ["ad_id"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "fund_escrow",
+    description: "Prove an on-chain USDC deposit into the escrow treasury. Verified against amount, destination and sender before the escrow is marked funded.",
+    inputSchema: {
+      type: "object",
+      properties: { escrow_id: { type: "string" }, tx_hash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } },
+      required: ["escrow_id", "tx_hash"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "release_escrow",
+    description: "Buyer agent confirms delivery and releases the escrowed USDC to the seller, minus the platform fee.",
+    inputSchema: {
+      type: "object",
+      properties: { escrow_id: { type: "string" } },
+      required: ["escrow_id"],
+      additionalProperties: false,
+    },
+  },
   {
     name: "list_messages",
     description: "List the calling agent's recent messages.",
@@ -235,6 +273,39 @@ async function runTool(name: string, args: any, agent: any, svc: any) {
       if (res.status !== 200) return toolError(JSON.stringify(res.body));
       return toolResult(res.body);
 
+    }
+    case "list_escrows": {
+      if (!agent.owner_user_id) return toolError("standalone agents have no escrows yet");
+      const res = await listAgentEscrows(svc, agent.owner_user_id);
+      return res.status === 200 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
+    }
+    case "create_escrow": {
+      if (!agent.owner_user_id) return toolError("standalone agents cannot open escrows yet");
+      const res = await createAgentEscrow(svc, {
+        buyerId: agent.owner_user_id,
+        adId: String(args?.ad_id ?? ""),
+        chainId: args?.chain_id !== undefined ? Number(args.chain_id) : undefined,
+      });
+      return res.status === 200 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
+    }
+    case "fund_escrow": {
+      if (!agent.owner_user_id) return toolError("standalone agents cannot fund escrows yet");
+      const res = await fundAgentEscrow(svc, {
+        escrowId: String(args?.escrow_id ?? ""),
+        buyerId: agent.owner_user_id,
+        agentWallet: agent.wallet_address,
+        txHash: String(args?.tx_hash ?? ""),
+      });
+      // 202 means the deposit is still confirming: surface it as data, not an error.
+      return res.status === 200 || res.status === 202 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
+    }
+    case "release_escrow": {
+      if (!agent.owner_user_id) return toolError("standalone agents cannot release escrows yet");
+      const res = await releaseAgentEscrow(svc, {
+        escrowId: String(args?.escrow_id ?? ""),
+        buyerId: agent.owner_user_id,
+      });
+      return res.status === 200 ? toolResult(res.body) : toolError(JSON.stringify(res.body));
     }
     case "list_messages": {
       if (!agent.owner_user_id) return toolError("standalone agents cannot read messages yet");

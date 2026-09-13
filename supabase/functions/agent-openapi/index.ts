@@ -39,6 +39,19 @@ const SPEC = {
                                     chain_id: { type: "integer" }
                                   } } } } } } },
 
+    "/escrows":       { get:  { summary: "List escrows I'm party to (buyer or seller)" },
+                        post: { summary: "Open or reuse an escrow for a listing. Returns the escrow and the USDC deposit address on Arc.",
+                                requestBody: { required: true, content: { "application/json": { schema: { type: "object",
+                                  required: ["ad_id"],
+                                  properties: { ad_id: { type: "string" }, chain_id: { type: "integer" } } } } } } } },
+    "/escrows/{id}/fund": { post: { summary: "Prove the on-chain USDC deposit into the escrow treasury. Returns 202 while the transfer is still confirming.",
+                                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+                                requestBody: { required: true, content: { "application/json": { schema: { type: "object",
+                                  required: ["tx_hash"],
+                                  properties: { tx_hash: { type: "string", pattern: "^0x[0-9a-fA-F]{64}$" } } } } } } } },
+    "/escrows/{id}/release": { post: { summary: "Buyer agent confirms delivery and releases escrowed USDC to the seller",
+                                parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }] } },
+
     "/messages":      { get:  { summary: "List my message threads" },
                         post: { summary: "Send a message",
                                 requestBody: { required: true, content: { "application/json": { schema: { type: "object",

@@ -5,6 +5,9 @@ import {
 } from "../_shared/agent-auth.ts";
 
 import { verifyUsdcTransfer } from "../_shared/tx-verify.ts";
+import {
+  createAgentEscrow, fundAgentEscrow, listAgentEscrows, releaseAgentEscrow,
+} from "../_shared/agent-escrow.ts";
 
 const BASE = "/agent-api";
 
@@ -197,6 +200,56 @@ Deno.serve(async (req) => {
       }
     }
 
+
+    // /escrows GET - every escrow this agent's user is party to.
+    else if (route === "/escrows" && method === "GET") {
+      if (!agent.owner_user_id) { status = 400; body = { error: "standalone agents have no escrows yet" }; }
+      else {
+        const res = await listAgentEscrows(svc, agent.owner_user_id);
+        status = res.status; body = res.body;
+      }
+    }
+
+    // /escrows POST - open (or reuse) an escrow and get the deposit address.
+    else if (route === "/escrows" && method === "POST") {
+      if (!agent.owner_user_id) { status = 403; body = { error: "standalone agents cannot open escrows yet" }; }
+      else {
+        const b = await req.json().catch(() => ({}));
+        const res = await createAgentEscrow(svc, {
+          buyerId: agent.owner_user_id,
+          adId: String(b?.ad_id ?? ""),
+          chainId: b?.chain_id !== undefined ? Number(b.chain_id) : undefined,
+        });
+        status = res.status; body = res.body;
+      }
+    }
+
+    // /escrows/:id/fund - prove the on-chain deposit landed in the treasury.
+    else if (method === "POST" && route.match(/^\/escrows\/[^/]+\/fund$/)) {
+      if (!agent.owner_user_id) { status = 403; body = { error: "standalone agents cannot fund escrows yet" }; }
+      else {
+        const b = await req.json().catch(() => ({}));
+        const res = await fundAgentEscrow(svc, {
+          escrowId: route.split("/")[2],
+          buyerId: agent.owner_user_id,
+          agentWallet: agent.wallet_address,
+          txHash: String(b?.tx_hash ?? ""),
+        });
+        status = res.status; body = res.body;
+      }
+    }
+
+    // /escrows/:id/release - buyer agent confirms delivery, seller gets paid.
+    else if (method === "POST" && route.match(/^\/escrows\/[^/]+\/release$/)) {
+      if (!agent.owner_user_id) { status = 403; body = { error: "standalone agents cannot release escrows yet" }; }
+      else {
+        const res = await releaseAgentEscrow(svc, {
+          escrowId: route.split("/")[2],
+          buyerId: agent.owner_user_id,
+        });
+        status = res.status; body = res.body;
+      }
+    }
 
     // /messages GET
     else if (route === "/messages" && method === "GET") {

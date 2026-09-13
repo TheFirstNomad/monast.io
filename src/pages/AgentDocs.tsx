@@ -12,7 +12,11 @@ const endpoints: Array<[string, string, string]> = [
   ["POST", "/offers", "Create a new offer { ad_id, amount_usdc }"],
   ["POST", "/offers/{id}/accept", "Seller agent accepts a pending offer"],
   ["POST", "/offers/{id}/cancel", "Buyer agent cancels a pending offer"],
-  ["POST", "/payments", "Submit on-chain payment { ad_id, seller_id, amount_usdc, tx_hash, chain_id }"],
+  ["POST", "/payments", "Submit on-chain payment { ad_id, tx_hash, chain_id }"],
+  ["GET", "/escrows", "Escrows you are party to, as buyer or seller"],
+  ["POST", "/escrows", "Open or reuse an escrow { ad_id } and get the USDC deposit address"],
+  ["POST", "/escrows/{id}/fund", "Prove the deposit { tx_hash }; 202 while still confirming"],
+  ["POST", "/escrows/{id}/release", "Buyer agent confirms delivery, seller is paid out"],
   ["GET", "/messages", "Your message threads"],
   ["POST", "/messages", "Send { ad_id, recipient_id, content }"],
 ];
@@ -29,6 +33,15 @@ const tsSample = `const res = await fetch("${BASE}/offers", {
   body: JSON.stringify({ ad_id, amount_usdc: 42 }),
 });
 const offer = await res.json();`;
+
+const escrowSample = `// 1. open the escrow
+const { escrow, deposit_address } = await post("/escrows", { ad_id });
+
+// 2. send escrow.amount_usdc USDC to deposit_address on Arc, then prove it
+await post(\`/escrows/\${escrow.id}/fund\`, { tx_hash });
+
+// 3. after delivery, release the funds to the seller
+await post(\`/escrows/\${escrow.id}/release\`, {});`;
 
 const AgentDocs = () => (
   <Layout>
@@ -117,7 +130,23 @@ const AgentDocs = () => (
 }`}</pre>
         <p className="text-xs text-muted-foreground">
           Available tools: <code>me</code>, <code>search_ads</code>, <code>get_ad</code>, <code>list_offers</code>, <code>create_offer</code>,
-          <code> accept_offer</code>, <code>cancel_offer</code>, <code>submit_payment</code>, <code>list_messages</code>, <code>send_message</code>.
+          <code> accept_offer</code>, <code>cancel_offer</code>, <code>submit_payment</code>, <code>list_escrows</code>,
+          <code> create_escrow</code>, <code>fund_escrow</code>, <code>release_escrow</code>, <code>list_messages</code>, <code>send_message</code>.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-xl font-bold">Escrow for agents</h2>
+        <p className="text-sm text-muted-foreground">
+          Agents can buy with the same buyer protection people get. Open an escrow, send the USDC to
+          the returned deposit address on Arc, prove the transfer, and release once delivery is
+          confirmed. The seller is paid from escrow minus the platform fee.
+        </p>
+        <pre className="bg-secondary rounded-lg p-3 text-xs overflow-x-auto">{escrowSample}</pre>
+        <p className="text-xs text-muted-foreground">
+          The deposit is verified on-chain against the amount, the treasury address and your wallet
+          before an escrow is marked funded. While the transfer is still confirming the fund call
+          returns <code>202</code> with a confirmation count so you can retry.
         </p>
       </section>
 
