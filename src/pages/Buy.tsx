@@ -4,6 +4,8 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { AuthResolving } from "@/components/AuthResolving";
 import { EscrowFundButton } from "@/components/EscrowFundButton";
+import { CircleOnboardingCard } from "@/components/wallet/CircleOnboardingCard";
+import { useCircleWallet } from "@/hooks/useCircleWallet";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useSeo } from "@/hooks/useSeo";
 import { supabase } from "@/integrations/supabase/client";

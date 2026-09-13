@@ -9,6 +9,7 @@ import { AuthResolving } from "@/components/AuthResolving";
 import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
 import { getExplorerUrl, getExplorerName, PaymentChainId } from "@/lib/arcAppKit";
 import { useSeo } from "@/hooks/useSeo";
+import { CircleOnboardingCard } from "@/components/wallet/CircleOnboardingCard";
 import {
   ShoppingBag,
   Receipt,
@@ -258,6 +259,11 @@ const Account = () => {
         <p className="text-sm text-muted-foreground mb-6">
           Your orders, payments, and sales - buyer and seller activity in one place.
         </p>
+
+        <CircleOnboardingCard
+          className="mb-6"
+          reason="Set up your Monast wallet so you can pay into escrow and receive refunds."
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
           <Stat icon={Package} label="In escrow" value={String(inEscrow)} />
