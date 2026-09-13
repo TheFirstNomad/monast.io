@@ -4,6 +4,8 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { AuthResolving } from "@/components/AuthResolving";
 import { EscrowFundButton } from "@/components/EscrowFundButton";
+import { CircleOnboardingCard } from "@/components/wallet/CircleOnboardingCard";
+import { useCircleWallet } from "@/hooks/useCircleWallet";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useSeo } from "@/hooks/useSeo";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +46,7 @@ const Buy = () => {
   const [escrow, setEscrow] = useState<EscrowRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [autoFund, setAutoFund] = useState(false);
+  const { ready: walletReady, checking: walletChecking } = useCircleWallet();
 
   useSeo({
     title: ad ? `Buy ${ad.title} with USDC escrow | monast.io` : "Secure checkout | monast.io",
@@ -186,11 +189,21 @@ const Buy = () => {
           </p>
         </section>
 
+        {!ownListing && !unavailable && (walletChecking || !walletReady) && (
+          <CircleOnboardingCard reason="Create your Monast wallet to pay this escrow in USDC." />
+        )}
+
         <section className="bg-card border border-border rounded-xl p-5 space-y-3">
           {ownListing ? (
             <p className="text-sm text-muted-foreground">This is your own listing, so you cannot buy it.</p>
           ) : unavailable ? (
             <p className="text-sm text-muted-foreground">This listing is no longer available for purchase.</p>
+          ) : walletChecking ? (
+            <p className="text-sm text-muted-foreground">Checking your wallet...</p>
+          ) : !walletReady ? (
+            <p className="text-sm text-muted-foreground">
+              Set up your wallet above to continue with this purchase.
+            </p>
           ) : escrow ? (
             escrow.status === "created" ? (
               <>
