@@ -132,8 +132,8 @@ const EditAd = () => {
       const patch: Record<string, unknown> = {
         description: form.description,
         category: form.category,
-        condition: form.condition,
-        location: form.location,
+        condition: physical ? form.condition : null,
+        location: physical ? form.location : null,
         images,
         attributes: Object.fromEntries(
           extraFields.map((f) => [f.key, (extras[f.key] || "").trim()]).filter(([, v]) => v),

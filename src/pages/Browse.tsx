@@ -114,29 +114,33 @@ const Browse = () => {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Condition</label>
-              <div className="flex flex-col gap-1">
-                <FilterChip active={!condition} onClick={() => setCondition("")}>All</FilterChip>
-                {conditions.map((c) => (
-                  <FilterChip key={c} active={condition === c} onClick={() => setCondition(c)}>{c}</FilterChip>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
+            {showPhysicalFilters && (
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <input
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="City or country"
-                    className="w-full h-9 pl-8 pr-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Condition</label>
+                <div className="flex flex-col gap-1">
+                  <FilterChip active={!condition} onClick={() => setCondition("")}>All</FilterChip>
+                  {conditions.map((c) => (
+                    <FilterChip key={c} active={condition === c} onClick={() => setCondition(c)}>{c}</FilterChip>
+                  ))}
                 </div>
               </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-3">
+              {showPhysicalFilters && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Location</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <input
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="City or country"
+                      className="w-full h-9 pl-8 pr-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min price (USDC)</label>
                 <input
