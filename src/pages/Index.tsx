@@ -79,10 +79,10 @@ const Index = () => {
           <div className="max-w-2xl">
             <p className="text-xs font-medium text-primary mb-5">The global desk for digital assets</p>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-medium text-foreground mb-5 leading-[0.98]">
-              Buy and sell anything.<br />Worldwide. In USDC.
+              Buy and sell digital assets.<br />Worldwide. In USDC.
           </h1>
           <p className="text-base md:text-lg text-foreground/70 mb-8 max-w-xl leading-relaxed">
-            List goods, work, or digital products. Payment sits in escrow until delivery is confirmed.
+            Apps, coins, NFTs, domains, websites and accounts, transferred fast. Payment sits in escrow until delivery is confirmed.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button asChild size="lg" className="text-base px-7 h-12">

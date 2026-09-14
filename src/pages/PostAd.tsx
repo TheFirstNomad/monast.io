@@ -115,7 +115,7 @@ const PostAd = () => {
       <div className="max-w-2xl mx-auto px-4 py-10 md:py-14">
         <p className="text-xs text-primary mb-2">Sell worldwide</p>
         <h1 className="font-display text-4xl text-foreground mb-2">List an item</h1>
-        <p className="text-muted-foreground mb-8">Goods, work, or digital products. Payment protected by escrow.</p>
+        <p className="text-muted-foreground mb-8">Apps, coins, NFTs, domains, websites and more. Payment protected by escrow.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
