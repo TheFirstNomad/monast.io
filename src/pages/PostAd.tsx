@@ -247,15 +247,17 @@ const PostAd = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
-            <Input
-              placeholder="e.g. New York, USA or Worldwide"
-              value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-              required
-            />
-          </div>
+          {physical && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
+              <Input
+                placeholder="e.g. New York, USA or Worldwide"
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                required
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
