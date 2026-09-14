@@ -120,10 +120,19 @@ Deno.serve(async (req) => {
             { onConflict: "user_id,address" },
           );
       }
-      // Also store a primary address on profiles for quick reads.
+      // Also store the primary address AND Circle wallet id on profiles. The id
+      // is what circle-transfer needs to move USDC, so without it escrow
+      // funding fails with "No Circle wallet on file" right after onboarding.
       const primary = existing[0]?.address;
+      const primaryId = existing[0]?.id;
       if (primary) {
-        await admin.from("profiles").update({ circle_wallet_address: primary }).eq("id", user.id);
+        await admin
+          .from("profiles")
+          .update({
+            circle_wallet_address: primary,
+            ...(primaryId ? { circle_wallet_id: primaryId } : {}),
+          })
+          .eq("id", user.id);
       }
       return json({
         status: "ready",

@@ -22,10 +22,13 @@ export const useCircleWallet = () => {
     }
     const { data } = await supabase
       .from("profiles")
-      .select("circle_wallet_address")
+      .select("circle_wallet_address, circle_wallet_id")
       .eq("id", user.id)
       .maybeSingle();
-    setAddress((data?.circle_wallet_address as string | null) ?? null);
+    // Both pieces matter: payments are initiated with the Circle wallet id, so
+    // an address alone is not yet a payable wallet.
+    const payable = Boolean(data?.circle_wallet_address && data?.circle_wallet_id);
+    setAddress(payable ? (data?.circle_wallet_address as string) : null);
     setChecking(false);
   }, [user, selfCustody]);
 
