@@ -222,7 +222,7 @@ const PublishAd = () => {
           <div className="min-w-0">
             <p className="font-semibold truncate">{ad.title}</p>
             <p className="text-sm text-muted-foreground">
-              {Number(ad.price_usdc).toLocaleString()} USDC · {ad.location}
+              {Number(ad.price_usdc).toLocaleString()} USDC{ad.location ? ` · ${ad.location}` : ""}
             </p>
           </div>
         </div>

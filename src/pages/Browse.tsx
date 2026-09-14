@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
-import { DbAd, categories, conditions, categoryQueryValues } from "@/lib/types";
+import { DbAd, categories, conditions, categoryQueryValues, isPhysicalCategory } from "@/lib/types";
 import { Search, SlidersHorizontal, X, MapPin, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/hooks/useSeo";
@@ -62,6 +62,16 @@ const Browse = () => {
     [category, condition, location, minPrice, maxPrice, featuredOnly]
   );
 
+  // Condition and location only apply to physical listings, so those filters
+  // stay hidden while a digital category is selected.
+  const showPhysicalFilters = !category || isPhysicalCategory(category);
+
+  useEffect(() => {
+    if (showPhysicalFilters) return;
+    setCondition("");
+    setLocation("");
+  }, [showPhysicalFilters]);
+
   const clearAll = () => {
     setSearch(""); setCategory(""); setCondition("");
     setLocation(""); setMinPrice(""); setMaxPrice(""); setFeaturedOnly(false); setSort("newest");
@@ -70,7 +80,7 @@ const Browse = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
-        <div className="mb-8"><p className="text-xs text-primary mb-2">Global marketplace</p><h1 className="font-display text-4xl md:text-5xl text-foreground mb-2">The market</h1><p className="text-sm text-muted-foreground">Goods, work, and digital products from sellers worldwide.</p></div>
+        <div className="mb-8"><p className="text-xs text-primary mb-2">Global marketplace</p><h1 className="font-display text-4xl md:text-5xl text-foreground mb-2">The market</h1><p className="text-sm text-muted-foreground">Apps, coins, NFTs, domains, websites and more, transferred fast and paid in USDC escrow.</p></div>
         <div className="flex items-center gap-3 mb-5 lg:hidden">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -114,29 +124,33 @@ const Browse = () => {
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Condition</label>
-              <div className="flex flex-col gap-1">
-                <FilterChip active={!condition} onClick={() => setCondition("")}>All</FilterChip>
-                {conditions.map((c) => (
-                  <FilterChip key={c} active={condition === c} onClick={() => setCondition(c)}>{c}</FilterChip>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
+            {showPhysicalFilters && (
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                  <input
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="City or country"
-                    className="w-full h-9 pl-8 pr-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Condition</label>
+                <div className="flex flex-col gap-1">
+                  <FilterChip active={!condition} onClick={() => setCondition("")}>All</FilterChip>
+                  {conditions.map((c) => (
+                    <FilterChip key={c} active={condition === c} onClick={() => setCondition(c)}>{c}</FilterChip>
+                  ))}
                 </div>
               </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-3">
+              {showPhysicalFilters && (
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Location</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                    <input
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="City or country"
+                      className="w-full h-9 pl-8 pr-3 rounded-lg bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Min price (USDC)</label>
                 <input

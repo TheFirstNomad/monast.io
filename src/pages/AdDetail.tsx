@@ -37,7 +37,7 @@ const AdDetail = () => {
   useSeo({
     title: ad ? `${ad.title} - ${Number(ad.price_usdc).toLocaleString()} USDC | Monast` : "Listing | Monast",
     description: ad
-      ? `${ad.title} in ${ad.category} - ${ad.condition}, ${ad.location}. Pay ${Number(ad.price_usdc).toLocaleString()} USDC into onchain escrow, released only when you confirm delivery.`
+      ? `${ad.title} in ${ad.category}${[ad.condition, ad.location].filter(Boolean).length ? ` - ${[ad.condition, ad.location].filter(Boolean).join(", ")}` : ""}. Pay ${Number(ad.price_usdc).toLocaleString()} USDC into onchain escrow, released only when you confirm delivery.`
       : "View this listing on Monast, the escrow marketplace settled in USDC on Arc.",
     canonicalPath: id ? `/ad/${id}` : undefined,
     image: ad?.images?.[0],
@@ -267,11 +267,13 @@ const AdDetail = () => {
               </div>
               <h1 className="font-display text-2xl text-foreground mb-4 leading-tight">{ad.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
-                  <MapPin className="w-3 h-3" />
-                  {ad.location}
-                </span>
-                <span className="bg-secondary px-2 py-1 rounded">{ad.condition}</span>
+                {ad.location && (
+                  <span className="flex items-center gap-1 bg-secondary px-2 py-1 rounded">
+                    <MapPin className="w-3 h-3" />
+                    {ad.location}
+                  </span>
+                )}
+                {ad.condition && <span className="bg-secondary px-2 py-1 rounded">{ad.condition}</span>}
                 <span className="bg-secondary px-2 py-1 rounded">{ad.category}</span>
                 {user && user.id !== ad.seller_id && (
                   <ReportDialog targetType="ad" targetId={ad.id} className="ml-auto" />

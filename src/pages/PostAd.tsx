@@ -4,7 +4,7 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { categories, conditions } from "@/lib/types";
+import { categories, conditions, isPhysicalCategory } from "@/lib/types";
 import { extraFieldsFor } from "@/lib/categoryFields";
 import { Camera, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +31,9 @@ const PostAd = () => {
   // Category-specific answers (Apps, Crypto & NFTs). Saved on the ad as `attributes`.
   const [extras, setExtras] = useState<Record<string, string>>({});
   const extraFields = extraFieldsFor(form.category);
+  // Digital assets have no condition or location: those inputs only show for
+  // the physical catch-all category.
+  const physical = isPhysicalCategory(form.category);
 
 
   const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -80,8 +83,8 @@ const PostAd = () => {
           description: form.description,
           price_usdc: Number(form.price),
           category: form.category,
-          condition: form.condition,
-          location: form.location,
+          condition: physical ? form.condition : null,
+          location: physical ? form.location : null,
           images,
           attributes: Object.fromEntries(
             extraFields.map((f) => [f.key, (extras[f.key] || "").trim()]).filter(([, v]) => v),
@@ -112,7 +115,7 @@ const PostAd = () => {
       <div className="max-w-2xl mx-auto px-4 py-10 md:py-14">
         <p className="text-xs text-primary mb-2">Sell worldwide</p>
         <h1 className="font-display text-4xl text-foreground mb-2">List an item</h1>
-        <p className="text-muted-foreground mb-8">Goods, work, or digital products. Payment protected by escrow.</p>
+        <p className="text-muted-foreground mb-8">Apps, coins, NFTs, domains, websites and more. Payment protected by escrow.</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -206,25 +209,27 @@ const PostAd = () => {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Condition</label>
-            <div className="flex gap-2">
-              {conditions.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setForm({ ...form, condition: c })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    form.condition === c
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-secondary text-foreground border-border hover:border-primary/50"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
+          {physical && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Condition</label>
+              <div className="flex gap-2">
+                {conditions.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm({ ...form, condition: c })}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                      form.condition === c
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-secondary text-foreground border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Price (USDC)</label>
@@ -242,15 +247,17 @@ const PostAd = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
-            <Input
-              placeholder="e.g. New York, USA or Worldwide"
-              value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-              required
-            />
-          </div>
+          {physical && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
+              <Input
+                placeholder="e.g. New York, USA or Worldwide"
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                required
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
