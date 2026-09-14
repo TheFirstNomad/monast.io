@@ -292,25 +292,27 @@ const EditAd = () => {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Condition</label>
-            <div className="flex gap-2">
-              {conditions.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setForm({ ...form, condition: c })}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    form.condition === c
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-secondary text-foreground border-border hover:border-primary/50"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
+          {physical && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Condition</label>
+              <div className="flex gap-2">
+                {conditions.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm({ ...form, condition: c })}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                      form.condition === c
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-secondary text-foreground border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -330,14 +332,16 @@ const EditAd = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
-            <Input
-              value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-              required
-            />
-          </div>
+          {physical && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1.5">Location</label>
+              <Input
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+                required
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
