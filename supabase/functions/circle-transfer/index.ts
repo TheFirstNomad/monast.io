@@ -86,6 +86,31 @@ async function idempotencyKeyFor(seed: string): Promise<string> {
  */
 const TOKEN_SAFETY_MS = 5 * 60 * 1000;
 
+/**
+ * Wallets created through the in-app onboarding step (circle-provision-wallet)
+ * have no social refresh session, so a userToken is minted directly from the
+ * stored Circle userId. Without this path those buyers finish onboarding and
+ * then cannot pay at all.
+ */
+async function mintUserSession(admin: any, userId: string) {
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("circle_user_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!profile?.circle_user_id) {
+    throw new Error("Finish setting up your wallet before paying.");
+  }
+  const res = await circle("/users/token", {
+    method: "POST",
+    body: JSON.stringify({ userId: profile.circle_user_id }),
+  });
+  const userToken: string | undefined = res?.data?.userToken;
+  const encryptionKey: string = res?.data?.encryptionKey ?? "";
+  if (!userToken) throw new Error("Circle did not return a wallet session");
+  return { userToken, encryptionKey };
+}
+
 async function getFreshUserSession(admin: any, userId: string, forceRefresh = false) {
   const { data: session } = await admin
     .from("circle_sessions")
@@ -93,9 +118,10 @@ async function getFreshUserSession(admin: any, userId: string, forceRefresh = fa
     .eq("user_id", userId)
     .maybeSingle();
   // Circle rejects a partial refresh with a bare 403 "userToken is invalid",
-  // so never call it without all three pieces of the session.
+  // so never call it without all three pieces of the session. A user without a
+  // social session still has a Circle userId we can mint a token for.
   if (!session?.refresh_token || !session?.user_token || !session?.device_id) {
-    throw new Error("Your wallet session expired. Please sign in with Google again.");
+    return await mintUserSession(admin, userId);
   }
 
   if (!forceRefresh && session.user_token_expires_at) {
