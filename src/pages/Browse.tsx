@@ -80,7 +80,7 @@ const Browse = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
-        <div className="mb-8"><p className="text-xs text-primary mb-2">Global marketplace</p><h1 className="font-display text-4xl md:text-5xl text-foreground mb-2">The market</h1><p className="text-sm text-muted-foreground">Goods, work, and digital products from sellers worldwide.</p></div>
+        <div className="mb-8"><p className="text-xs text-primary mb-2">Global marketplace</p><h1 className="font-display text-4xl md:text-5xl text-foreground mb-2">The market</h1><p className="text-sm text-muted-foreground">Apps, coins, NFTs, domains, websites and more, transferred fast and paid in USDC escrow.</p></div>
         <div className="flex items-center gap-3 mb-5 lg:hidden">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
