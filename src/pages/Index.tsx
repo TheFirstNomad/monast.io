@@ -77,7 +77,7 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/10" />
         <div className="relative max-w-7xl mx-auto px-4 min-h-[calc(100svh-4rem)] max-h-[860px] flex flex-col justify-center py-12">
           <div className="max-w-2xl">
-            <p className="text-xs font-medium text-primary mb-5">The global desk for anything</p>
+            <p className="text-xs font-medium text-primary mb-5">The global desk for digital assets</p>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-medium text-foreground mb-5 leading-[0.98]">
               Buy and sell anything.<br />Worldwide. In USDC.
           </h1>
