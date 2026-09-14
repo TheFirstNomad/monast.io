@@ -36,7 +36,7 @@ export type Database = {
         Row: {
           attributes: Json
           category: string
-          condition: string
+          condition: string | null
           created_at: string
           description: string
           featured: boolean
@@ -47,7 +47,7 @@ export type Database = {
           listing_fee_paid_at: string | null
           listing_fee_tx_hash: string | null
           listing_fee_usdc: number
-          location: string
+          location: string | null
           price_usdc: number
           seller_id: string
           sold_at: string | null
@@ -58,7 +58,7 @@ export type Database = {
         Insert: {
           attributes?: Json
           category: string
-          condition: string
+          condition?: string | null
           created_at?: string
           description: string
           featured?: boolean
@@ -69,7 +69,7 @@ export type Database = {
           listing_fee_paid_at?: string | null
           listing_fee_tx_hash?: string | null
           listing_fee_usdc?: number
-          location: string
+          location?: string | null
           price_usdc: number
           seller_id: string
           sold_at?: string | null
@@ -80,7 +80,7 @@ export type Database = {
         Update: {
           attributes?: Json
           category?: string
-          condition?: string
+          condition?: string | null
           created_at?: string
           description?: string
           featured?: boolean
@@ -91,7 +91,7 @@ export type Database = {
           listing_fee_paid_at?: string | null
           listing_fee_tx_hash?: string | null
           listing_fee_usdc?: number
-          location?: string
+          location?: string | null
           price_usdc?: number
           seller_id?: string
           sold_at?: string | null

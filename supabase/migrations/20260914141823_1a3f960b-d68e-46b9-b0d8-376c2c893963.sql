@@ -1,0 +1,2 @@
+ALTER TABLE public.ads ALTER COLUMN condition DROP NOT NULL;
+ALTER TABLE public.ads ALTER COLUMN location DROP NOT NULL;
