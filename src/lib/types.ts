@@ -5,8 +5,10 @@ export interface DbAd {
   description: string;
   price_usdc: number;
   category: string;
-  condition: "New" | "Used" | "Refurbished";
-  location: string;
+  // Digital listings (domains, apps, tokens) have no physical condition or
+  // location, so both are optional.
+  condition?: "New" | "Used" | "Refurbished" | null;
+  location?: string | null;
   images: string[];
   // `pending_fee` = created but not yet published (listing fee unpaid),
   // `reserved` = an escrow is in flight so it cannot be bought by anyone else.
@@ -23,29 +25,44 @@ export interface DbAd {
   } | null;
 }
 
-import catVehicles from "@/assets/cat-vehicles.png";
-import catProperty from "@/assets/cat-property.png";
-import catElectronics from "@/assets/cat-electronics.png";
-import catFashion from "@/assets/cat-fashion.png";
 import catCrypto from "@/assets/cat-crypto.png";
 import catApps from "@/assets/cat-apps.png";
+import catNfts from "@/assets/cat-nfts.png";
+import catDomains from "@/assets/cat-domains.png";
+import catWebsites from "@/assets/cat-websites.png";
+import catSocial from "@/assets/cat-social.png";
+import catDigitalProducts from "@/assets/cat-digital-products.png";
 import catServices from "@/assets/cat-services.png";
-import catJobs from "@/assets/cat-jobs.png";
-import catAgriculture from "@/assets/cat-agriculture.png";
 import catOthers from "@/assets/cat-others.png";
 
-export const categories = [
-  { name: "Vehicles", icon: "🚗", image: catVehicles },
-  { name: "Property", icon: "🏠", image: catProperty },
-  { name: "Electronics & Phones", icon: "💻📱", image: catElectronics },
-  { name: "Fashion", icon: "👗", image: catFashion },
-  { name: "Crypto & NFTs", icon: "🪙", image: catCrypto },
-  { name: "Apps", icon: "📲", image: catApps },
-  { name: "Services", icon: "🔧", image: catServices },
-  { name: "Jobs", icon: "💼", image: catJobs },
-  { name: "Agriculture", icon: "🌾", image: catAgriculture },
-  { name: "Others", icon: "📦", image: catOthers },
+export interface Category {
+  name: string;
+  icon: string;
+  image: string;
+  /** Digital assets transfer online: no condition or location is collected. */
+  digital: boolean;
+}
+
+export const categories: Category[] = [
+  { name: "Apps", icon: "📲", image: catApps, digital: true },
+  { name: "Crypto & Coins", icon: "🪙", image: catCrypto, digital: true },
+  { name: "NFTs", icon: "🖼️", image: catNfts, digital: true },
+  { name: "Domains", icon: "🌐", image: catDomains, digital: true },
+  { name: "Websites", icon: "🖥️", image: catWebsites, digital: true },
+  { name: "Social & Media Accounts", icon: "📣", image: catSocial, digital: true },
+  { name: "Digital Products", icon: "📁", image: catDigitalProducts, digital: true },
+  { name: "Services", icon: "🔧", image: catServices, digital: true },
+  { name: "Others", icon: "📦", image: catOthers, digital: false },
 ];
+
+export const DIGITAL_CATEGORIES = categories.filter((c) => c.digital).map((c) => c.name);
+
+/** True when a category needs condition + location fields (physical goods). */
+export function isPhysicalCategory(name: string): boolean {
+  const hit = categories.find((c) => c.name === name);
+  // Unknown/legacy category names came from the old physical set.
+  return hit ? !hit.digital : true;
+}
 
 /**
  * Legacy category names that were merged or removed. Listings created before the
@@ -53,8 +70,20 @@ export const categories = [
  * name to include its legacy aliases and nothing becomes unreachable.
  */
 export const CATEGORY_ALIASES: Record<string, string[]> = {
-  "Electronics & Phones": ["Electronics & Phones", "Electronics", "Phones & Tablets"],
-  Others: ["Others", "Home & Garden"],
+  "Crypto & Coins": ["Crypto & Coins", "Crypto & NFTs"],
+  NFTs: ["NFTs", "Crypto & NFTs"],
+  Others: [
+    "Others",
+    "Home & Garden",
+    "Vehicles",
+    "Property",
+    "Electronics & Phones",
+    "Electronics",
+    "Phones & Tablets",
+    "Fashion",
+    "Jobs",
+    "Agriculture",
+  ],
 };
 
 export function categoryQueryValues(name: string): string[] {
