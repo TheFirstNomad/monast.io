@@ -79,10 +79,22 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
         encryptionKey: challenge.encryptionKey,
         challengeId: challenge.challengeId,
       });
+      // Circle creates the wallet asynchronously, so poll the provisioning
+      // endpoint until it reports the wallet as ready. That call is what stores
+      // the address and wallet id the payment flow needs.
+      let ready = false;
+      for (let attempt = 0; attempt < 8 && !ready; attempt += 1) {
+        const { data } = await supabase.functions.invoke("circle-provision-wallet");
+        if (data?.status === "ready") { ready = true; break; }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      if (!ready) {
+        throw new Error(
+          "Your wallet is still being created. Reopen this in a moment and it will finish automatically.",
+        );
+      }
       setPhase("done");
       toast({ title: "Wallet ready", description: "Your Arc wallet is live." });
-      // Refresh backend state so profiles.circle_wallet_address gets populated.
-      await supabase.functions.invoke("circle-provision-wallet").catch(() => {});
       onComplete?.();
     } catch (e) {
       setError((e as Error).message);
