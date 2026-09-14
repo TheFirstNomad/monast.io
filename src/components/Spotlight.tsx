@@ -58,8 +58,12 @@ export const Spotlight = () => {
                   </div>
                   <h3 className="text-sm font-semibold text-foreground line-clamp-1 mb-1">{ad.title}</h3>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="w-3 h-3" />
-                    <span className="truncate">{ad.location}</span>
+                    {ad.location && (
+                      <>
+                        <MapPin className="w-3 h-3" />
+                        <span className="truncate">{ad.location}</span>
+                      </>
+                    )}
                     <span className="ml-auto shrink-0">{ad.category}</span>
                   </div>
                 </div>

@@ -4,7 +4,7 @@ import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { categories, conditions } from "@/lib/types";
+import { categories, conditions, isPhysicalCategory } from "@/lib/types";
 import { extraFieldsFor } from "@/lib/categoryFields";
 import { Camera, X, Save, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +38,8 @@ const EditAd = () => {
   });
   const [extras, setExtras] = useState<Record<string, string>>({});
   const extraFields = extraFieldsFor(form.category);
+  // Digital categories carry no condition or location.
+  const physical = isPhysicalCategory(form.category);
   const locked = !!lockedEscrowId;
 
   useEffect(() => {
@@ -56,8 +58,8 @@ const EditAd = () => {
         description: ad.description,
         price: String(ad.price_usdc),
         category: ad.category,
-        condition: ad.condition,
-        location: ad.location,
+        condition: ad.condition ?? "Used",
+        location: ad.location ?? "",
       });
       setImages(ad.images || []);
       setExtras(((ad as any).attributes as Record<string, string>) || {});

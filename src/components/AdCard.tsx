@@ -34,11 +34,21 @@ export const AdCard = ({ ad }: { ad: DbAd }) => {
           </div>
           <h3 className="text-sm font-medium text-foreground line-clamp-2 min-h-10 mb-3 leading-snug">{ad.title}</h3>
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground min-w-0">
-            <span className="flex items-center gap-1 truncate">
-              <MapPin className="w-3 h-3" />
-              {ad.location}
-            </span>
-            <span aria-hidden="true">·</span><span>{ad.condition}</span><span aria-hidden="true">·</span><span className="truncate">{ad.category}</span>
+            {ad.location && (
+              <>
+                <span className="flex items-center gap-1 truncate">
+                  <MapPin className="w-3 h-3" />
+                  {ad.location}
+                </span>
+                <span aria-hidden="true">·</span>
+              </>
+            )}
+            {ad.condition && (
+              <>
+                <span>{ad.condition}</span><span aria-hidden="true">·</span>
+              </>
+            )}
+            <span className="truncate">{ad.category}</span>
           </div>
         </div>
       </article>
