@@ -10,6 +10,7 @@ import PostAd from "./pages/PostAd";
 import EditAd from "./pages/EditAd";
 import AdDetail from "./pages/AdDetail";
 import Browse from "./pages/Browse";
+import CategoryPage from "./pages/CategoryPage";
 
 
 import Dashboard from "./pages/Dashboard";

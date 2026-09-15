@@ -25,15 +25,15 @@ export interface DbAd {
   } | null;
 }
 
-import catCrypto from "@/assets/cat-crypto.png";
-import catApps from "@/assets/cat-apps.png";
-import catNfts from "@/assets/cat-nfts.png";
-import catDomains from "@/assets/cat-domains.png";
-import catWebsites from "@/assets/cat-websites.png";
-import catSocial from "@/assets/cat-social.png";
-import catDigitalProducts from "@/assets/cat-digital-products.png";
-import catServices from "@/assets/cat-services.png";
-import catOthers from "@/assets/cat-others.png";
+import catCrypto from "@/assets/cat-crypto.jpg";
+import catApps from "@/assets/cat-apps.jpg";
+import catNfts from "@/assets/cat-nfts.jpg";
+import catDomains from "@/assets/cat-domains.jpg";
+import catWebsites from "@/assets/cat-websites.jpg";
+import catSocial from "@/assets/cat-social.jpg";
+import catDigitalProducts from "@/assets/cat-digital-products.jpg";
+import catServices from "@/assets/cat-services.jpg";
+import catOthers from "@/assets/cat-others.jpg";
 
 export interface Category {
   name: string;
