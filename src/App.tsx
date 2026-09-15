@@ -53,6 +53,10 @@ const App = () => (
               <Route path="/edit-ad/:id" element={<EditAd />} />
               <Route path="/ad/:id" element={<AdDetail />} />
               <Route path="/browse" element={<Browse />} />
+              <Route path="/apps" element={<CategoryPage />} />
+              <Route path="/crypto-coins" element={<CategoryPage />} />
+              <Route path="/nfts" element={<CategoryPage />} />
+              <Route path="/domains" element={<CategoryPage />} />
 
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/favorites" element={<Favorites />} />
