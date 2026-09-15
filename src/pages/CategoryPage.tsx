@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ const accentClasses: Record<string, string> = {
 };
 
 const CategoryPage = () => {
-  const { slug = "" } = useParams();
+  const slug = useLocation().pathname.replace(/^\/+|\/+$/g, "");
   const config = categoryPageFor(slug);
 
   const [search, setSearch] = useState("");
