@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CHAINS } from "@/lib/chains";
+import { ACTIVE_CHAIN, CHAINS } from "@/lib/chains";
 import type { WalletActivityItem } from "@/lib/wallet/api";
 
 const ARC = CHAINS["arc-testnet"];
@@ -55,7 +55,7 @@ export const ActivityList = ({
                   {out ? "Sent" : "Received"} {t.amountUsdc.toLocaleString()} USDC
                 </div>
                 <div className="text-xs text-muted-foreground truncate">
-                  {t.counterparty ? (out ? `To ${short(t.counterparty)}` : `From ${short(t.counterparty)}`) : "Arc Testnet"}
+                  {t.counterparty ? (out ? `To ${short(t.counterparty)}` : `From ${short(t.counterparty)}`) : ACTIVE_CHAIN.label}
                   {" · "}
                   {stateLabel(t.state)}
                   {t.createdAt ? ` · ${new Date(t.createdAt).toLocaleDateString()}` : ""}

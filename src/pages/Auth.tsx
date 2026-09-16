@@ -34,13 +34,23 @@ const Auth = () => {
       return;
     }
 
-
-    // Email sign-in: make sure a Circle wallet exists before moving on.
+    // Any account that already has a hosted wallet is done - never run the
+    // legacy PIN provisioner for a returning Google user.
     if (provisioned.current) return;
     provisioned.current = true;
 
     (async () => {
       try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("circle_wallet_address")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile?.circle_wallet_address) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
         const { data, error } = await supabase.functions.invoke("circle-provision-wallet");
         if (error) throw error;
         if (data?.status === "ready") {
@@ -54,6 +64,7 @@ const Auth = () => {
       }
     })();
   }, [user, loading, navigate]);
+
 
   return (
     <Layout>

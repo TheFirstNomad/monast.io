@@ -161,6 +161,80 @@ async function getFreshUserSession(admin: any, userId: string, forceRefresh = fa
 }
 
 /**
+ * Self-heal: some accounts were provisioned before the Circle wallet id was
+ * stored (only the address was saved), which made the app wrongly believe the
+ * wallet did not exist. Read the wallet list from Circle and write the id back
+ * to `profiles` and `user_wallets`. Returns the wallet id when one exists.
+ */
+async function syncWalletRecords(admin: any, userId: string): Promise<{
+  walletId: string | null;
+  address: string | null;
+}> {
+  const walletsRes = await withUserSession(admin, userId, (s) =>
+    circle("/wallets", { method: "GET", headers: { "X-User-Token": s.userToken } })
+  ).catch(() => null);
+
+  const wallets = walletsRes?.data?.wallets ?? [];
+  if (wallets.length === 0) return { walletId: null, address: null };
+
+  for (const w of wallets) {
+    await admin.from("user_wallets").upsert(
+      {
+        user_id: userId,
+        address: String(w.address).toLowerCase(),
+        circle_wallet_id: w.id,
+        kind: "email_circle",
+        chain_id: null,
+        label: w.blockchain,
+        is_primary: false,
+      },
+      { onConflict: "user_id,address" },
+    );
+  }
+
+  await admin
+    .from("profiles")
+    .update({ circle_wallet_address: wallets[0].address, circle_wallet_id: wallets[0].id })
+    .eq("id", userId);
+
+  return { walletId: String(wallets[0].id), address: String(wallets[0].address) };
+}
+
+/**
+ * Wallet id for a paying action, healing the record when it is missing instead
+ * of dead-ending the buyer with "No Circle wallet on file".
+ */
+async function requireWalletId(admin: any, userId: string): Promise<string | null> {
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("circle_wallet_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.circle_wallet_id) return String(profile.circle_wallet_id);
+
+  const { data: linked } = await admin
+    .from("user_wallets")
+    .select("circle_wallet_id")
+    .eq("user_id", userId)
+    .eq("kind", "email_circle")
+    .not("circle_wallet_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (linked?.circle_wallet_id) {
+    await admin
+      .from("profiles")
+      .update({ circle_wallet_id: linked.circle_wallet_id })
+      .eq("id", userId);
+    return String(linked.circle_wallet_id);
+  }
+
+  const synced = await syncWalletRecords(admin, userId);
+  return synced.walletId;
+}
+
+
+
+/**
  * A cached userToken can still be rejected by Circle (rotation elsewhere, or a
  * clock skew). Retry exactly once with a forced refresh so the UI never shows a
  * spurious "session expired".
@@ -263,7 +337,7 @@ Deno.serve(async (req) => {
 
     // Read-only actions get a much higher ceiling: the client polls a transfer
     // every 1.5s, which used to exhaust the write limit mid-payment.
-    const READ_ACTIONS = ["status", "balance", "activity", "resolve", "resolveWithdraw"];
+    const READ_ACTIONS = ["status", "balance", "activity", "resolve", "resolveWithdraw", "resync"];
     const limitKey = action === "withdraw"
       ? "circle-withdraw"
       : READ_ACTIONS.includes(action)
@@ -271,6 +345,12 @@ Deno.serve(async (req) => {
         : "circle-transfer";
     const rl = await checkUserRateLimit(admin, userId, limitKey);
     if (!rl.ok) return json(rateLimitBody(rl), 429);
+
+    // ---- Repair a wallet record that lost its Circle id --------------------
+    if (action === "resync") {
+      const walletId = await requireWalletId(admin, userId);
+      return json({ status: walletId ? "ready" : "pending", walletId });
+    }
 
 
     if (action === "createChallenge" || action === "resolve") {
@@ -287,12 +367,9 @@ Deno.serve(async (req) => {
       const referenceId = String(body?.referenceId ?? "");
       if (!purpose || !referenceId) return json({ error: "Missing purpose or referenceId" }, 400);
 
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("circle_wallet_id")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!profile?.circle_wallet_id) return json({ error: "No Circle wallet on file" }, 400);
+      const walletId = await requireWalletId(admin, userId);
+      if (!walletId) return json({ error: "No Circle wallet on file" }, 400);
+
 
       let destinationAddress: string;
       let amountUsdc: number;
@@ -370,7 +447,8 @@ Deno.serve(async (req) => {
       if (action === "resolve") {
         const found = await findTransfer({
           userToken: session.userToken,
-          walletId: profile.circle_wallet_id,
+          walletId,
+
           destinationAddress,
           amountUsdc,
         });
@@ -389,7 +467,7 @@ Deno.serve(async (req) => {
         headers: { "X-User-Token": session.userToken },
         body: JSON.stringify({
           idempotencyKey: await idempotencyKeyFor(`${purpose}:${referenceId}`),
-          walletId: profile.circle_wallet_id,
+          walletId,
           destinationAddress,
           tokenId: circleUsdcTokenId(chainId),
           // Exact decimal string from integer micro-USDC - never a float.
@@ -436,20 +514,17 @@ Deno.serve(async (req) => {
       const amount = Number(body?.amountUsdc);
       if (!/^0x[0-9a-fA-F]{40}$/.test(to)) return json({ error: "Invalid destination address" }, 400);
       if (!Number.isFinite(amount) || amount <= 0) return json({ error: "Invalid amount" }, 400);
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("circle_wallet_id")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!profile?.circle_wallet_id) return json({ error: "No Circle wallet on file" }, 400);
+      const walletId = await requireWalletId(admin, userId);
+      if (!walletId) return json({ error: "No Circle wallet on file" }, 400);
       const found = await withUserSession(admin, userId, (s) =>
         findTransfer({
           userToken: s.userToken,
-          walletId: profile.circle_wallet_id as string,
+          walletId,
           destinationAddress: to,
           amountUsdc: amount,
         }),
       );
+
       return json({
         transactionId: found?.id ?? null,
         status: found?.state ?? null,
@@ -461,18 +536,19 @@ Deno.serve(async (req) => {
 
     // ---- Wallet home: balance, activity, withdraw -------------------------
     if (action === "balance" || action === "activity" || action === "withdraw") {
+      const walletId = await requireWalletId(admin, userId);
+      if (!walletId) return json({ error: "No Circle wallet on file" }, 400);
       const { data: profile } = await admin
         .from("profiles")
-        .select("circle_wallet_id, circle_wallet_address")
+        .select("circle_wallet_address")
         .eq("id", userId)
         .maybeSingle();
-      if (!profile?.circle_wallet_id) return json({ error: "No Circle wallet on file" }, 400);
-      const walletId = profile.circle_wallet_id as string;
-      const myAddress = String(profile.circle_wallet_address ?? "").toLowerCase();
+      const myAddress = String(profile?.circle_wallet_address ?? "").toLowerCase();
+
 
       if (action === "balance") {
         const amount = await withUserSession(admin, userId, (s) => usdcBalance(s.userToken, walletId));
-        return json({ balanceUsdc: amount, address: profile.circle_wallet_address, chainId: ARC_CHAIN_ID });
+        return json({ balanceUsdc: amount, address: profile?.circle_wallet_address ?? null, chainId: ARC_CHAIN_ID });
       }
 
       if (action === "activity") {

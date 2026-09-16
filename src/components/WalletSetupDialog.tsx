@@ -7,6 +7,8 @@ import { Loader2, ShieldCheck, Wallet, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { runCircleChallenge } from "@/lib/circle/client";
 import { toast } from "@/hooks/use-toast";
+import { getFunctionErrorMessage } from "@/lib/functionErrors";
+
 
 interface Props {
   open: boolean;
@@ -40,10 +42,22 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
       setPhase("provisioning");
       setError(null);
       try {
-        const { data, error: fnErr } = await supabase.functions.invoke(
-          "circle-provision-wallet",
-        );
-        if (fnErr) throw new Error(fnErr.message);
+        // Never hang forever on a slow Circle call: fail with a readable message.
+        const { data, error: fnErr } = (await Promise.race([
+          supabase.functions.invoke("circle-provision-wallet"),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Circle is taking longer than usual. Please try again.")),
+              25000,
+            ),
+          ),
+        ])) as { data: Record<string, string> | null; error: unknown };
+
+        if (fnErr) {
+          throw new Error(
+            await getFunctionErrorMessage(fnErr, "We could not prepare your wallet just now."),
+          );
+        }
         if (!data || data.error) throw new Error(data?.error ?? "Provisioning failed");
         if (cancelled) return;
 
@@ -68,6 +82,7 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
 
     return () => { cancelled = true; };
   }, [open, phase, onComplete]);
+
 
   const startPinSetup = async () => {
     if (!challenge?.challengeId) return;

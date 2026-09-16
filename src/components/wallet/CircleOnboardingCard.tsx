@@ -8,18 +8,24 @@ interface Props {
   /** Optional extra line explaining why the wallet is needed right now. */
   reason?: string;
   className?: string;
+  /** Show a confirmation card when the wallet is already usable. */
+  showWhenReady?: boolean;
 }
 
 /**
- * Onboarding step shown to signed-in buyers who signed in with Google or email
- * and do not have a Circle wallet yet. Purely presentational around the
- * existing `WalletSetupDialog` provisioning flow.
+ * Onboarding step for signed-in buyers who have no Circle wallet at all.
+ * Google sign-in creates the wallet automatically, so anyone with a wallet
+ * address sees nothing here - never the legacy PIN setup dialog.
  */
-export const CircleOnboardingCard = ({ reason, className = "" }: Props) => {
-  const { checking, needsSetup, address, selfCustody, refresh } = useCircleWallet();
+export const CircleOnboardingCard = ({ reason, className = "", showWhenReady = false }: Props) => {
+  const { checking, needsSetup, address, selfCustody } = useCircleWallet();
   const [open, setOpen] = useState(false);
 
+  // Nothing to show for self-custody users or wallets that already exist.
+  if (selfCustody) return null;
+
   if (checking) {
+    if (!showWhenReady) return null;
     return (
       <div className={`bg-card border border-border rounded-xl p-5 flex items-center gap-2 text-sm text-muted-foreground ${className}`}>
         <Loader2 className="w-4 h-4 animate-spin" /> Checking your wallet...
@@ -27,8 +33,8 @@ export const CircleOnboardingCard = ({ reason, className = "" }: Props) => {
     );
   }
 
-  if (selfCustody || !needsSetup) {
-    if (!address) return null;
+  if (!needsSetup) {
+    if (!showWhenReady || !address) return null;
     return (
       <div className={`bg-card border border-border rounded-xl p-5 ${className}`}>
         <div className="flex items-center gap-3">
@@ -70,14 +76,7 @@ export const CircleOnboardingCard = ({ reason, className = "" }: Props) => {
         </Button>
       </div>
 
-      <WalletSetupDialog
-        open={open}
-        onOpenChange={setOpen}
-        onComplete={() => {
-          setOpen(false);
-          void refresh();
-        }}
-      />
+      <WalletSetupDialog open={open} onOpenChange={setOpen} onComplete={() => setOpen(false)} />
     </>
   );
 };
