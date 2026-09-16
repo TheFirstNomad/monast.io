@@ -337,7 +337,7 @@ Deno.serve(async (req) => {
 
     // Read-only actions get a much higher ceiling: the client polls a transfer
     // every 1.5s, which used to exhaust the write limit mid-payment.
-    const READ_ACTIONS = ["status", "balance", "activity", "resolve", "resolveWithdraw"];
+    const READ_ACTIONS = ["status", "balance", "activity", "resolve", "resolveWithdraw", "resync"];
     const limitKey = action === "withdraw"
       ? "circle-withdraw"
       : READ_ACTIONS.includes(action)
