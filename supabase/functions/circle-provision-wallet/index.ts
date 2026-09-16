@@ -112,6 +112,9 @@ Deno.serve(async (req) => {
             {
               user_id: user.id,
               address: (w.address as string).toLowerCase(),
+              // Store the Circle wallet id here too: without it a later repair
+              // pass has no local source and the buyer looks wallet-less.
+              circle_wallet_id: w.id ?? null,
               kind: "email_circle",
               chain_id: null,
               label: w.blockchain,
@@ -120,6 +123,7 @@ Deno.serve(async (req) => {
             { onConflict: "user_id,address" },
           );
       }
+
       // Also store the primary address AND Circle wallet id on profiles. The id
       // is what circle-transfer needs to move USDC, so without it escrow
       // funding fails with "No Circle wallet on file" right after onboarding.
