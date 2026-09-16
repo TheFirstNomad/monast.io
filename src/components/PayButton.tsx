@@ -5,6 +5,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/lib/usdc";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { toast } from "sonner";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 
@@ -43,7 +44,7 @@ export const PayButton = ({ adId, sellerId, amount }: Props) => {
         try {
           await switchChainAsync({ chainId: ARC_CHAIN_ID });
         } catch {
-          toast.error("Please switch your wallet to Arc Testnet");
+          toast.error(`Please switch your wallet to ${ACTIVE_CHAIN.label}`);
           return;
         }
       }

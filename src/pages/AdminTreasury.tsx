@@ -7,6 +7,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { getAdminAuthHeaders } from "@/lib/adminAuth";
 import { useSeo } from "@/hooks/useSeo";
 import { ARC_CHAIN_ID } from "@/lib/usdc";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { toast } from "sonner";
 import { useSignMessage } from "wagmi";
 import { AlertTriangle, Banknote, Loader2, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
@@ -198,7 +199,7 @@ const AdminTreasury = () => {
           <div className="rounded-xl border border-border bg-card p-5 space-y-3">
             <h2 className="font-semibold">Treasury not set up yet</h2>
             <p className="text-sm text-muted-foreground">
-              Create the escrow and revenue wallets on Arc Testnet. Until this is done, payments and
+              Create the escrow and revenue wallets on {ACTIVE_CHAIN.label}. Until this is done, payments and
               escrow funding stay disabled; no funds can be sent anywhere unsafe.
             </p>
             <div className="flex flex-wrap gap-2">
