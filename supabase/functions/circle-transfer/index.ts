@@ -346,6 +346,12 @@ Deno.serve(async (req) => {
     const rl = await checkUserRateLimit(admin, userId, limitKey);
     if (!rl.ok) return json(rateLimitBody(rl), 429);
 
+    // ---- Repair a wallet record that lost its Circle id --------------------
+    if (action === "resync") {
+      const walletId = await requireWalletId(admin, userId);
+      return json({ status: walletId ? "ready" : "pending", walletId });
+    }
+
 
     if (action === "createChallenge" || action === "resolve") {
       if (!CIRCLE_USDC_TOKEN_ID) {
@@ -361,12 +367,9 @@ Deno.serve(async (req) => {
       const referenceId = String(body?.referenceId ?? "");
       if (!purpose || !referenceId) return json({ error: "Missing purpose or referenceId" }, 400);
 
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("circle_wallet_id")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!profile?.circle_wallet_id) return json({ error: "No Circle wallet on file" }, 400);
+      const walletId = await requireWalletId(admin, userId);
+      if (!walletId) return json({ error: "No Circle wallet on file" }, 400);
+
 
       let destinationAddress: string;
       let amountUsdc: number;
@@ -444,7 +447,8 @@ Deno.serve(async (req) => {
       if (action === "resolve") {
         const found = await findTransfer({
           userToken: session.userToken,
-          walletId: profile.circle_wallet_id,
+          walletId,
+
           destinationAddress,
           amountUsdc,
         });
@@ -510,20 +514,17 @@ Deno.serve(async (req) => {
       const amount = Number(body?.amountUsdc);
       if (!/^0x[0-9a-fA-F]{40}$/.test(to)) return json({ error: "Invalid destination address" }, 400);
       if (!Number.isFinite(amount) || amount <= 0) return json({ error: "Invalid amount" }, 400);
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("circle_wallet_id")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!profile?.circle_wallet_id) return json({ error: "No Circle wallet on file" }, 400);
+      const walletId = await requireWalletId(admin, userId);
+      if (!walletId) return json({ error: "No Circle wallet on file" }, 400);
       const found = await withUserSession(admin, userId, (s) =>
         findTransfer({
           userToken: s.userToken,
-          walletId: profile.circle_wallet_id as string,
+          walletId,
           destinationAddress: to,
           amountUsdc: amount,
         }),
       );
+
       return json({
         transactionId: found?.id ?? null,
         status: found?.state ?? null,
@@ -535,14 +536,15 @@ Deno.serve(async (req) => {
 
     // ---- Wallet home: balance, activity, withdraw -------------------------
     if (action === "balance" || action === "activity" || action === "withdraw") {
+      const walletId = await requireWalletId(admin, userId);
+      if (!walletId) return json({ error: "No Circle wallet on file" }, 400);
       const { data: profile } = await admin
         .from("profiles")
-        .select("circle_wallet_id, circle_wallet_address")
+        .select("circle_wallet_address")
         .eq("id", userId)
         .maybeSingle();
-      if (!profile?.circle_wallet_id) return json({ error: "No Circle wallet on file" }, 400);
-      const walletId = profile.circle_wallet_id as string;
-      const myAddress = String(profile.circle_wallet_address ?? "").toLowerCase();
+      const myAddress = String(profile?.circle_wallet_address ?? "").toLowerCase();
+
 
       if (action === "balance") {
         const amount = await withUserSession(admin, userId, (s) => usdcBalance(s.userToken, walletId));
