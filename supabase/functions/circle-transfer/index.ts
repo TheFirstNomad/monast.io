@@ -467,7 +467,7 @@ Deno.serve(async (req) => {
         headers: { "X-User-Token": session.userToken },
         body: JSON.stringify({
           idempotencyKey: await idempotencyKeyFor(`${purpose}:${referenceId}`),
-          walletId: profile.circle_wallet_id,
+          walletId,
           destinationAddress,
           tokenId: circleUsdcTokenId(chainId),
           // Exact decimal string from integer micro-USDC - never a float.
@@ -548,7 +548,7 @@ Deno.serve(async (req) => {
 
       if (action === "balance") {
         const amount = await withUserSession(admin, userId, (s) => usdcBalance(s.userToken, walletId));
-        return json({ balanceUsdc: amount, address: profile.circle_wallet_address, chainId: ARC_CHAIN_ID });
+        return json({ balanceUsdc: amount, address: profile?.circle_wallet_address ?? null, chainId: ARC_CHAIN_ID });
       }
 
       if (action === "activity") {
