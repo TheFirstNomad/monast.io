@@ -7,6 +7,8 @@ import { Loader2, ShieldCheck, Wallet, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { runCircleChallenge } from "@/lib/circle/client";
 import { toast } from "@/hooks/use-toast";
+import { getFunctionErrorMessage } from "@/lib/functionErrors";
+
 
 interface Props {
   open: boolean;
@@ -49,7 +51,8 @@ export const WalletSetupDialog = ({ open, onOpenChange, onComplete }: Props) => 
               25000,
             ),
           ),
-        ])) as Awaited<ReturnType<typeof supabase.functions.invoke>>;
+        ])) as { data: Record<string, string> | null; error: unknown };
+
         if (fnErr) {
           throw new Error(
             await getFunctionErrorMessage(fnErr, "We could not prepare your wallet just now."),
