@@ -161,6 +161,80 @@ async function getFreshUserSession(admin: any, userId: string, forceRefresh = fa
 }
 
 /**
+ * Self-heal: some accounts were provisioned before the Circle wallet id was
+ * stored (only the address was saved), which made the app wrongly believe the
+ * wallet did not exist. Read the wallet list from Circle and write the id back
+ * to `profiles` and `user_wallets`. Returns the wallet id when one exists.
+ */
+async function syncWalletRecords(admin: any, userId: string): Promise<{
+  walletId: string | null;
+  address: string | null;
+}> {
+  const walletsRes = await withUserSession(admin, userId, (s) =>
+    circle("/wallets", { method: "GET", headers: { "X-User-Token": s.userToken } })
+  ).catch(() => null);
+
+  const wallets = walletsRes?.data?.wallets ?? [];
+  if (wallets.length === 0) return { walletId: null, address: null };
+
+  for (const w of wallets) {
+    await admin.from("user_wallets").upsert(
+      {
+        user_id: userId,
+        address: String(w.address).toLowerCase(),
+        circle_wallet_id: w.id,
+        kind: "email_circle",
+        chain_id: null,
+        label: w.blockchain,
+        is_primary: false,
+      },
+      { onConflict: "user_id,address" },
+    );
+  }
+
+  await admin
+    .from("profiles")
+    .update({ circle_wallet_address: wallets[0].address, circle_wallet_id: wallets[0].id })
+    .eq("id", userId);
+
+  return { walletId: String(wallets[0].id), address: String(wallets[0].address) };
+}
+
+/**
+ * Wallet id for a paying action, healing the record when it is missing instead
+ * of dead-ending the buyer with "No Circle wallet on file".
+ */
+async function requireWalletId(admin: any, userId: string): Promise<string | null> {
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("circle_wallet_id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profile?.circle_wallet_id) return String(profile.circle_wallet_id);
+
+  const { data: linked } = await admin
+    .from("user_wallets")
+    .select("circle_wallet_id")
+    .eq("user_id", userId)
+    .eq("kind", "email_circle")
+    .not("circle_wallet_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (linked?.circle_wallet_id) {
+    await admin
+      .from("profiles")
+      .update({ circle_wallet_id: linked.circle_wallet_id })
+      .eq("id", userId);
+    return String(linked.circle_wallet_id);
+  }
+
+  const synced = await syncWalletRecords(admin, userId);
+  return synced.walletId;
+}
+
+
+
+/**
  * A cached userToken can still be rejected by Circle (rotation elsewhere, or a
  * clock skew). Retry exactly once with a forced refresh so the UI never shows a
  * spurious "session expired".
