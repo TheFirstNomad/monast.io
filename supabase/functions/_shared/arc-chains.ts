@@ -33,7 +33,17 @@ export function arcMainnetUsdc(): string {
 }
 
 export function arcMainnetRpc(): string {
-  return env("ARC_MAINNET_RPC_URL") || "https://rpc.arc.network";
+  return env("ARC_MAINNET_RPC_URL") || "https://rpc.mainnet.arc.io";
+}
+
+export function arcExplorer(chainId: number): string {
+  return chainId === ARC_MAINNET_CHAIN_ID
+    ? env("ARC_MAINNET_EXPLORER_URL") || "https://explorer.arc.io"
+    : ARC_TESTNET_EXPLORER;
+}
+
+export function arcExplorerTxUrl(chainId: number, txHash: string): string {
+  return `${arcExplorer(chainId)}/tx/${txHash}`;
 }
 
 /** Mainnet is only usable once BOTH the USDC contract and Circle token id exist. */
