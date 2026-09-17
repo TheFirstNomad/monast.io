@@ -1,58 +1,94 @@
 # Flip monast.io to Arc mainnet
 
-Good news: no code needs rewriting. The app was built so the network switch is
-configuration only. What follows is the exact set of values needed and the order
-to apply them in.
+No rebuild needed: the network switch was built to be configuration plus two new
+treasury wallets. Work stops for your review before mainnet becomes the default
+settlement network.
 
-## What I need from you
+## Step 1 — Live credentials, secure form only
 
-1. **Live Circle API key** — you have it. I will open the secure form so you paste
-   it directly into the encrypted store; it never appears in chat or in the code.
-2. **Live Circle entity secret** — the 64-character value you generate in the
-   Circle console and register there. If your live Circle account uses a different
-   entity secret than the sandbox one, this must be updated too.
-3. **Arc mainnet USDC contract address** — Circle must have published it for the
-   Arc public network. Without a real address the app will keep settling on
-   testnet by design, rather than sending money to an address nobody controls.
-4. **Circle token ID for USDC on Arc mainnet** — visible in your live Circle
-   wallet's balance list once the mainnet wallet holds USDC.
+I open the encrypted secret form for you to paste, never chat:
 
-If items 3 and 4 aren't available yet, we can still switch the Circle credentials
-to live and leave the network on testnet, then flip the network the moment Circle
-publishes them.
+- `CIRCLE_API_KEY` (live, starts with `LIVE_API_KEY:`)
+- `CIRCLE_ENTITY_SECRET` (the new mainnet entity secret you registered in Circle)
+- `CIRCLE_CLIENT_KEY` (live client key bound to monast.io)
 
-## Order of work
+Your existing user-controlled App ID stays as it is; no new App ID.
 
-1. Save the live Circle credentials through the secure form.
-2. Save the Arc mainnet USDC address and Circle token ID.
-3. Set the default settlement network to Arc mainnet.
-4. Create the two live treasury wallets (escrow and revenue) on Arc mainnet from
-   the admin console — mainnet payouts will not run until these exist, and they
-   are separate wallets from the testnet ones.
-5. Live smoke test with a small real amount: publish a listing (listing fee),
-   fund one escrow, release it, and confirm the funds and the explorer links.
-6. Confirm the wallet page, purchases and account screens all show the mainnet
-   network and mainnet explorer links.
+## Step 2 — Mainnet constants
 
-## Safety points before we go live
+Saved as backend configuration and build values:
 
-- Testnet and mainnet treasuries are different wallets. Existing testnet escrows
-  stay on testnet and keep working; new activity goes to mainnet.
-- The app refuses to accept payments on mainnet until a live treasury exists, so
-  there is no window where money could land nowhere.
-- Real money, real fees: the first test should be a small amount you are happy to
-  lose if something needs another pass.
+- Blockchain code `ARC`, chain id `5042`
+- RPC `https://rpc.mainnet.arc.io`
+- Explorer `https://explorer.arc.io`
+- USDC contract `0x3600000000000000000000000000000000000000`
+- Circle ERC-20 USDC token id `5677d668-490d-51d3-82c7-b2b8313df2f4`
+
+Chain id `5042002` stays as the testnet value only. The previously assumed
+`5042001` is removed everywhere so nothing can settle on it.
+
+One correction to make in code: the app currently hardcodes `5042001` as the
+mainnet chain id and `arcscan.app` as the mainnet explorer, in the chain registry,
+the wallet/App Kit helper and every explorer link. Those become `5042` and
+`https://explorer.arc.io`, read from configuration rather than hardcoded.
+
+## Step 3 — Two new mainnet treasury wallets
+
+Created with the live key and new entity secret, on blockchain `ARC` only, using
+the same account type as today's treasury wallets:
+
+- Wallet set: `monast.io mainnet treasury`
+- Wallet 1 name: `escrow wallet`
+- Wallet 2 name: `revenue wallet`
+
+No testnet wallet id is reused. The returned wallet ids and addresses are stored
+as configuration, and I give you the two addresses so you can fund them with real
+USDC.
+
+## Step 4 — Wire and gate
+
+Escrow deposits and releases use the escrow wallet; listing fees, promotions and
+platform fees use the revenue wallet. Mainnet payments stay refused until both
+wallets exist and their ids are saved — the code already fails loudly rather than
+sending funds to an unowned address.
+
+## Step 5 — Checklist for you, before default settlement flips
+
+I stop here and show you: which secrets are set, both mainnet wallet addresses,
+the chain/RPC/explorer values in effect, and confirmation that testnet is
+untouched. Only after your go-ahead does mainnet become the default network.
+
+## Step 6 — Small live smoke test
+
+With real USDC in the wallets: publish a listing (fee), fund one escrow, release
+it, and confirm each step on `explorer.arc.io`. Use a small amount for the first
+pass.
+
+## Safety
+
+- Existing testnet listings and escrows keep settling on testnet and keep working.
+- The live API key and entity secret stay backend-only; the frontend gets the
+  client key and App ID and nothing else.
+- Separate escrow and revenue wallets, so buyer funds and platform revenue never
+  mix.
 
 ## Technical detail
 
-Backend secrets to set: `CIRCLE_API_KEY` (live), `CIRCLE_ENTITY_SECRET` (live),
-`ARC_MAINNET_USDC_ADDRESS`, `CIRCLE_USDC_TOKEN_ID_ARC_MAINNET`,
-`ARC_DEFAULT_CHAIN_ID=5042001`, optionally `ARC_MAINNET_RPC_URL` and
-`CIRCLE_ARC_MAINNET_BLOCKCHAIN`.
+Backend secrets: `CIRCLE_API_KEY`, `CIRCLE_ENTITY_SECRET`, `CIRCLE_CLIENT_KEY`,
+`CIRCLE_ARC_MAINNET_BLOCKCHAIN=ARC`, `ARC_DEFAULT_CHAIN_ID=5042`,
+`ARC_MAINNET_RPC_URL`, `ARC_MAINNET_EXPLORER_URL`, `ARC_MAINNET_USDC_ADDRESS`,
+`CIRCLE_USDC_TOKEN_ID_ARC_MAINNET`, then `CIRCLE_ESCROW_WALLET_ID` and
+`CIRCLE_REVENUE_WALLET_ID` after creation.
 
-Frontend build values: `VITE_ARC_MAINNET_USDC`, optionally `VITE_ARC_MAINNET_RPC`.
+Frontend build values: `VITE_ARC_MAINNET_USDC`, `VITE_ARC_MAINNET_RPC`,
+`VITE_ARC_CHAIN_ID=5042`.
 
-`supabase/functions/_shared/arc-chains.ts` treats mainnet as live only when both a
-real USDC address and the Circle mainnet token ID are present; `src/lib/chains.ts`
-does the same check client-side. Chain id 5042001, explorer arcscan.app. After the
-secrets land I redeploy the money-path functions and re-run the test suite.
+Code touched: `src/lib/chains.ts` (mainnet id 5042, explorer explorer.arc.io,
+chain id from `VITE_ARC_CHAIN_ID`), `src/lib/arcAppKit.ts` (`PaymentChainId`,
+`chainString`, `getExplorerUrl`, `getChainLabel`), any remaining hardcoded
+`arcscan.app`/`5042001` explorer helpers, `supabase/functions/_shared/arc-chains.ts`
+(`ARC_MAINNET_CHAIN_ID = 5042`, explorer + RPC from env, mainnet-live check keeps
+requiring both a real USDC address and the Circle mainnet token id),
+`supabase/functions/treasury-provision/index.ts` (named wallet set and named
+escrow/revenue wallets, mainnet chain in the provision request). Then redeploy the
+money-path functions and re-run the test suite.
