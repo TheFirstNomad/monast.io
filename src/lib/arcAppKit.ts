@@ -7,6 +7,7 @@
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
 import { supabase } from "@/integrations/supabase/client";
+import { ARC_MAINNET_ID, ARC_TESTNET_ID, explorerTxUrl } from "@/lib/chains";
 
 /**
  * The real Circle Kit Key is a server-side secret (ARC_KIT_KEY) held only by
