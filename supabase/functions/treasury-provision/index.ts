@@ -12,6 +12,7 @@ import { statusFromError } from "../_shared/http-error.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { verifyAdmin } from "../_shared/admin-auth.ts";
 import { circleBlockchain, createWalletSet, createWallets, walletBalance } from "../_shared/circle-dev.ts";
+import { defaultArcChainId } from "../_shared/arc-chains.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,8 +24,14 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const WALLET_SET_NAME = "monast.io treasury";
-const DEFAULT_CHAINS = [5042002]; // Arc Testnet is the launch network.
+const TESTNET_WALLET_SET_NAME = "monast.io treasury";
+const MAINNET_WALLET_SET_NAME = "monast.io mainnet treasury";
+const ARC_MAINNET_CHAIN_ID = 5042;
+// Names Circle Console shows for each treasury wallet.
+const WALLET_NAME: Record<"escrow" | "revenue", string> = {
+  escrow: "escrow wallet",
+  revenue: "revenue wallet",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -72,29 +79,35 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const rawChains = Array.isArray(body.chain_ids) && body.chain_ids.length
       ? body.chain_ids
-      : DEFAULT_CHAINS;
+      : [defaultArcChainId()];
     const chainIds = [...new Set(rawChains.map((c: unknown) => Number(c)))].filter(
       (c) => Number.isInteger(c) && c > 0,
     ) as number[];
     if (!chainIds.length) return json({ error: "chain_ids must be positive integers" }, 400);
 
-    // Reuse the existing wallet set if one was already created.
-    const { data: anyWallet } = await admin
-      .from("treasury_wallets")
-      .select("circle_wallet_set_id")
-      .not("circle_wallet_set_id", "is", null)
-      .limit(1)
-      .maybeSingle();
-
-    let walletSetId = anyWallet?.circle_wallet_set_id as string | undefined;
-    if (!walletSetId) {
-      const set = await createWalletSet(WALLET_SET_NAME);
-      walletSetId = set.id;
-    }
-
     const created: unknown[] = [];
     for (const chainId of chainIds) {
+      const isMainnet = chainId === ARC_MAINNET_CHAIN_ID;
       const blockchain = circleBlockchain(chainId);
+
+      // Mainnet gets its own wallet set: a testnet wallet id must never be
+      // reused for live money.
+      const { data: peer } = await admin
+        .from("treasury_wallets")
+        .select("circle_wallet_set_id")
+        .eq("chain_id", chainId)
+        .not("circle_wallet_set_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+
+      let walletSetId = peer?.circle_wallet_set_id as string | undefined;
+      if (!walletSetId) {
+        const set = await createWalletSet(
+          isMainnet ? MAINNET_WALLET_SET_NAME : TESTNET_WALLET_SET_NAME,
+        );
+        walletSetId = set.id;
+      }
+
       for (const purpose of ["escrow", "revenue"] as const) {
         const { data: existing } = await admin
           .from("treasury_wallets")
@@ -107,7 +120,13 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const wallets = await createWallets(walletSetId!, [blockchain], 1);
+        const wallets = await createWallets(
+          walletSetId!,
+          [blockchain],
+          1,
+          "SCA",
+          [WALLET_NAME[purpose]],
+        );
         const w = wallets[0];
         if (!w?.address) throw new Error(`Circle returned no wallet for ${blockchain}`);
 
@@ -125,7 +144,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json({ wallet_set_id: walletSetId, wallets: created });
+    return json({ wallets: created });
   } catch (e) {
     console.error("treasury-provision", e);
     return json({ error: (e as Error).message }, statusFromError(e));
