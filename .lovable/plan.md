@@ -54,11 +54,13 @@ platform fees use the revenue wallet. Mainnet payments stay refused until both
 wallets exist and their ids are saved — the code already fails loudly rather than
 sending funds to an unowned address.
 
-## Step 5 — Checklist for you, before default settlement flips
+## Step 5 — Full stop, then a checklist for you
 
-I stop here and show you: which secrets are set, both mainnet wallet addresses,
-the chain/RPC/explorer values in effect, and confirmation that testnet is
-untouched. Only after your go-ahead does mainnet become the default network.
+Work stops after the secrets are saved and the two wallets exist. I show you: every
+secret and configuration value that was set, both mainnet wallet addresses, the
+chain/RPC/explorer values in effect, and confirmation that testnet is untouched.
+Default settlement does not move to mainnet, and fees/escrow/revenue are not wired
+to the new wallets, until you have funded them and told me to continue.
 
 ## Step 6 — Small live smoke test
 
