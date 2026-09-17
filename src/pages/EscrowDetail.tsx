@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
 import { splitSale, SALE_FEE_LABEL } from "@/lib/fees";
+import { explorerTxUrl } from "@/lib/chains";
 import { toast } from "sonner";
 import {
   Shield,
