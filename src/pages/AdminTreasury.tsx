@@ -7,7 +7,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { getAdminAuthHeaders } from "@/lib/adminAuth";
 import { useSeo } from "@/hooks/useSeo";
 import { ARC_CHAIN_ID } from "@/lib/usdc";
-import { ACTIVE_CHAIN } from "@/lib/chains";
+import { ACTIVE_CHAIN, ARC_MAINNET_ID } from "@/lib/chains";
 import { toast } from "sonner";
 import { useSignMessage } from "wagmi";
 import { AlertTriangle, Banknote, Loader2, RefreshCw, ShieldCheck, Wallet } from "lucide-react";
@@ -97,10 +97,10 @@ const AdminTreasury = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  const provision = async () => {
+  const provision = async (chainId: number = ARC_CHAIN_ID) => {
     setProvisioning(true);
     try {
-      await callAdmin("treasury-provision", { chain_ids: [ARC_CHAIN_ID] });
+      await callAdmin("treasury-provision", { chain_ids: [chainId] });
       toast.success("Treasury wallets created");
       await load();
     } catch (e: any) {
@@ -203,7 +203,7 @@ const AdminTreasury = () => {
               escrow funding stay disabled; no funds can be sent anywhere unsafe.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={provision} disabled={provisioning} className="gap-2">
+              <Button onClick={() => provision()} disabled={provisioning} className="gap-2">
                 {provisioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
                 Create treasury wallets
               </Button>
@@ -240,6 +240,21 @@ const AdminTreasury = () => {
             )}
           </div>
 
+        )}
+
+        {status && !status.wallets.some((w) => w.chain_id === ARC_MAINNET_ID) && (
+          <div className="rounded-xl border border-primary/40 bg-primary/5 p-5 space-y-3">
+            <h2 className="font-semibold">Arc Mainnet treasury</h2>
+            <p className="text-sm text-muted-foreground">
+              Creates two brand-new live wallets named “escrow wallet” and “revenue wallet” inside the
+              Circle wallet set “monast.io mainnet treasury”. Existing testnet wallets are untouched, and
+              live settlement stays switched off until you fund these and confirm.
+            </p>
+            <Button onClick={() => provision(ARC_MAINNET_ID)} disabled={provisioning} className="gap-2">
+              {provisioning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
+              Create Arc Mainnet treasury wallets
+            </Button>
+          </div>
         )}
 
         {status?.provisioned && (
