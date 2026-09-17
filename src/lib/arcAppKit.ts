@@ -80,7 +80,7 @@ function getAppKit(): AppKit {
 
 export async function payListingFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = ARC_TESTNET_ID,
   amount: string = "10",
 ) {
   const kit = getAppKit();
