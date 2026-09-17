@@ -10,6 +10,7 @@ import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { loadFeeSettings } from "../_shared/fees.ts";
 import { writeLedger } from "../_shared/ledger.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
+import { defaultArcChainId } from "../_shared/arc-chains.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,7 +21,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const DEFAULT_CHAIN = 5042002;
+const DEFAULT_CHAIN = defaultArcChainId();
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

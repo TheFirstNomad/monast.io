@@ -1,23 +1,24 @@
 // Arc network registry for edge functions - the single place that decides
 // whether monast.io is settling on Arc Testnet or Arc Public Mainnet.
 //
-// Arc Public Mainnet goes live on 16 September 2026. Until Circle publishes the
-// mainnet USDC contract and issues a mainnet USDC token id, mainnet stays OFF:
-// every money path keeps using Arc Testnet rather than sending funds to an
-// address nobody controls. Flipping to mainnet is configuration only - no code
-// change - by setting these secrets:
+// Arc Public Mainnet is chain 5042 (blockchain code ARC). Mainnet only becomes
+// usable once BOTH the mainnet USDC contract and the Circle mainnet USDC token
+// id are configured, so no money path can ever send funds to an address nobody
+// controls. Flipping is configuration only - no code change:
 //
 //   ARC_MAINNET_USDC_ADDRESS          0x… USDC contract on Arc mainnet
-//   CIRCLE_USDC_TOKEN_ID_ARC_MAINNET  Circle token id for USDC on ARC
-//   ARC_DEFAULT_CHAIN_ID              5042001 to make mainnet the default
+//   CIRCLE_USDC_TOKEN_ID_ARC_MAINNET  Circle ERC-20 USDC token id on ARC
+//   ARC_DEFAULT_CHAIN_ID              5042 to make mainnet the default
 //   ARC_MAINNET_RPC_URL               optional RPC override
+//   ARC_MAINNET_EXPLORER_URL          optional explorer override
 //   CIRCLE_ARC_MAINNET_BLOCKCHAIN     optional Circle blockchain id override
 
 export const ARC_TESTNET_CHAIN_ID = 5042002;
-export const ARC_MAINNET_CHAIN_ID = 5042001;
+export const ARC_MAINNET_CHAIN_ID = 5042;
 
 export const ARC_TESTNET_USDC = "0x3600000000000000000000000000000000000000";
 export const ARC_TESTNET_RPC = "https://rpc.testnet.arc.network";
+export const ARC_TESTNET_EXPLORER = "https://testnet.arcscan.app";
 
 function env(name: string): string {
   return ((globalThis as any).Deno?.env?.get(name) ?? "").trim();
@@ -32,7 +33,17 @@ export function arcMainnetUsdc(): string {
 }
 
 export function arcMainnetRpc(): string {
-  return env("ARC_MAINNET_RPC_URL") || "https://rpc.arc.network";
+  return env("ARC_MAINNET_RPC_URL") || "https://rpc.mainnet.arc.io";
+}
+
+export function arcExplorer(chainId: number): string {
+  return chainId === ARC_MAINNET_CHAIN_ID
+    ? env("ARC_MAINNET_EXPLORER_URL") || "https://explorer.arc.io"
+    : ARC_TESTNET_EXPLORER;
+}
+
+export function arcExplorerTxUrl(chainId: number, txHash: string): string {
+  return `${arcExplorer(chainId)}/tx/${txHash}`;
 }
 
 /** Mainnet is only usable once BOTH the USDC contract and Circle token id exist. */

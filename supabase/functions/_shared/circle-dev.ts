@@ -140,6 +140,8 @@ export async function createWallets(
   blockchains: string[],
   count = 1,
   accountType: "SCA" | "EOA" = "SCA",
+  /** Names shown in the Circle console, one entry per wallet. */
+  names?: string[],
 ) {
   const body = await circleFetch("/developer/wallets", {
     method: "POST",
@@ -150,6 +152,7 @@ export async function createWallets(
       blockchains,
       count,
       accountType,
+      ...(names?.length ? { metadata: names.map((name) => ({ name })) } : {}),
     }),
   });
   return body.data.wallets as Array<{ id: string; address: string; blockchain: string }>;

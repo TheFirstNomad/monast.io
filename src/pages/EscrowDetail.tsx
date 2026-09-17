@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
 import { splitSale, SALE_FEE_LABEL } from "@/lib/fees";
+import { explorerTxUrl } from "@/lib/chains";
 import { toast } from "sonner";
 import {
   Shield,
@@ -155,10 +156,10 @@ const EscrowDetail = () => {
           {escrow.released_at && <Row k="Released" v={new Date(escrow.released_at).toLocaleString()} />}
           {escrow.refunded_at && <Row k="Refunded" v={new Date(escrow.refunded_at).toLocaleString()} />}
           {escrow.deposit_tx_hash && (
-            <Row k="Deposit tx" v={<Hash value={escrow.deposit_tx_hash} />} />
+            <Row k="Deposit tx" v={<Hash value={escrow.deposit_tx_hash} chainId={escrow.chain_id} />} />
           )}
-          {escrow.release_tx_hash && <Row k="Payout tx" v={<Hash value={escrow.release_tx_hash} />} />}
-          {escrow.refund_tx_hash && <Row k="Refund tx" v={<Hash value={escrow.refund_tx_hash} />} />}
+          {escrow.release_tx_hash && <Row k="Payout tx" v={<Hash value={escrow.release_tx_hash} chainId={escrow.chain_id} />} />}
+          {escrow.refund_tx_hash && <Row k="Refund tx" v={<Hash value={escrow.refund_tx_hash} chainId={escrow.chain_id} />} />}
         </div>
 
         {payoutPending && (
@@ -344,9 +345,9 @@ const Row = ({ k, v }: { k: string; v: React.ReactNode }) => (
   </div>
 );
 
-const Hash = ({ value }: { value: string }) => (
+const Hash = ({ value, chainId }: { value: string; chainId: number }) => (
   <a
-    href={`https://testnet.arcscan.app/tx/${value}`}
+    href={explorerTxUrl(chainId, value)}
     target="_blank"
     rel="noopener noreferrer"
     className="font-mono text-xs break-all text-primary hover:underline"

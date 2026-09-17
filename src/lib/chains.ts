@@ -1,12 +1,17 @@
 /**
  * Chain registry - single source of truth for supported networks.
- * monast.io is Arc-native. Arc Public Mainnet launches 16 September 2026 and
- * stays disabled here until its USDC contract is published: set
- * VITE_ARC_MAINNET_USDC (and optionally VITE_ARC_MAINNET_RPC) to switch the
- * marketplace over. A zero address must never be selectable.
+ * monast.io is Arc-native. Arc Public Mainnet is chain 5042 with USDC at
+ * 0x3600...0000 and explorer https://explorer.arc.io. Every value can be
+ * overridden through build config (VITE_ARC_*) without touching code.
+ * A zero address must never be selectable.
  */
-const MAINNET_USDC = (import.meta.env.VITE_ARC_MAINNET_USDC ?? "") as string;
-const MAINNET_RPC = (import.meta.env.VITE_ARC_MAINNET_RPC ?? "https://rpc.arc.network") as string;
+const MAINNET_USDC = (import.meta.env.VITE_ARC_MAINNET_USDC ??
+  "0x3600000000000000000000000000000000000000") as string;
+const MAINNET_RPC = (import.meta.env.VITE_ARC_MAINNET_RPC ??
+  "https://rpc.mainnet.arc.io") as string;
+const MAINNET_EXPLORER = (import.meta.env.VITE_ARC_MAINNET_EXPLORER ??
+  "https://explorer.arc.io") as string;
+const MAINNET_CHAIN_ID = Number(import.meta.env.VITE_ARC_CHAIN_ID ?? 5042);
 const MAINNET_READY =
   /^0x[0-9a-fA-F]{40}$/.test(MAINNET_USDC) && !/^0x0+$/.test(MAINNET_USDC);
 export type ChainKey = "arc-testnet" | "arc-mainnet";
@@ -23,9 +28,12 @@ export interface ChainEntry {
   appKitChain?: string;
 }
 
+export const ARC_MAINNET_ID = MAINNET_CHAIN_ID;
+export const ARC_TESTNET_ID = 5042002;
+
 export const CHAINS: Record<ChainKey, ChainEntry> = {
   "arc-testnet": {
-    id: 5042002,
+    id: ARC_TESTNET_ID,
     key: "arc-testnet",
     label: "Arc Testnet",
     network: "arc-testnet",
@@ -36,7 +44,7 @@ export const CHAINS: Record<ChainKey, ChainEntry> = {
     appKitChain: "Arc_Testnet",
   },
   "arc-mainnet": {
-    id: 5042001,
+    id: MAINNET_CHAIN_ID,
     key: "arc-mainnet",
     label: "Arc Mainnet",
     network: "arc",
@@ -44,7 +52,7 @@ export const CHAINS: Record<ChainKey, ChainEntry> = {
     usdc: (MAINNET_READY
       ? MAINNET_USDC.toLowerCase()
       : "0x0000000000000000000000000000000000000000") as `0x${string}`,
-    explorer: "https://arcscan.app",
+    explorer: MAINNET_EXPLORER,
     enabled: MAINNET_READY,
     appKitChain: "Arc",
   },
@@ -59,3 +67,7 @@ export const ENABLED_CHAINS = Object.values(CHAINS).filter((c) => c.enabled);
 export const ARC_CHAIN_IDS = Object.values(CHAINS).map((c) => c.id);
 export const isArcChainId = (id: number) => ARC_CHAIN_IDS.includes(id);
 export const isArcMainnetLive = () => CHAINS["arc-mainnet"].enabled;
+
+/** Explorer transaction URL for any supported Arc chain. */
+export const explorerTxUrl = (chainId: number, txHash: string) =>
+  `${chainId === MAINNET_CHAIN_ID ? MAINNET_EXPLORER : CHAINS["arc-testnet"].explorer}/tx/${txHash}`;

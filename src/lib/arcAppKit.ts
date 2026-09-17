@@ -7,6 +7,7 @@
 import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
 import { supabase } from "@/integrations/supabase/client";
+import { ARC_MAINNET_ID, ARC_TESTNET_ID, explorerTxUrl } from "@/lib/chains";
 
 /**
  * The real Circle Kit Key is a server-side secret (ARC_KIT_KEY) held only by
@@ -21,25 +22,24 @@ export const ARC_KIT_KEY = "KIT_KEY:proxy:proxy";
 export const TREASURY_ADDRESS: `0x${string}` =
   "0x13FA78ab20762c8F49B58D44DBc177a2Adb94D7c";
 
-// Arc-native: Arc Testnet today, Arc Mainnet once it launches.
-export type PaymentChainId = 5042002 | 5042001;
+// Arc-native. Chain ids, RPC and explorer come from the chain registry so the
+// mainnet flip stays configuration only.
+export type PaymentChainId = number;
 
 function chainString(chainId: PaymentChainId): string {
-  return chainId === 5042001 ? "Arc" : "Arc_Testnet";
+  return chainId === ARC_MAINNET_ID ? "Arc" : "Arc_Testnet";
 }
 
 export function getChainLabel(chainId: PaymentChainId): string {
-  return chainId === 5042001 ? "Arc Mainnet" : "Arc Testnet";
+  return chainId === ARC_MAINNET_ID ? "Arc Mainnet" : "Arc Testnet";
 }
 
 export function getExplorerUrl(chainId: PaymentChainId, txHash: string): string {
-  return chainId === 5042001
-    ? `https://arcscan.app/tx/${txHash}`
-    : `https://testnet.arcscan.app/tx/${txHash}`;
+  return explorerTxUrl(chainId, txHash);
 }
 
 export function getExplorerName(chainId: PaymentChainId): string {
-  return "ArcScan";
+  return chainId === ARC_MAINNET_ID ? "Arc Explorer" : "ArcScan";
 }
 
 function extractTxHash(result: unknown): string {
@@ -80,7 +80,7 @@ function getAppKit(): AppKit {
 
 export async function payListingFee(
   adapter: Awaited<ReturnType<typeof createViemAdapterFromWallet>>,
-  chainId: PaymentChainId = 5042002,
+  chainId: PaymentChainId = ARC_TESTNET_ID,
   amount: string = "10",
 ) {
   const kit = getAppKit();

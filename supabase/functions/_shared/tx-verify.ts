@@ -39,7 +39,7 @@ function chainConf(chainId: number): ChainConf | null {
 // Tunable per network once Arc's finality profile is better understood.
 const MIN_CONFIRMATIONS: Record<number, number> = {
   5042002: 3, // Arc Testnet
-  5042001: 3, // Arc Mainnet
+  5042: 3, // Arc Mainnet
 };
 
 const DEFAULT_MIN_CONFIRMATIONS = 12;
