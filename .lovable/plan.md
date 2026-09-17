@@ -12,7 +12,9 @@ I open the encrypted secret form for you to paste, never chat:
 - `CIRCLE_ENTITY_SECRET` (the new mainnet entity secret you registered in Circle)
 - `CIRCLE_CLIENT_KEY` (live client key bound to monast.io)
 
-Your existing user-controlled App ID stays as it is; no new App ID.
+Your existing user-controlled App ID stays as it is; no new App ID. The client key
+is stored but only used where the code already expects one — Google sign-in and
+the user-controlled wallet path are not rebuilt.
 
 ## Step 2 — Mainnet constants
 
