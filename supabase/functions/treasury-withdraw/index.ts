@@ -10,6 +10,7 @@ import { treasuryTransfer, walletBalance } from "../_shared/circle-dev.ts";
 import { writeLedger } from "../_shared/ledger.ts";
 import { formatUsdc, toBaseUnits } from "../_shared/fees.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
+import { defaultArcChainId } from "../_shared/arc-chains.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,7 +36,7 @@ Deno.serve(async (req) => {
     if (!rl.ok) return json(rateLimitBody(rl), 429);
 
     const body = await req.json().catch(() => ({}));
-    const chainId = Number(body.chain_id ?? 5042002);
+    const chainId = Number(body.chain_id ?? defaultArcChainId());
     const to = String(body.destination_address ?? "").trim();
     const amount = Number(body.amount_usdc);
 

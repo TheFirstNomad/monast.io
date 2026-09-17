@@ -6,6 +6,7 @@ import { statusFromError } from "../_shared/http-error.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { getTreasury, isTreasuryMissing } from "../_shared/treasury.ts";
 import { loadFeeSettings } from "../_shared/fees.ts";
+import { defaultArcChainId } from "../_shared/arc-chains.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,7 +32,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const bodyRaw = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const purposeRaw = String(bodyRaw.purpose ?? url.searchParams.get("purpose") ?? "escrow");
-    const chainId = Number(bodyRaw.chain_id ?? url.searchParams.get("chain_id") ?? 5042002);
+    const chainId = Number(bodyRaw.chain_id ?? url.searchParams.get("chain_id") ?? defaultArcChainId());
     if (purposeRaw !== "escrow" && purposeRaw !== "revenue") {
       return json({ error: "purpose must be escrow or revenue" }, 400);
     }
