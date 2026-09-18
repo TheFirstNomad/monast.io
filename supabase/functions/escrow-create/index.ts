@@ -32,7 +32,9 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const adId = String(body.ad_id ?? "");
-    const chainId = Number(body.chain_id ?? ARC_CHAIN_ID);
+    // The settlement network is a server decision. A client-supplied chain id is
+    // ignored so nobody can open a test-network escrow against live activity.
+    const chainId = ARC_CHAIN_ID;
     if (!adId) return json({ error: "ad_id required" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
