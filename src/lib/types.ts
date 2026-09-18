@@ -1,3 +1,10 @@
+/**
+ * Columns a listing card needs. Lists ask for exactly these instead of every
+ * column, so long descriptions never travel to the browser for a grid view.
+ */
+export const AD_CARD_COLUMNS =
+  "id,seller_id,title,price_usdc,category,condition,location,images,status,featured,featured_until,created_at";
+
 export interface DbAd {
   id: string;
   seller_id: string;
