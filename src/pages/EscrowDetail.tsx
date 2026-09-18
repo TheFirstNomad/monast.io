@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
 import { splitSale, SALE_FEE_LABEL } from "@/lib/fees";
-import { explorerTxUrl } from "@/lib/chains";
+import { chainLabel, explorerTxUrl } from "@/lib/chains";
 import { toast } from "sonner";
 import {
   Shield,
@@ -148,6 +148,7 @@ const EscrowDetail = () => {
             v={<span className="price-nums font-medium text-foreground">{net.toLocaleString()} USDC</span>}
           />
           <Row k="Role" v={isBuyer ? "You are the buyer" : isSeller ? "You are the seller" : "Observer"} />
+          <Row k="Network" v={chainLabel(escrow.chain_id)} />
           <Row k="Created" v={new Date(escrow.created_at).toLocaleString()} />
           {escrow.funded_at && <Row k="Funded" v={new Date(escrow.funded_at).toLocaleString()} />}
           {escrow.delivery_marked_at && (
