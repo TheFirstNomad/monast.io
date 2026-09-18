@@ -68,6 +68,10 @@ export const ARC_CHAIN_IDS = Object.values(CHAINS).map((c) => c.id);
 export const isArcChainId = (id: number) => ARC_CHAIN_IDS.includes(id);
 export const isArcMainnetLive = () => CHAINS["arc-mainnet"].enabled;
 
+/** Human label for a chain id, so records always show their own network. */
+export const chainLabel = (chainId: number) =>
+  chainId === MAINNET_CHAIN_ID ? CHAINS["arc-mainnet"].label : CHAINS["arc-testnet"].label;
+
 /** Explorer transaction URL for any supported Arc chain. */
 export const explorerTxUrl = (chainId: number, txHash: string) =>
   `${chainId === MAINNET_CHAIN_ID ? MAINNET_EXPLORER : CHAINS["arc-testnet"].explorer}/tx/${txHash}`;
