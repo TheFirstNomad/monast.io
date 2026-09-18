@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { DbAd } from "@/lib/types";
+import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 import { Check, MapPin } from "lucide-react";
 
 export const Spotlight = () => {
@@ -10,13 +10,13 @@ export const Spotlight = () => {
   useEffect(() => {
     supabase
       .from("ads")
-      .select("*")
+      .select(AD_CARD_COLUMNS)
       .eq("status", "active")
       .eq("featured", true)
       .or(`featured_until.is.null,featured_until.gt.${new Date().toISOString()}`)
       .order("created_at", { ascending: false })
       .limit(8)
-      .then(({ data }) => setAds((data as DbAd[]) || []));
+      .then(({ data }) => setAds((data as unknown as DbAd[]) || []));
   }, []);
 
   if (ads.length === 0) return null;

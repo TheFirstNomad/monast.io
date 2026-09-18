@@ -4,7 +4,7 @@ import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { AdCard } from "@/components/AdCard";
 import { ReportDialog } from "@/components/ReportDialog";
-import { DbAd } from "@/lib/types";
+import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 import { Star } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
 
@@ -58,7 +58,7 @@ const SellerProfile = () => {
           .select("id, display_name, avatar_url, bio, rating, total_ads, created_at")
           .eq("id", id)
           .maybeSingle(),
-        supabase.from("ads").select("*").eq("seller_id", id).eq("status", "active").order("created_at", { ascending: false }),
+        supabase.from("ads").select(AD_CARD_COLUMNS).eq("seller_id", id).eq("status", "active").order("created_at", { ascending: false }),
         supabase
           .from("reviews")
           .select("*, buyer:profiles!reviews_buyer_id_fkey(display_name)")
@@ -67,7 +67,7 @@ const SellerProfile = () => {
           .limit(10),
       ]);
       setProfile(p as Profile);
-      setAds((a as DbAd[]) || []);
+      setAds((a as unknown as DbAd[]) || []);
       setReviews((r as unknown as Review[]) || []);
       setLoading(false);
     })();

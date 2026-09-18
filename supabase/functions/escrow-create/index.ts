@@ -32,7 +32,9 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const adId = String(body.ad_id ?? "");
-    const chainId = Number(body.chain_id ?? ARC_CHAIN_ID);
+    // The settlement network is a server decision. A client-supplied chain id is
+    // ignored so nobody can open a test-network escrow against live activity.
+    const chainId = ARC_CHAIN_ID;
     if (!adId) return json({ error: "ad_id required" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
@@ -43,12 +45,37 @@ Deno.serve(async (req) => {
 
     const { data: ad, error: adErr } = await admin
       .from("ads")
-      .select("id, seller_id, price_usdc, status")
+      .select("id, seller_id, price_usdc, status, listing_fee_chain_id")
       .eq("id", adId)
       .maybeSingle();
     if (adErr || !ad) return json({ error: "Ad not found" }, 404);
     if (ad.seller_id === buyerId) return json({ error: "Cannot buy your own ad" }, 400);
     if (ad.status !== "active") return json({ error: "Ad is not active" }, 400);
+
+    // A listing belongs to the network it was published on. Mixing networks
+    // would mean real funds settling against test activity, so refuse.
+    const adChain = ad.listing_fee_chain_id ? Number(ad.listing_fee_chain_id) : null;
+    if (adChain && adChain !== chainId) {
+      return json(
+        {
+          error:
+            "This listing was published on a different network and cannot be bought here. The seller needs to relist it.",
+        },
+        409,
+      );
+    }
+
+    // No escrow without a treasury wallet on this network to hold the funds.
+    const { data: treasury } = await admin
+      .from("treasury_wallets")
+      .select("id")
+      .eq("chain_id", chainId)
+      .eq("purpose", "escrow")
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!treasury) {
+      return json({ error: "Escrow is not available on this network yet." }, 503);
+    }
 
     // Amount = accepted offer if any, else ad price.
     const { data: acceptedOffer } = await admin

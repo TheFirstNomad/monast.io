@@ -6,7 +6,7 @@ import { CategoryGrid } from "@/components/CategoryGrid";
 import { AdCard } from "@/components/AdCard";
 import { Spotlight } from "@/components/Spotlight";
 import { supabase } from "@/integrations/supabase/client";
-import { DbAd } from "@/lib/types";
+import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 import { ArrowRight, Plus } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
@@ -25,11 +25,11 @@ const Index = () => {
   useEffect(() => {
     supabase
       .from("ads")
-      .select("*")
+      .select(AD_CARD_COLUMNS)
       .eq("status", "active")
       .order("created_at", { ascending: false })
-      .limit(12)
-      .then(({ data }) => setAds((data as DbAd[]) || []));
+      .limit(8)
+      .then(({ data }) => setAds((data as unknown as DbAd[]) || []));
   }, []);
 
   const recentAds = ads.slice(0, 8);

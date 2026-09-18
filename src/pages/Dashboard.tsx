@@ -9,7 +9,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { useWallet } from "@/hooks/useWallet";
 import { isOwnerWallet } from "@/lib/owner";
-import { DbAd } from "@/lib/types";
+import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 import { OffersInbox } from "@/components/OffersInbox";
 import { EscrowsList } from "@/components/EscrowsList";
 
@@ -27,10 +27,10 @@ const Dashboard = () => {
     if (!user) return;
     supabase
       .from("ads")
-      .select("*")
+      .select(AD_CARD_COLUMNS)
       .eq("seller_id", user.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => setMyAds((data as DbAd[]) || []));
+      .then(({ data }) => setMyAds((data as unknown as DbAd[]) || []));
     supabase
       .from("profiles")
       .select("display_name")

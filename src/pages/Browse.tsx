@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
-import { DbAd, categories, conditions, categoryQueryValues, isPhysicalCategory } from "@/lib/types";
+import { AD_CARD_COLUMNS, DbAd, categories, conditions, categoryQueryValues, isPhysicalCategory } from "@/lib/types";
 import { Search, SlidersHorizontal, X, MapPin, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/hooks/useSeo";
@@ -33,7 +33,7 @@ const Browse = () => {
 
   useEffect(() => {
     setLoading(true);
-    let q = supabase.from("ads").select("*").eq("status", "active");
+    let q = supabase.from("ads").select(AD_CARD_COLUMNS).eq("status", "active");
 
     // Featured-first always, then chosen sort as tiebreaker.
     q = q.order("featured", { ascending: false });
@@ -52,7 +52,7 @@ const Browse = () => {
     if (featuredOnly || sort === "featured") q = q.eq("featured", true);
 
     q.limit(60).then(({ data }) => {
-      setAds((data as DbAd[]) || []);
+      setAds((data as unknown as DbAd[]) || []);
       setLoading(false);
     });
   }, [search, category, condition, location, minPrice, maxPrice, sort, featuredOnly]);

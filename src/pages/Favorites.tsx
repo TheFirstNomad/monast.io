@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { useFavorites } from "@/hooks/useFavorites";
-import { DbAd } from "@/lib/types";
+import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 
 const Favorites = () => {
   const { user, resolving } = useRequireAuth();
@@ -28,11 +28,11 @@ const Favorites = () => {
     setBusy(true);
     supabase
       .from("ads")
-      .select("*")
+      .select(AD_CARD_COLUMNS)
       .in("id", list)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        setAds((data as DbAd[]) || []);
+        setAds((data as unknown as DbAd[]) || []);
         setBusy(false);
       });
   }, [user, ids]);

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -5,37 +6,50 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { WalletProvider } from "@/hooks/useWallet";
 import { FavoritesProvider } from "@/hooks/useFavorites";
-import Index from "./pages/Index";
-import PostAd from "./pages/PostAd";
-import EditAd from "./pages/EditAd";
-import AdDetail from "./pages/AdDetail";
-import Browse from "./pages/Browse";
-import CategoryPage from "./pages/CategoryPage";
-
-
-import Dashboard from "./pages/Dashboard";
-import Auth from "./pages/Auth";
-import Messages from "./pages/Messages";
-import MessageThread from "./pages/MessageThread";
-import Transactions from "./pages/Transactions";
-import Wallet from "./pages/Wallet";
-import SellerProfile from "./pages/SellerProfile";
-import NotFound from "./pages/NotFound";
-import AgentDocs from "./pages/AgentDocs";
-import Pricing from "./pages/Pricing";
-import Promote from "./pages/Promote";
-import PublishAd from "./pages/PublishAd";
-import AdminTreasury from "./pages/AdminTreasury";
-import AdminDisputes from "./pages/AdminDisputes";
-import AdminReports from "./pages/AdminReports";
-import AdminRoles from "./pages/AdminRoles";
-import EscrowDetail from "./pages/EscrowDetail";
-import Favorites from "./pages/Favorites";
-import Purchases from "./pages/Purchases";
-import Buy from "./pages/Buy";
-import Settings from "./pages/Settings";
-import Account from "./pages/Account";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+
+// The landing page is the first thing most visitors see, so it ships in the
+// initial bundle. Every other screen is fetched only when its route opens,
+// which keeps the first load small.
+import Index from "./pages/Index";
+
+const PostAd = lazy(() => import("./pages/PostAd"));
+const EditAd = lazy(() => import("./pages/EditAd"));
+const AdDetail = lazy(() => import("./pages/AdDetail"));
+const Browse = lazy(() => import("./pages/Browse"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Messages = lazy(() => import("./pages/Messages"));
+const MessageThread = lazy(() => import("./pages/MessageThread"));
+const Transactions = lazy(() => import("./pages/Transactions"));
+const Wallet = lazy(() => import("./pages/Wallet"));
+const SellerProfile = lazy(() => import("./pages/SellerProfile"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AgentDocs = lazy(() => import("./pages/AgentDocs"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Promote = lazy(() => import("./pages/Promote"));
+const PublishAd = lazy(() => import("./pages/PublishAd"));
+const AdminTreasury = lazy(() => import("./pages/AdminTreasury"));
+const AdminDisputes = lazy(() => import("./pages/AdminDisputes"));
+const AdminReports = lazy(() => import("./pages/AdminReports"));
+const AdminRoles = lazy(() => import("./pages/AdminRoles"));
+const EscrowDetail = lazy(() => import("./pages/EscrowDetail"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const Purchases = lazy(() => import("./pages/Purchases"));
+const Buy = lazy(() => import("./pages/Buy"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Account = lazy(() => import("./pages/Account"));
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div
+      className="h-8 w-8 rounded-full border-2 border-border border-t-primary animate-spin"
+      role="status"
+      aria-label="Loading"
+    />
+  </div>
+);
 
 const App = () => (
   <ErrorBoundary>
@@ -46,6 +60,7 @@ const App = () => (
         <AuthProvider>
           <WalletProvider>
             <FavoritesProvider>
+            <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -80,6 +95,7 @@ const App = () => (
               <Route path="/admin/roles" element={<AdminRoles />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
             </FavoritesProvider>
           </WalletProvider>
 

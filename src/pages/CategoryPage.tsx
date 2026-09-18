@@ -4,7 +4,7 @@ import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { DbAd, categories, categoryQueryValues } from "@/lib/types";
+import { AD_CARD_COLUMNS, DbAd, categories, categoryQueryValues } from "@/lib/types";
 import { CATEGORY_PAGES, categoryPageFor } from "@/lib/categoryPages";
 import { useSeo } from "@/hooks/useSeo";
 import { ArrowRight, PackageOpen, Plus, Search, Sparkles } from "lucide-react";
@@ -42,7 +42,7 @@ const CategoryPage = () => {
     setLoading(true);
     let q = supabase
       .from("ads")
-      .select("*")
+      .select(AD_CARD_COLUMNS)
       .eq("status", "active")
       .in("category", categoryQueryValues(config.category));
 
@@ -61,7 +61,7 @@ const CategoryPage = () => {
     if (maxPrice && !Number.isNaN(max)) q = q.lte("price_usdc", max);
 
     q.limit(60).then(({ data }) => {
-      setAds((data as DbAd[]) || []);
+      setAds((data as unknown as DbAd[]) || []);
       setLoading(false);
     });
   }, [config, search, quick, minPrice, maxPrice, sort]);

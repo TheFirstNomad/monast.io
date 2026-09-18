@@ -26,9 +26,12 @@ const Messages = () => {
     (async () => {
       const { data: msgs } = await supabase
         .from("messages")
-        .select("*")
+        .select("ad_id,sender_id,recipient_id,content,created_at")
         .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        // Newest first, so the most recent message per conversation is always
+        // inside this window; older history stays on the server.
+        .limit(300);
       if (!msgs) return;
       const map = new Map<string, Conv>();
       for (const m of msgs as any[]) {
