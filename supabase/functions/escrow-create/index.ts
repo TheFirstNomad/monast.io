@@ -45,12 +45,37 @@ Deno.serve(async (req) => {
 
     const { data: ad, error: adErr } = await admin
       .from("ads")
-      .select("id, seller_id, price_usdc, status")
+      .select("id, seller_id, price_usdc, status, listing_fee_chain_id")
       .eq("id", adId)
       .maybeSingle();
     if (adErr || !ad) return json({ error: "Ad not found" }, 404);
     if (ad.seller_id === buyerId) return json({ error: "Cannot buy your own ad" }, 400);
     if (ad.status !== "active") return json({ error: "Ad is not active" }, 400);
+
+    // A listing belongs to the network it was published on. Mixing networks
+    // would mean real funds settling against test activity, so refuse.
+    const adChain = ad.listing_fee_chain_id ? Number(ad.listing_fee_chain_id) : null;
+    if (adChain && adChain !== chainId) {
+      return json(
+        {
+          error:
+            "This listing was published on a different network and cannot be bought here. The seller needs to relist it.",
+        },
+        409,
+      );
+    }
+
+    // No escrow without a treasury wallet on this network to hold the funds.
+    const { data: treasury } = await admin
+      .from("treasury_wallets")
+      .select("id")
+      .eq("chain_id", chainId)
+      .eq("purpose", "escrow")
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!treasury) {
+      return json({ error: "Escrow is not available on this network yet." }, 503);
+    }
 
     // Amount = accepted offer if any, else ad price.
     const { data: acceptedOffer } = await admin
