@@ -10,6 +10,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useSeo } from "@/hooks/useSeo";
 import { supabase } from "@/integrations/supabase/client";
 import { ARC_CHAIN_ID } from "@/lib/usdc";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
 import { SALE_FEE_LABEL, DELIVERY_WINDOW_HOURS } from "@/lib/fees";
 import { toast } from "sonner";
