@@ -5,16 +5,20 @@
  * overridden through build config (VITE_ARC_*) without touching code.
  * A zero address must never be selectable.
  */
-// Mainnet is live ONLY when the mainnet USDC address is explicitly configured.
-// Never fall back to a default here - a guessed address would silently enable
-// mainnet before it is ready and send payments to the wrong network.
-const MAINNET_USDC = (import.meta.env.VITE_ARC_MAINNET_USDC ?? "") as string;
+// Arc Public Mainnet is LIVE. Readiness is an explicit switch, never derived
+// from the USDC address: Arc uses the same USDC predeploy address on both
+// networks, so the address can never tell the networks apart.
+const MAINNET_ENABLED =
+  String(import.meta.env.VITE_ARC_MAINNET_ENABLED ?? "true") !== "false";
+const MAINNET_USDC = (import.meta.env.VITE_ARC_MAINNET_USDC ??
+  "0x3600000000000000000000000000000000000000") as string;
 const MAINNET_RPC = (import.meta.env.VITE_ARC_MAINNET_RPC ??
   "https://rpc.mainnet.arc.io") as string;
 const MAINNET_EXPLORER = (import.meta.env.VITE_ARC_MAINNET_EXPLORER ??
   "https://explorer.arc.io") as string;
 const MAINNET_CHAIN_ID = Number(import.meta.env.VITE_ARC_CHAIN_ID ?? 5042);
 const MAINNET_READY =
+  MAINNET_ENABLED &&
   /^0x[0-9a-fA-F]{40}$/.test(MAINNET_USDC) &&
   !/^0+$/.test(MAINNET_USDC.slice(2));
 export type ChainKey = "arc-testnet" | "arc-mainnet";
