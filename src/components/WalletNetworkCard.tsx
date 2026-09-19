@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet, Check, Copy, Loader2, Link2, AlertTriangle, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWallet } from "@/hooks/useWallet";
-import { CHAINS } from "@/lib/chains";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { USDC_DECIMALS } from "@/lib/usdc";
 import { toast } from "sonner";
 
-const ARC = CHAINS["arc-testnet"];
+const ARC = ACTIVE_CHAIN;
 
 interface Props {
   userId: string;

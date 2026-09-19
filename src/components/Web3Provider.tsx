@@ -8,20 +8,26 @@ import { CHAINS } from "@/lib/chains";
 
 const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || "3592c16759a9b6907bc4eb5afd455b15";
 
-// monast.io is Arc-native - Arc Testnet is the only wallet network offered.
+// monast.io is Arc-native. Both Arc networks are registered with the wallet
+// connector so switching works whichever network a record settles on.
 // USDC is the native gas token on Arc (18 decimals for msg.value).
-const ARC = CHAINS["arc-testnet"];
+const TESTNET = CHAINS["arc-testnet"];
+const MAINNET = CHAINS["arc-mainnet"];
 
-const arcTestnet = {
-  id: ARC.id,
-  name: ARC.label,
-  nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-  rpcUrls: { default: { http: [ARC.rpc] } },
-  blockExplorers: { default: { name: "ArcScan", url: ARC.explorer } },
-  testnet: true,
-} as any;
+const toWagmiChain = (c: typeof TESTNET, testnet: boolean) =>
+  ({
+    id: c.id,
+    name: c.label,
+    nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+    rpcUrls: { default: { http: [c.rpc] } },
+    blockExplorers: { default: { name: "ArcScan", url: c.explorer } },
+    testnet,
+  }) as any;
 
-const networks = [arcTestnet] as const;
+const arcTestnet = toWagmiChain(TESTNET, true);
+const arcMainnet = toWagmiChain(MAINNET, false);
+
+const networks = [arcTestnet, arcMainnet] as const;
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
 import { DbAd } from "@/lib/types";
 import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/lib/usdc";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { useSeo } from "@/hooks/useSeo";
 import { toast } from "sonner";
@@ -141,7 +142,12 @@ const PublishAd = () => {
     }
     try {
       if (chainId !== ARC_CHAIN_ID) {
-        await switchChainAsync({ chainId: ARC_CHAIN_ID });
+        try {
+          await switchChainAsync({ chainId: ARC_CHAIN_ID });
+        } catch {
+          toast.error(`Please switch your wallet to ${ACTIVE_CHAIN.label} and try again`);
+          return;
+        }
       }
       const hash = await writeContractAsync({
         address: USDC_ADDRESS,
