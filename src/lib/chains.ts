@@ -5,15 +5,18 @@
  * overridden through build config (VITE_ARC_*) without touching code.
  * A zero address must never be selectable.
  */
-const MAINNET_USDC = (import.meta.env.VITE_ARC_MAINNET_USDC ??
-  "0x3600000000000000000000000000000000000000") as string;
+// Mainnet is live ONLY when the mainnet USDC address is explicitly configured.
+// Never fall back to a default here - a guessed address would silently enable
+// mainnet before it is ready and send payments to the wrong network.
+const MAINNET_USDC = (import.meta.env.VITE_ARC_MAINNET_USDC ?? "") as string;
 const MAINNET_RPC = (import.meta.env.VITE_ARC_MAINNET_RPC ??
   "https://rpc.mainnet.arc.io") as string;
 const MAINNET_EXPLORER = (import.meta.env.VITE_ARC_MAINNET_EXPLORER ??
   "https://explorer.arc.io") as string;
 const MAINNET_CHAIN_ID = Number(import.meta.env.VITE_ARC_CHAIN_ID ?? 5042);
 const MAINNET_READY =
-  /^0x[0-9a-fA-F]{40}$/.test(MAINNET_USDC) && !/^0x0+$/.test(MAINNET_USDC);
+  /^0x[0-9a-fA-F]{40}$/.test(MAINNET_USDC) &&
+  !/^0x0+$/.test(MAINNET_USDC.replace(/^0x/, ""));
 export type ChainKey = "arc-testnet" | "arc-mainnet";
 
 export interface ChainEntry {
