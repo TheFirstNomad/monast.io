@@ -1,9 +1,9 @@
 import { ArrowDownLeft, ArrowUpRight, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ACTIVE_CHAIN, CHAINS } from "@/lib/chains";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import type { WalletActivityItem } from "@/lib/wallet/api";
 
-const ARC = CHAINS["arc-testnet"];
+const ARC = ACTIVE_CHAIN;
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 const stateLabel = (state: string | null) => {

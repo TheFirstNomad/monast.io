@@ -2,10 +2,10 @@ import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, ExternalLink } from "lucide-react";
-import { CHAINS } from "@/lib/chains";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { toast } from "sonner";
 
-const ARC = CHAINS["arc-testnet"];
+const ARC = ACTIVE_CHAIN;
 
 export const ReceiveCard = ({ address }: { address: string }) => {
   const [copied, setCopied] = useState(false);

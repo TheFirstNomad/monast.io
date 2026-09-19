@@ -13,12 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { useSeo } from "@/hooks/useSeo";
-import { CHAINS } from "@/lib/chains";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { ERC20_BALANCE_ABI, USDC_ADDRESS, USDC_DECIMALS } from "@/lib/usdc";
 import { fetchCircleActivity, fetchCircleBalance, type WalletActivityItem } from "@/lib/wallet/api";
 import { Check, RefreshCw, Wallet as WalletIcon } from "lucide-react";
 
-const ARC = CHAINS["arc-testnet"];
+const ARC = ACTIVE_CHAIN;
 
 const Wallet = () => {
   useSeo({
