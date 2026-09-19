@@ -63,7 +63,13 @@ export const SendUsdcCard = ({ isCircleWallet, balance, onSent }: Props) => {
         });
       } else {
         if (!address) throw new Error("Connect your wallet first");
-        if (chainId !== ARC.id) await switchChainAsync({ chainId: ARC.id });
+        if (chainId !== ARC.id) {
+          try {
+            await switchChainAsync({ chainId: ARC.id });
+          } catch {
+            throw new Error(`Please switch your wallet to ${ARC.label} and try again`);
+          }
+        }
         const hash = await writeContractAsync({
           address: USDC_ADDRESS,
           abi: ERC20_TRANSFER_ABI,
