@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
 import { DbAd } from "@/lib/types";
 import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/lib/usdc";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { useSeo } from "@/hooks/useSeo";
 import { toast } from "sonner";

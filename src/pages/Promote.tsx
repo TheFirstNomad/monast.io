@@ -9,6 +9,7 @@ import { DbAd } from "@/lib/types";
 import { PROMOTION_TIERS, PromotionTier } from "@/lib/promotionTiers";
 import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/lib/usdc";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { toast } from "sonner";
 import { Sparkles, Check, Loader2, ArrowLeft, Wallet } from "lucide-react";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
