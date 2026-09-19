@@ -98,7 +98,12 @@ const Promote = () => {
     }
     try {
       if (chainId !== ARC_CHAIN_ID) {
-        await switchChainAsync({ chainId: ARC_CHAIN_ID });
+        try {
+          await switchChainAsync({ chainId: ARC_CHAIN_ID });
+        } catch {
+          toast.error(`Please switch your wallet to ${ACTIVE_CHAIN.label} and try again`);
+          return;
+        }
       }
       const hash = await writeContractAsync({
         address: USDC_ADDRESS,

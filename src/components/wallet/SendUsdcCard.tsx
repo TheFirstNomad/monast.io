@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Send } from "lucide-react";
-import { CHAINS } from "@/lib/chains";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 import { ERC20_TRANSFER_ABI, USDC_ADDRESS, toUsdcUnits } from "@/lib/usdc";
 import { withdrawFromCircleWallet } from "@/lib/wallet/api";
 import { toast } from "sonner";
 
-const ARC = CHAINS["arc-testnet"];
+const ARC = ACTIVE_CHAIN;
 
 interface Props {
   isCircleWallet: boolean;
