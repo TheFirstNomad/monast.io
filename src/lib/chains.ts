@@ -16,7 +16,7 @@ const MAINNET_EXPLORER = (import.meta.env.VITE_ARC_MAINNET_EXPLORER ??
 const MAINNET_CHAIN_ID = Number(import.meta.env.VITE_ARC_CHAIN_ID ?? 5042);
 const MAINNET_READY =
   /^0x[0-9a-fA-F]{40}$/.test(MAINNET_USDC) &&
-  !/^0x0+$/.test(MAINNET_USDC.replace(/^0x/, ""));
+  !/^0+$/.test(MAINNET_USDC.slice(2));
 export type ChainKey = "arc-testnet" | "arc-mainnet";
 
 export interface ChainEntry {
