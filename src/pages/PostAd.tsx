@@ -12,6 +12,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
 import { LISTING_FEE_USDC } from "@/lib/fees";
+import { compressImage } from "@/lib/imageCompress";
 
 const PostAd = () => {
   const { toast } = useToast();
