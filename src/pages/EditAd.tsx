@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/imageCompress";
 
 const OPEN_ESCROW_STATUSES = ["created", "funded", "disputed"];
 
