@@ -28,43 +28,45 @@ const CategoryPage = () => {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
-  const [ads, setAds] = useState<DbAd[]>([]);
-  const [loading, setLoading] = useState(true);
-
   useSeo({
     title: config?.seoTitle ?? "monast.io",
     description: config?.seoDescription ?? "",
     canonicalPath: `/${slug}`,
   });
 
-  useEffect(() => {
-    if (!config) return;
-    setLoading(true);
-    let q = supabase
-      .from("ads")
-      .select(AD_CARD_COLUMNS)
-      .eq("status", "active")
-      .in("category", categoryQueryValues(config.category));
+  const searchTerm = useDebounced(search.trim(), 350);
+  const minTerm = useDebounced(minPrice, 350);
+  const maxTerm = useDebounced(maxPrice, 350);
 
-    q = q.order("featured", { ascending: false });
-    if (sort === "price_asc") q = q.order("price_usdc", { ascending: true });
-    else if (sort === "price_desc") q = q.order("price_usdc", { ascending: false });
-    else q = q.order("created_at", { ascending: false });
+  const { data: ads = [], isPending: loading } = useQuery({
+    enabled: Boolean(config),
+    queryKey: ["ads", "category", config?.category, { searchTerm, quick, minTerm, maxTerm, sort }],
+    queryFn: async () => {
+      let q = supabase
+        .from("ads")
+        .select(AD_CARD_COLUMNS)
+        .eq("status", "active")
+        .in("category", categoryQueryValues(config!.category));
 
-    const terms = [search.trim(), ...quick].filter(Boolean);
-    for (const term of terms) {
-      q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
-    }
-    const min = Number(minPrice);
-    const max = Number(maxPrice);
-    if (minPrice && !Number.isNaN(min)) q = q.gte("price_usdc", min);
-    if (maxPrice && !Number.isNaN(max)) q = q.lte("price_usdc", max);
+      q = q.order("featured", { ascending: false });
+      if (sort === "price_asc") q = q.order("price_usdc", { ascending: true });
+      else if (sort === "price_desc") q = q.order("price_usdc", { ascending: false });
+      else q = q.order("created_at", { ascending: false });
 
-    q.limit(60).then(({ data }) => {
-      setAds((data as unknown as DbAd[]) || []);
-      setLoading(false);
-    });
-  }, [config, search, quick, minPrice, maxPrice, sort]);
+      const terms = [searchTerm, ...quick].filter(Boolean);
+      for (const term of terms) {
+        q = q.or(`title.ilike.%${term}%,description.ilike.%${term}%`);
+      }
+      const min = Number(minTerm);
+      const max = Number(maxTerm);
+      if (minTerm && !Number.isNaN(min)) q = q.gte("price_usdc", min);
+      if (maxTerm && !Number.isNaN(max)) q = q.lte("price_usdc", max);
+
+      const { data } = await q.limit(60);
+      return (data as unknown as DbAd[]) || [];
+    },
+    placeholderData: (prev) => prev,
+  });
 
   const featured = useMemo(() => ads.filter((a) => a.featured).slice(0, 4), [ads]);
   const rest = useMemo(() => ads.filter((a) => !a.featured), [ads]);
