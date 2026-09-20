@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useDebounced } from "@/hooks/useDebounced";
 import { useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
@@ -28,34 +30,42 @@ const Browse = () => {
   const [sort, setSort] = useState<SortKey>("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [featuredOnly, setFeaturedOnly] = useState(false);
-  const [ads, setAds] = useState<DbAd[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Typing no longer fires a search on every keystroke.
+  const searchTerm = useDebounced(search.trim(), 350);
+  const locationTerm = useDebounced(location.trim(), 350);
+  const minTerm = useDebounced(minPrice, 350);
+  const maxTerm = useDebounced(maxPrice, 350);
 
-  useEffect(() => {
-    setLoading(true);
-    let q = supabase.from("ads").select(AD_CARD_COLUMNS).eq("status", "active");
+  const { data: ads = [], isPending: loading } = useQuery({
+    queryKey: [
+      "ads",
+      "browse",
+      { searchTerm, category, condition, locationTerm, minTerm, maxTerm, sort, featuredOnly },
+    ],
+    queryFn: async () => {
+      let q = supabase.from("ads").select(AD_CARD_COLUMNS).eq("status", "active");
 
-    // Featured-first always, then chosen sort as tiebreaker.
-    q = q.order("featured", { ascending: false });
-    if (sort === "price_asc") q = q.order("price_usdc", { ascending: true });
-    else if (sort === "price_desc") q = q.order("price_usdc", { ascending: false });
-    else q = q.order("created_at", { ascending: false });
+      // Featured-first always, then chosen sort as tiebreaker.
+      q = q.order("featured", { ascending: false });
+      if (sort === "price_asc") q = q.order("price_usdc", { ascending: true });
+      else if (sort === "price_desc") q = q.order("price_usdc", { ascending: false });
+      else q = q.order("created_at", { ascending: false });
 
-    if (category) q = q.in("category", categoryQueryValues(category));
-    if (condition) q = q.eq("condition", condition);
-    if (search) q = q.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
-    if (location) q = q.ilike("location", `%${location}%`);
-    const min = Number(minPrice);
-    const max = Number(maxPrice);
-    if (minPrice && !Number.isNaN(min)) q = q.gte("price_usdc", min);
-    if (maxPrice && !Number.isNaN(max)) q = q.lte("price_usdc", max);
-    if (featuredOnly || sort === "featured") q = q.eq("featured", true);
+      if (category) q = q.in("category", categoryQueryValues(category));
+      if (condition) q = q.eq("condition", condition);
+      if (searchTerm) q = q.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      if (locationTerm) q = q.ilike("location", `%${locationTerm}%`);
+      const min = Number(minTerm);
+      const max = Number(maxTerm);
+      if (minTerm && !Number.isNaN(min)) q = q.gte("price_usdc", min);
+      if (maxTerm && !Number.isNaN(max)) q = q.lte("price_usdc", max);
+      if (featuredOnly || sort === "featured") q = q.eq("featured", true);
 
-    q.limit(60).then(({ data }) => {
-      setAds((data as unknown as DbAd[]) || []);
-      setLoading(false);
-    });
-  }, [search, category, condition, location, minPrice, maxPrice, sort, featuredOnly]);
+      const { data } = await q.limit(60);
+      return (data as unknown as DbAd[]) || [];
+    },
+    placeholderData: (prev) => prev,
+  });
 
   const activeFilterCount = useMemo(
     () => [category, condition, location, minPrice, maxPrice, featuredOnly].filter(Boolean).length,
