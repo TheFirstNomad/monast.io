@@ -108,7 +108,18 @@ const stripWalletConnectRow = () => {
 stripWalletConnectRow();
 ConnectorController.subscribeKey("connectors", stripWalletConnectRow);
 
-const queryClient = new QueryClient();
+// Public browsing data changes slowly, so cached results are reused for a short
+// window instead of refetching on every navigation or tab focus.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 45_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 export function Web3Provider({ children }: { children: ReactNode }) {
   return (
