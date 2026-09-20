@@ -48,13 +48,18 @@ const PostAd = () => {
           toast({ title: "Skipped", description: `${file.name} is not an image`, variant: "destructive" });
           continue;
         }
-        if (file.size > MAX_FILE_BYTES) {
+        // Shrink big photos in the browser first: smaller uploads finish faster
+        // and listing pages load quicker for buyers.
+        const prepared = await compressImage(file);
+        if (prepared.size > MAX_FILE_BYTES) {
           toast({ title: "Too large", description: `${file.name} exceeds 5 MB`, variant: "destructive" });
           continue;
         }
-        const ext = file.name.split(".").pop();
+        const ext = prepared.name.split(".").pop();
         const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await supabase.storage.from("ad-photos").upload(path, file);
+        const { error } = await supabase.storage
+          .from("ad-photos")
+          .upload(path, prepared, { contentType: prepared.type, cacheControl: "31536000" });
         if (error) throw error;
         const { data } = supabase.storage.from("ad-photos").getPublicUrl(path);
         uploaded.push(data.publicUrl);
