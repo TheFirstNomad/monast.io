@@ -20,17 +20,19 @@ const Index = () => {
     canonicalPath: "/",
   });
 
-  const [ads, setAds] = useState<DbAd[]>([]);
-
-  useEffect(() => {
-    supabase
-      .from("ads")
-      .select(AD_CARD_COLUMNS)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .limit(8)
-      .then(({ data }) => setAds((data as unknown as DbAd[]) || []));
-  }, []);
+  // Cached briefly so returning to the home page is instant.
+  const { data: ads = [] } = useQuery({
+    queryKey: ["ads", "recent"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("ads")
+        .select(AD_CARD_COLUMNS)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(8);
+      return (data as unknown as DbAd[]) || [];
+    },
+  });
 
   const recentAds = ads.slice(0, 8);
 
