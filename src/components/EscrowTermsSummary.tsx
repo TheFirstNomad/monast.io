@@ -27,7 +27,7 @@ export const EscrowTermsSummary = ({ escrowId }: { escrowId: string }) => {
     });
     setLoading(false);
     if (error || data?.error) {
-      const msg = data?.error ?? (await getFunctionErrorMessage(error)) ?? "Something went wrong";
+      const msg = data?.error ?? (await getFunctionErrorMessage(error, "Could not summarize the terms"));
       setError(msg);
       toast.error(msg);
       return;
