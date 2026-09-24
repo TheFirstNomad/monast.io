@@ -22,6 +22,7 @@ import {
 import { EscrowFundButton } from "@/components/EscrowFundButton";
 import { ChatDialog } from "@/components/ChatDialog";
 import { MessageCircle } from "lucide-react";
+import { EscrowTermsSummary } from "@/components/EscrowTermsSummary";
 
 interface EscrowRow {
   id: string;
@@ -219,6 +220,8 @@ const EscrowDetail = () => {
             </div>
           </div>
         )}
+
+        {(isBuyer || isSeller) && <EscrowTermsSummary escrowId={escrow.id} />}
 
         <div className="space-y-2">
           {isBuyer && escrow.status === "created" && (
