@@ -15,6 +15,7 @@ import { ArrowLeft, Check, Loader2, ShieldCheck } from "lucide-react";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { getFunctionErrorMessage } from "@/lib/functionErrors";
+import { ListingProgressSteps } from "@/components/ListingProgressSteps";
 
 /**
  * Listing-fee checkout. An ad stays in `pending_fee` - invisible to buyers  - 
@@ -217,6 +218,7 @@ const PublishAd = () => {
           <ArrowLeft className="w-4 h-4" /> Dashboard
         </Link>
 
+        <ListingProgressSteps currentStep={2} />
         <h1 className="text-2xl font-bold mb-1">Publish your listing</h1>
         <p className="text-muted-foreground mb-6">
           A one-time {fee} USDC fee keeps monast.io free of spam listings. It is charged once per
