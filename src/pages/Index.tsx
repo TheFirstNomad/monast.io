@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { CategoryGrid } from "@/components/CategoryGrid";
@@ -7,12 +8,21 @@ import { AdCard } from "@/components/AdCard";
 import { Spotlight } from "@/components/Spotlight";
 import { supabase } from "@/integrations/supabase/client";
 import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
-import { ArrowRight, Plus } from "lucide-react";
+import { ArrowRight, Plus, Search } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 import marketHero from "@/assets/monast-market-hero.jpg";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [heroSearch, setHeroSearch] = useState("");
+
+  const submitHeroSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = heroSearch.trim();
+    navigate(q ? `/browse?q=${encodeURIComponent(q)}` : "/browse");
+  };
+
   useSeo({
     title: "monast.io | Buy & Sell Anything Worldwide with USDC",
     description:
@@ -79,23 +89,40 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/10" />
         <div className="relative max-w-7xl mx-auto px-4 min-h-[calc(100svh-4rem)] max-h-[860px] flex flex-col justify-center py-12">
           <div className="max-w-2xl">
-            <p className="text-xs font-medium text-primary mb-5">The global desk for digital assets</p>
+            <p className="text-xs font-medium text-primary mb-5">The global marketplace, settled in USDC</p>
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-medium text-foreground mb-5 leading-[0.98]">
-              Buy and sell digital assets.<br />Worldwide. In USDC.
-          </h1>
-          <p className="text-base md:text-lg text-foreground/70 mb-8 max-w-xl leading-relaxed">
-            Apps, coins, NFTs, domains, websites and accounts, transferred fast. Payment sits in escrow until delivery is confirmed.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button asChild size="lg" className="text-base px-7 h-12">
-              <Link to="/post-ad">
-                <Plus className="w-5 h-5 mr-2" />
-                Sell an item
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="text-base px-7 h-12 bg-background/20 backdrop-blur-sm">
-              <Link to="/browse">Browse the market <ArrowRight className="ml-1 w-4 h-4" /></Link>
-            </Button>
+              Buy and sell anything.<br />Worldwide. In USDC.
+            </h1>
+            <p className="text-base md:text-lg text-foreground/70 mb-6 max-w-xl leading-relaxed">
+              Goods, services, digital assets and more — transferred fast and settled in escrow. Payment releases only when you confirm delivery.
+            </p>
+            {/* Inline hero search */}
+            <form onSubmit={submitHeroSearch} className="flex items-center gap-2 mb-6 max-w-lg">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="search"
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
+                  placeholder="Search listings…"
+                  className="w-full h-12 pl-10 pr-4 rounded-lg bg-background/80 backdrop-blur border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <Button type="submit" size="lg" className="h-12 px-5 shrink-0">
+                Search
+              </Button>
+            </form>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button asChild size="lg" className="text-base px-7 h-12">
+                <Link to="/post-ad">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Sell an item
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="text-base px-7 h-12 bg-background/20 backdrop-blur-sm">
+                <Link to="/browse">Browse the market <ArrowRight className="ml-1 w-4 h-4" /></Link>
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-3 gap-0 border-y border-border mt-10 max-w-2xl">
             {[
