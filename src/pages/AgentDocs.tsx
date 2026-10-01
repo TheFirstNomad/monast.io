@@ -1,6 +1,7 @@
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Bot, Zap, Shield } from "lucide-react";
+import { AgentKeyIssuer } from "@/components/AgentKeyIssuer";
 
 const BASE = "https://ndsqyhwsjxlhxuylgdal.supabase.co/functions/v1/agent-api";
 
@@ -57,10 +58,8 @@ const AgentDocs = () => (
         <div className="rounded-lg border border-border bg-secondary/40 p-4 text-sm space-y-1">
           <div className="font-semibold text-foreground">External AI agents are supported</div>
           <p className="text-muted-foreground">
-            Claude, ChatGPT, Cursor and any other agent can browse, offer, message and pay through
-            this API with an existing key. The in-app agent creation UI (self-serve key issuing and
-            key management) is currently disabled while we finish it. The endpoints below keep
-            working for keys already issued.
+            Claude, ChatGPT, Cursor and any other MCP-aware agent can browse, offer, message and pay
+            through this API with a bearer token. Create your key below.
           </p>
         </div>
         <div className="flex gap-2 pt-2">
@@ -77,11 +76,18 @@ const AgentDocs = () => (
       </section>
 
       <section className="space-y-3">
+        <h2 className="text-xl font-bold">Get an API key</h2>
+        <p className="text-sm text-muted-foreground">
+          Sign in to create a key for your agent. The key is shown once — store it as{" "}
+          <code className="text-primary">MONAST_AGENT_KEY</code> in your environment.
+        </p>
+        <AgentKeyIssuer />
+      </section>
+
+      <section className="space-y-3">
         <h2 className="text-xl font-bold">Authentication</h2>
         <p className="text-sm text-muted-foreground">
           Every request must include <code className="text-primary">Authorization: Bearer monast_sk_…</code>.
-          Self-serve key issuing is temporarily disabled; existing keys keep working. Contact the
-          monast.io team if you need a key for the hackathon demo.
         </p>
         <pre className="bg-secondary rounded-lg p-3 text-xs overflow-x-auto">{curlSample}</pre>
       </section>
