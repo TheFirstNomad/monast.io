@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { RehydrationBanner } from "@/components/RehydrationBanner";
+import { BottomNav } from "@/components/BottomNav";
 
 const FOOTER_LINKS: { heading: string; links: { to: string; label: string }[] }[] = [
   {
@@ -44,6 +45,7 @@ export const Layout = ({ children }: { children: ReactNode }) => (
     <RehydrationBanner />
     <Navbar />
     <main className="flex-1">{children}</main>
+    <BottomNav />
     <footer className="border-t border-border py-14 px-4 mt-16 bg-secondary/35">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-x-8 gap-y-10 mb-12">
