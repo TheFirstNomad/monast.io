@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface Conv {
   ad_id: string;
@@ -20,42 +21,92 @@ const Messages = () => {
   const { user, resolving } = useRequireAuth();
   const [convs, setConvs] = useState<Conv[]>([]);
 
+  const loadConversations = useCallback(async (userId: string) => {
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("ad_id,sender_id,recipient_id,content,created_at")
+      .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+      .order("created_at", { ascending: false })
+      // Newest first, so the most recent message per conversation is always
+      // inside this window; older history stays on the server.
+      .limit(300);
+    if (!msgs) return;
 
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const { data: msgs } = await supabase
-        .from("messages")
-        .select("ad_id,sender_id,recipient_id,content,created_at")
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order("created_at", { ascending: false })
-        // Newest first, so the most recent message per conversation is always
-        // inside this window; older history stays on the server.
-        .limit(300);
-      if (!msgs) return;
-      const map = new Map<string, Conv>();
-      for (const m of msgs as any[]) {
-        const other = m.sender_id === user.id ? m.recipient_id : m.sender_id;
-        const key = `${m.ad_id}::${other}`;
-        if (!map.has(key)) map.set(key, { ad_id: m.ad_id, other_id: other, last: m.content, created_at: m.created_at });
-      }
-      const arr = [...map.values()];
-      const adIds = [...new Set(arr.map((c) => c.ad_id))].filter(Boolean);
-      const otherIds = [...new Set(arr.map((c) => c.other_id))];
-      const [{ data: ads }, { data: profs }] = await Promise.all([
-        supabase.from("ads").select("id,title,images").in("id", adIds),
-        supabase.from("profiles").select("id,display_name").in("id", otherIds),
-      ]);
-      const adMap = new Map((ads || []).map((a: any) => [a.id, a]));
-      const pMap = new Map((profs || []).map((p: any) => [p.id, p]));
-      setConvs(arr.map((c) => ({
+    const map = new Map<string, Conv>();
+    for (const m of msgs as any[]) {
+      const other = m.sender_id === userId ? m.recipient_id : m.sender_id;
+      const key = `${m.ad_id}::${other}`;
+      if (!map.has(key))
+        map.set(key, {
+          ad_id: m.ad_id,
+          other_id: other,
+          last: m.content,
+          created_at: m.created_at,
+        });
+    }
+
+    const arr = [...map.values()];
+    const adIds = [...new Set(arr.map((c) => c.ad_id))].filter(Boolean);
+    const otherIds = [...new Set(arr.map((c) => c.other_id))];
+    const [{ data: ads }, { data: profs }] = await Promise.all([
+      supabase.from("ads").select("id,title,images").in("id", adIds),
+      supabase.from("profiles").select("id,display_name").in("id", otherIds),
+    ]);
+    const adMap = new Map((ads || []).map((a: any) => [a.id, a]));
+    const pMap = new Map((profs || []).map((p: any) => [p.id, p]));
+    setConvs(
+      arr.map((c) => ({
         ...c,
         ad_title: adMap.get(c.ad_id)?.title,
         ad_image: adMap.get(c.ad_id)?.images?.[0],
         other_name: pMap.get(c.other_id)?.display_name || "User",
-      })));
-    })();
-  }, [user]);
+      })),
+    );
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    if (!user) return;
+    void loadConversations(user.id);
+  }, [user, loadConversations]);
+
+  // Realtime subscription — refresh the conversation list whenever any
+  // message involving this user is inserted or updated.
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`messages-inbox-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        () => {
+          void loadConversations(user.id);
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `sender_id=eq.${user.id}`,
+        },
+        () => {
+          void loadConversations(user.id);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [user, loadConversations]);
 
   if (resolving) return <AuthResolving />;
   if (!user) return null;
@@ -71,7 +122,15 @@ const Messages = () => {
           <div className="text-center py-20 bg-card border border-border rounded-xl">
             <MessageCircle className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
             <p className="font-display text-2xl text-foreground">No conversations yet.</p>
-            <p className="text-sm text-muted-foreground mt-2">Messages with buyers and sellers will appear here.</p>
+            <p className="text-sm text-muted-foreground mt-2 mb-6">
+              Find a listing and message the seller to get started.
+            </p>
+            <Button asChild>
+              <Link to="/browse">
+                <Plus className="w-4 h-4 mr-2" />
+                Browse listings
+              </Link>
+            </Button>
           </div>
         ) : (
           <div className="space-y-2">
@@ -81,10 +140,19 @@ const Messages = () => {
                 to={`/messages/${c.ad_id}/${c.other_id}`}
                 className="flex items-center gap-4 bg-card border border-border rounded-xl p-4 min-h-20 hover:border-foreground/20 transition-colors"
               >
-                <img src={c.ad_image || "/placeholder.svg"} alt="" className="w-12 h-12 rounded-lg object-cover bg-secondary" />
+                <img
+                  src={c.ad_image || "/placeholder.svg"}
+                  alt=""
+                  className="w-12 h-12 rounded-lg object-cover bg-secondary shrink-0"
+                />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground truncate">{c.other_name} · {c.ad_title}</div>
+                  <div className="text-sm font-medium text-foreground truncate">
+                    {c.other_name} · {c.ad_title}
+                  </div>
                   <div className="text-xs text-muted-foreground truncate">{c.last}</div>
+                </div>
+                <div className="text-[10px] text-muted-foreground shrink-0">
+                  {new Date(c.created_at).toLocaleDateString()}
                 </div>
               </Link>
             ))}
