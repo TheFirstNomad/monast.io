@@ -16,6 +16,7 @@ import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { ReportDialog } from "@/components/ReportDialog";
 import { useSeo } from "@/hooks/useSeo";
+import { EscrowTrustBadge } from "@/components/EscrowTrustBadge";
 
 
 const AdDetail = () => {
@@ -395,6 +396,10 @@ const AdDetail = () => {
               </Link>
             )}
 
+            {/* Buyer trust explainer — shown to non-sellers on active listings */}
+            {(!user || user.id !== ad.seller_id) && ad.status === "active" && (
+              <EscrowTrustBadge />
+            )}
             <ReviewSection adId={ad.id} sellerId={ad.seller_id} adSold={ad.status === "sold"} />
           </div>
         </div>
