@@ -138,7 +138,6 @@ const Index = () => {
             ))}
           </div>
           <p className="text-[11px] text-muted-foreground mt-4">Settled on Arc · USDC · Agent-ready</p>
-          </div>
         </div>
       </section>
 
