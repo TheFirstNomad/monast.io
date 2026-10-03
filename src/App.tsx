@@ -20,6 +20,9 @@ const Browse = lazy(() => import("./pages/Browse"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const ProSeller = lazy(() => import("./pages/ProSeller"));
 const Refer = lazy(() => import("./pages/Refer"));
+const EscrowApi = lazy(() => import("./pages/EscrowApi"));
+const Reputation = lazy(() => import("./pages/Reputation"));
+const AgentBilling = lazy(() => import("./pages/AgentBilling"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -90,6 +93,9 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/pro" element={<ProSeller />} />
               <Route path="/refer" element={<Refer />} />
+              <Route path="/escrow-api" element={<EscrowApi />} />
+              <Route path="/reputation" element={<Reputation />} />
+              <Route path="/agent-billing" element={<AgentBilling />} />
               <Route path="/publish/:adId" element={<PublishAd />} />
               <Route path="/promote/:adId" element={<Promote />} />
               <Route path="/escrow/:id" element={<EscrowDetail />} />

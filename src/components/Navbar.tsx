@@ -83,6 +83,7 @@ export const Navbar = () => {
     { to: "/transactions", label: "Transactions", Icon: Receipt },
     { to: "/pro", label: "Pro Seller", Icon: Sparkles },
     { to: "/refer", label: "Refer & Earn", Icon: Gift },
+    { to: "/reputation", label: "My Reputation", Icon: ShieldCheck },
   ];
 
   const submitSearch = (e: React.FormEvent) => {

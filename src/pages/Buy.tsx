@@ -15,6 +15,7 @@ import { ESCROW_STATUS_LABEL, EscrowStatus } from "@/lib/escrow";
 import { SALE_FEE_LABEL, DELIVERY_WINDOW_HOURS } from "@/lib/fees";
 import { toast } from "sonner";
 import { Shield, Loader2, ArrowLeft, CheckCircle2, Lock, Truck } from "lucide-react";
+import { BuyerProtectionToggle } from "@/components/BuyerProtectionToggle";
 
 interface AdRow {
   id: string;
@@ -138,7 +139,9 @@ const Buy = () => {
 
   const ownListing = user?.id === ad.seller_id;
   const unavailable = ad.status !== "active" && ad.status !== "reserved";
-  const amount = Number(escrow?.amount_usdc ?? ad.price_usdc);
+  const baseAmount = Number(escrow?.amount_usdc ?? ad.price_usdc);
+  const [protectionFee, setProtectionFee] = useState(0);
+  const amount = baseAmount + protectionFee;
 
   return (
     <Layout>
@@ -193,6 +196,13 @@ const Buy = () => {
             The seller pays a {SALE_FEE_LABEL} platform fee on release. Nothing is charged to you beyond the item price plus network gas.
           </p>
         </section>
+
+        {!ownListing && !unavailable && !escrow && (
+          <BuyerProtectionToggle
+            priceUsdc={baseAmount}
+            onChange={(_enabled, fee) => setProtectionFee(fee)}
+          />
+        )}
 
         {!ownListing && !unavailable && (walletChecking || !walletReady) && (
           <CircleOnboardingCard reason="Create your Monast wallet to pay this escrow in USDC." />
