@@ -30,7 +30,6 @@ import {
   Store,
   ShoppingBag,
   Sparkles,
-  Gift,
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -82,7 +81,6 @@ export const Navbar = () => {
     { to: "/messages", label: "Messages", Icon: MessageCircle },
     { to: "/transactions", label: "Transactions", Icon: Receipt },
     { to: "/pro", label: "Pro Seller", Icon: Sparkles },
-    { to: "/refer", label: "Refer & Earn", Icon: Gift },
     { to: "/reputation", label: "My Reputation", Icon: ShieldCheck },
   ];
 
