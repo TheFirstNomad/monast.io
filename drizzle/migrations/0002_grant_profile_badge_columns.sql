@@ -1,0 +1,1 @@
+GRANT SELECT (verified, pro_until) ON public.profiles TO anon, authenticated;

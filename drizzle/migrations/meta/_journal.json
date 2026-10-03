@@ -15,6 +15,13 @@
       "when": 1791069267909,
       "tag": "0001_pro_referrals_profile_badges",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791069303451,
+      "tag": "0002_grant_profile_badge_columns",
+      "breakpoints": true
     }
   ]
 }
