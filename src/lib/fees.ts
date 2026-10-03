@@ -7,8 +7,8 @@
 /** Flat anti-spam fee charged once per published ad. */
 export const LISTING_FEE_USDC = 0.15;
 
-/** Platform fee on a successful sale, in basis points. 100 bps = 1%. */
-export const SALE_FEE_BPS = 100;
+/** Platform fee on a successful sale, in basis points. 250 bps = 2.5%. */
+export const SALE_FEE_BPS = 250;
 
 /** Hours after the seller marks delivery before a funded escrow auto-releases. */
 export const DELIVERY_WINDOW_HOURS = 72;

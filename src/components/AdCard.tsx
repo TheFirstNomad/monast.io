@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { DbAd } from "@/lib/types";
 import { MapPin } from "lucide-react";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ProSellerBadge } from "@/components/ProSellerBadge";
 
 
 export const AdCard = ({ ad }: { ad: DbAd }) => {
@@ -32,7 +34,13 @@ export const AdCard = ({ ad }: { ad: DbAd }) => {
           <div className="price-nums whitespace-nowrap text-lg font-semibold text-primary mb-1.5">
             {Number(ad.price_usdc).toLocaleString()} USDC
           </div>
-          <h3 className="text-sm font-medium text-foreground line-clamp-2 min-h-10 mb-3 leading-snug">{ad.title}</h3>
+          <h3 className="text-sm font-medium text-foreground line-clamp-2 min-h-10 mb-2 leading-snug">{ad.title}</h3>
+          {(ad.seller?.verified || (ad.seller?.pro_until && new Date(ad.seller.pro_until) > new Date())) && (
+            <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+              {ad.seller?.verified && <VerifiedBadge />}
+              {ad.seller?.pro_until && new Date(ad.seller.pro_until) > new Date() && <ProSellerBadge />}
+            </div>
+          )}
           <div className="flex items-center gap-1 text-[11px] text-muted-foreground min-w-0">
             {ad.location && (
               <>

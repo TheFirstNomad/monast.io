@@ -3,7 +3,7 @@
 // the fallback and the arithmetic used when moving money.
 
 export const LISTING_FEE_USDC = 0.15;
-export const SALE_FEE_BPS = 100; // 1%
+export const SALE_FEE_BPS = 250; // 2.5%
 export const DELIVERY_WINDOW_HOURS = 72;
 export const CANCEL_RESPONSE_HOURS = 48;
 

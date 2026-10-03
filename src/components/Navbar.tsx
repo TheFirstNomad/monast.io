@@ -29,6 +29,8 @@ import {
   Mail,
   Store,
   ShoppingBag,
+  Sparkles,
+  Gift,
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -79,6 +81,8 @@ export const Navbar = () => {
     { to: "/favorites", label: "Saved items", Icon: Heart },
     { to: "/messages", label: "Messages", Icon: MessageCircle },
     { to: "/transactions", label: "Transactions", Icon: Receipt },
+    { to: "/pro", label: "Pro Seller", Icon: Sparkles },
+    { to: "/refer", label: "Refer & Earn", Icon: Gift },
   ];
 
   const submitSearch = (e: React.FormEvent) => {

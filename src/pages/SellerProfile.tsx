@@ -7,6 +7,8 @@ import { ReportDialog } from "@/components/ReportDialog";
 import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 import { Star } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ProSellerBadge } from "@/components/ProSellerBadge";
 
 import { useAuth } from "@/hooks/useAuth";
 
@@ -18,6 +20,8 @@ interface Profile {
   rating: number | null;
   total_ads: number | null;
   created_at: string;
+  verified?: boolean | null;
+  pro_until?: string | null;
 }
 
 interface Review {
@@ -55,7 +59,7 @@ const SellerProfile = () => {
       const [{ data: p }, { data: a }, { data: r }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, display_name, avatar_url, bio, rating, total_ads, created_at")
+          .select("id, display_name, avatar_url, bio, rating, total_ads, created_at, verified, pro_until")
           .eq("id", id)
           .maybeSingle(),
         supabase.from("ads").select(AD_CARD_COLUMNS).eq("seller_id", id).eq("status", "active").order("created_at", { ascending: false }),
@@ -102,7 +106,11 @@ const SellerProfile = () => {
             </span>
           </div>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-foreground">{profile.display_name || "Anonymous"}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-foreground">{profile.display_name || "Anonymous"}</h1>
+              {profile.verified && <VerifiedBadge size="md" />}
+              {profile.pro_until && new Date(profile.pro_until) > new Date() && <ProSellerBadge size="md" />}
+            </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
               <span className="flex items-center gap-1">
                 <Star className="w-4 h-4 fill-primary text-primary" />

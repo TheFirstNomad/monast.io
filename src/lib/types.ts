@@ -3,7 +3,7 @@
  * column, so long descriptions never travel to the browser for a grid view.
  */
 export const AD_CARD_COLUMNS =
-  "id,seller_id,title,price_usdc,category,condition,location,images,status,featured,featured_until,created_at";
+  "id,seller_id,title,price_usdc,category,condition,location,images,status,featured,featured_until,created_at,seller:profiles(display_name,avatar_url,rating,verified,pro_until)";
 
 export interface DbAd {
   id: string;
@@ -27,8 +27,10 @@ export interface DbAd {
     display_name: string | null;
     avatar_url: string | null;
     rating: number | null;
-    total_ads: number | null;
-    created_at: string;
+    total_ads?: number | null;
+    created_at?: string;
+    verified?: boolean | null;
+    pro_until?: string | null;
   } | null;
 }
 

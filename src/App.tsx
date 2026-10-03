@@ -18,6 +18,8 @@ const EditAd = lazy(() => import("./pages/EditAd"));
 const AdDetail = lazy(() => import("./pages/AdDetail"));
 const Browse = lazy(() => import("./pages/Browse"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const ProSeller = lazy(() => import("./pages/ProSeller"));
+const Refer = lazy(() => import("./pages/Refer"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -86,6 +88,8 @@ const App = () => (
               <Route path="/seller/:id" element={<SellerProfile />} />
               <Route path="/agents" element={<AgentDocs />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/pro" element={<ProSeller />} />
+              <Route path="/refer" element={<Refer />} />
               <Route path="/publish/:adId" element={<PublishAd />} />
               <Route path="/promote/:adId" element={<Promote />} />
               <Route path="/escrow/:id" element={<EscrowDetail />} />
