@@ -8,6 +8,20 @@
       "when": 1789734355104,
       "tag": "0000_add_performance_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791069267909,
+      "tag": "0001_pro_referrals_profile_badges",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791069303451,
+      "tag": "0002_grant_profile_badge_columns",
+      "breakpoints": true
     }
   ]
 }

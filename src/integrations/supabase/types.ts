@@ -698,6 +698,36 @@ export type Database = {
           },
         ]
       }
+      pro_subscriptions: {
+        Row: {
+          amount_usdc: number
+          expires_at: string
+          id: string
+          started_at: string
+          status: string
+          tx_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_usdc: number
+          expires_at: string
+          id?: string
+          started_at?: string
+          status?: string
+          tx_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_usdc?: number
+          expires_at?: string
+          id?: string
+          started_at?: string
+          status?: string
+          tx_hash?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -708,9 +738,11 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          pro_until: string | null
           rating: number | null
           total_ads: number | null
           updated_at: string
+          verified: boolean
           wallet_address: string | null
         }
         Insert: {
@@ -722,9 +754,11 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          pro_until?: string | null
           rating?: number | null
           total_ads?: number | null
           updated_at?: string
+          verified?: boolean
           wallet_address?: string | null
         }
         Update: {
@@ -736,9 +770,11 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          pro_until?: string | null
           rating?: number | null
           total_ads?: number | null
           updated_at?: string
+          verified?: boolean
           wallet_address?: string | null
         }
         Relationships: []
@@ -795,6 +831,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          credited: boolean
+          id: string
+          referred_user_id: string | null
+          referrer_id: string
+          reward_usdc: number
+        }
+        Insert: {
+          created_at?: string
+          credited?: boolean
+          id?: string
+          referred_user_id?: string | null
+          referrer_id: string
+          reward_usdc?: number
+        }
+        Update: {
+          created_at?: string
+          credited?: boolean
+          id?: string
+          referred_user_id?: string | null
+          referrer_id?: string
+          reward_usdc?: number
+        }
+        Relationships: []
       }
       reports: {
         Row: {

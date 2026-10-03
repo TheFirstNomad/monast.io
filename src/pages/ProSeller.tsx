@@ -20,7 +20,7 @@ const PRO_DURATION_DAYS = 30;
 interface Subscription {
   id: string;
   expires_at: string;
-  plan: string;
+  status: string;
 }
 
 const ProSeller = () => {
@@ -52,7 +52,7 @@ const ProSeller = () => {
     if (!user) { setLoadingSub(false); return; }
     supabase
       .from("pro_subscriptions")
-      .select("id, expires_at, plan")
+      .select("id, expires_at, status")
       .eq("user_id", user.id)
       .gt("expires_at", new Date().toISOString())
       .order("expires_at", { ascending: false })
@@ -74,12 +74,12 @@ const ProSeller = () => {
     setActivating(true);
     const expiresAt = new Date(Date.now() + PRO_DURATION_DAYS * 86_400_000).toISOString();
     supabase.from("pro_subscriptions")
-      .upsert({ user_id: user.id, plan: "pro", expires_at: expiresAt, tx_hash: pendingHash }, { onConflict: "user_id" })
+      .insert({ user_id: user.id, amount_usdc: PRO_PRICE_USDC, expires_at: expiresAt, tx_hash: pendingHash })
       .then(({ error }) => {
         setActivating(false);
         if (error) { toast.error("Payment confirmed but activation failed. Contact support with your tx hash."); return; }
         toast.success("Pro Seller activated! Your badge is live.");
-        setActiveSub({ id: "new", expires_at: expiresAt, plan: "pro" });
+        setActiveSub({ id: "new", expires_at: expiresAt, status: "active" });
       });
   }, [txConfirmed, pendingHash, user]);
 
@@ -87,23 +87,10 @@ const ProSeller = () => {
     if (!user) { toast.error("Sign in to subscribe"); return; }
     if (!treasury) { toast.error("Treasury not available, try again shortly"); return; }
 
-    const paying = await resolvePayingWallet(user.id, address ?? null);
+    const paying = await resolvePayingWallet(user.id);
 
-    if (paying === "circle") {
-      setCirclePaying(true);
-      try {
-        await sendUsdcPayment({ amountUsdc: PRO_PRICE_USDC, to: treasury, userId: user.id, description: "Pro Seller subscription" });
-        const expiresAt = new Date(Date.now() + PRO_DURATION_DAYS * 86_400_000).toISOString();
-        const { error } = await supabase.from("pro_subscriptions")
-          .upsert({ user_id: user.id, plan: "pro", expires_at: expiresAt, tx_hash: "circle" }, { onConflict: "user_id" });
-        if (error) throw error;
-        toast.success("Pro Seller activated!");
-        setActiveSub({ id: "new", expires_at: expiresAt, plan: "pro" });
-      } catch (e: any) {
-        toast.error(e?.message ?? "Payment failed");
-      } finally {
-        setCirclePaying(false);
-      }
+    if (paying.isCircleWallet) {
+      toast.error("Pro Seller payments currently need a connected wallet such as MetaMask.");
       return;
     }
 
@@ -114,10 +101,9 @@ const ProSeller = () => {
         address: USDC_ADDRESS,
         abi: ERC20_TRANSFER_ABI,
         functionName: "transfer",
-        args: [treasury as `0x${string}`, toUsdcUnits(PRO_PRICE_USDC)],
-        chain: ACTIVE_CHAIN,
-        account: address as `0x${string}`,
-      });
+        args: [treasury.address, toUsdcUnits(PRO_PRICE_USDC)],
+        chainId: ARC_CHAIN_ID,
+      } as any);
       setPendingHash(hash);
     } catch (e: any) {
       if (!e?.message?.includes("rejected")) toast.error(e?.message ?? "Transaction failed");
