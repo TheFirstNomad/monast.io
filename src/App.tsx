@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { WalletProvider } from "@/hooks/useWallet";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { BrandLogo } from "@/components/BrandLogo";
 
 // The landing page is the first thing most visitors see, so it ships in the
 // initial bundle. Every other screen is fetched only when its route opens,
@@ -54,11 +55,9 @@ const Account = lazy(() => import("./pages/Account"));
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center">
-    <div
-      className="h-8 w-8 rounded-full border-2 border-border border-t-primary animate-spin"
-      role="status"
-      aria-label="Loading"
-    />
+    <div role="status" aria-label="Loading Monast" className="animate-pulse">
+      <BrandLogo size="lg" showName={false} />
+    </div>
   </div>
 );
 

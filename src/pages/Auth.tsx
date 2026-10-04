@@ -6,6 +6,7 @@ import { SignInChoice } from "@/components/SignInChoice";
 import { WalletSetupDialog } from "@/components/WalletSetupDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { isSelfCustodyEmail } from "@/lib/session";
+import { BrandLogo } from "@/components/BrandLogo";
 
 
 const Auth = () => {
@@ -69,7 +70,9 @@ const Auth = () => {
   return (
     <Layout>
       <div className="max-w-md mx-auto px-4 py-16 md:py-24">
-        <Link to="/" className="block text-center font-display text-3xl text-foreground mb-10">Monast</Link>
+        <Link to="/" className="flex justify-center mb-10" aria-label="Monast home">
+          <BrandLogo size="lg" />
+        </Link>
         <SignInChoice onDone={() => navigate("/dashboard", { replace: true })} />
 
         <div className="mt-8 text-xs text-muted-foreground text-center">

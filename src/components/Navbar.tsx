@@ -36,6 +36,7 @@ import {
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { BrandLogo } from "@/components/BrandLogo";
 
 
 import { useWallet } from "@/hooks/useWallet";
@@ -101,8 +102,8 @@ export const Navbar = () => {
     <nav className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl border-b border-border">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="shrink-0 font-display text-2xl text-foreground">
-            Monast
+          <Link to="/" className="shrink-0" aria-label="Monast home">
+            <BrandLogo size="sm" />
           </Link>
 
           <form onSubmit={submitSearch} className="hidden lg:flex flex-1 max-w-lg mx-8">
