@@ -25,14 +25,17 @@ import {
   Flag,
   ShieldCheck,
   ChevronDown,
-
   Mail,
   Store,
   ShoppingBag,
   Sparkles,
+  BarChart2,
+  Shield,
+  Upload,
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 
 import { useWallet } from "@/hooks/useWallet";
@@ -82,6 +85,9 @@ export const Navbar = () => {
     { to: "/transactions", label: "Transactions", Icon: Receipt },
     { to: "/pro", label: "Pro Seller", Icon: Sparkles },
     { to: "/reputation", label: "My Reputation", Icon: ShieldCheck },
+    { to: "/analytics", label: "Seller Analytics", Icon: BarChart2 },
+    { to: "/disputes", label: "Dispute History", Icon: Shield },
+    { to: "/bulk-import", label: "Bulk Import", Icon: Upload },
   ];
 
   const submitSearch = (e: React.FormEvent) => {
@@ -118,6 +124,7 @@ export const Navbar = () => {
             <Link to="/post-ad" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Sell</Link>
             <Link to="/messages" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Messages</Link>
             {user && <NotificationsBell />}
+            <ThemeToggle />
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

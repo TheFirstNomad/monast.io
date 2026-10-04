@@ -22,6 +22,13 @@ const ProSeller = lazy(() => import("./pages/ProSeller"));
 const EscrowApi = lazy(() => import("./pages/EscrowApi"));
 const Reputation = lazy(() => import("./pages/Reputation"));
 const AgentBilling = lazy(() => import("./pages/AgentBilling"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const DisputeHistory = lazy(() => import("./pages/DisputeHistory"));
+const BulkImport = lazy(() => import("./pages/BulkImport"));
+const ForFreelancers = lazy(() => import("./pages/ForFreelancers"));
+const ForCryptoTraders = lazy(() => import("./pages/ForCryptoTraders"));
+const ForDomainSellers = lazy(() => import("./pages/ForDomainSellers"));
+const Refer = lazy(() => import("./pages/Refer"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -94,6 +101,13 @@ const App = () => (
               <Route path="/escrow-api" element={<EscrowApi />} />
               <Route path="/reputation" element={<Reputation />} />
               <Route path="/agent-billing" element={<AgentBilling />} />
+              <Route path="/refer" element={<Refer />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/disputes" element={<DisputeHistory />} />
+              <Route path="/bulk-import" element={<BulkImport />} />
+              <Route path="/for-freelancers" element={<ForFreelancers />} />
+              <Route path="/for-crypto-traders" element={<ForCryptoTraders />} />
+              <Route path="/for-domain-sellers" element={<ForDomainSellers />} />
               <Route path="/publish/:adId" element={<PublishAd />} />
               <Route path="/promote/:adId" element={<Promote />} />
               <Route path="/escrow/:id" element={<EscrowDetail />} />

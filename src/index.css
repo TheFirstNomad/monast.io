@@ -126,9 +126,8 @@
     color: hsl(var(--foreground));
   }
 
-  html {
-    @apply dark;
-  }
+  /* Theme class toggled dynamically by ThemeProvider in hooks/useTheme.tsx */
+  /* Defaults to dark via localStorage or prefers-color-scheme on first visit */
 }
 
 @layer utilities {

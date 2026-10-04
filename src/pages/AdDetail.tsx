@@ -17,6 +17,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { ReportDialog } from "@/components/ReportDialog";
 import { useSeo } from "@/hooks/useSeo";
 import { EscrowTrustBadge } from "@/components/EscrowTrustBadge";
+import { ShareButtons } from "@/components/ShareButtons";
 
 
 const AdDetail = () => {
@@ -265,6 +266,7 @@ const AdDetail = () => {
                   {Number(ad.price_usdc).toLocaleString()} USDC
                 </div>
                 <FavoriteButton adId={ad.id} size="lg" />
+                <ShareButtons title={ad.title} priceUsdc={ad.price_usdc} />
               </div>
               <h1 className="font-display text-2xl text-foreground mb-4 leading-tight">{ad.title}</h1>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

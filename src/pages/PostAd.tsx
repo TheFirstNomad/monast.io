@@ -12,6 +12,7 @@ import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { AuthResolving } from "@/components/AuthResolving";
 import { supabase } from "@/integrations/supabase/client";
 import { LISTING_FEE_USDC } from "@/lib/fees";
+import { usePriceSuggestion } from "@/hooks/usePriceSuggestion";
 import { compressImage } from "@/lib/imageCompress";
 
 const PostAd = () => {
@@ -32,6 +33,7 @@ const PostAd = () => {
   // Category-specific answers (Apps, Crypto & NFTs). Saved on the ad as `attributes`.
   const [extras, setExtras] = useState<Record<string, string>>({});
   const extraFields = extraFieldsFor(form.category);
+  const priceSuggestion = usePriceSuggestion(form.title, form.category);
   // Digital assets have no condition or location: those inputs only show for
   // the physical catch-all category.
   const physical = isPhysicalCategory(form.category);
@@ -251,6 +253,13 @@ const PostAd = () => {
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-primary">USDC</span>
             </div>
+            {priceSuggestion && (
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Suggested range based on {priceSuggestion.count} similar listings:
+                <span className="text-primary font-medium ml-1">{priceSuggestion.min.toLocaleString()} – {priceSuggestion.max.toLocaleString()} USDC</span>
+                <span className="ml-1">(median {priceSuggestion.median.toLocaleString()} USDC)</span>
+              </p>
+            )}
           </div>
 
           {physical && (
