@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/monast-logo.png.asset.json";
+import logo from "@/assets/monast-logo.png";
 import { cn } from "@/lib/utils";
 
 type BrandLogoProps = {
@@ -28,7 +28,7 @@ export const BrandLogo = ({
 }: BrandLogoProps) => (
   <span className={cn("inline-flex items-center gap-2.5", className)}>
     <img
-      src={logoAsset.url}
+      src={logo}
       alt={showName ? "" : "Monast"}
       aria-hidden={showName || undefined}
       width={128}
