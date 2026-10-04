@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { RehydrationBanner } from "@/components/RehydrationBanner";
 import { BottomNav } from "@/components/BottomNav";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const FOOTER_LINKS: { heading: string; links: { to: string; label: string }[] }[] = [
   {
@@ -50,7 +51,9 @@ export const Layout = ({ children }: { children: ReactNode }) => (
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-x-8 gap-y-10 mb-12">
           <div className="col-span-2">
-            <Link to="/" className="font-display text-2xl text-foreground">Monast</Link>
+            <Link to="/" className="inline-flex" aria-label="Monast home">
+              <BrandLogo size="md" />
+            </Link>
             <p className="text-sm text-muted-foreground max-w-xs mt-3 leading-relaxed">
               The global desk for anything, settled in USDC.
             </p>
