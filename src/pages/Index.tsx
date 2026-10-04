@@ -28,6 +28,7 @@ const Index = () => {
     description:
       "Global peer-to-peer marketplace. Post free ads and trade anything worldwide with USDC escrow on Arc.",
     canonicalPath: "/",
+    image: "https://monast.io/og-cover.jpg",
   });
 
   // Cached briefly so returning to the home page is instant.

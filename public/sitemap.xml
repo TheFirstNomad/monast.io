@@ -2,12 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://monast.io/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://monast.io/browse</loc><changefreq>hourly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://monast.io/apps</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://monast.io/crypto-coins</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://monast.io/nfts</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://monast.io/domains</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://monast.io/post-ad</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://monast.io/category/apps</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://monast.io/category/domains</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://monast.io/category/crypto-coins</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://monast.io/category/nfts</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://monast.io/category/services</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://monast.io/category/electronics</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://monast.io/category/collectibles</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://monast.io/category/social-accounts</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://monast.io/for-freelancers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://monast.io/for-crypto-traders</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://monast.io/for-domain-sellers</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://monast.io/pricing</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://monast.io/agents</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://monast.io/auth</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://monast.io/agent-docs</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://monast.io/escrow-api</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://monast.io/pro</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>

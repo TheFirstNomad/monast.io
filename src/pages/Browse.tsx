@@ -9,6 +9,7 @@ import { AD_CARD_COLUMNS, DbAd, categories, conditions, categoryQueryValues, isP
 import { Search, SlidersHorizontal, X, MapPin, PackageOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/hooks/useSeo";
+import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 
 type SortKey = "newest" | "price_asc" | "price_desc" | "featured";
 
@@ -30,6 +31,8 @@ const Browse = () => {
   const [sort, setSort] = useState<SortKey>("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 24;
   // Typing no longer fires a search on every keystroke.
   const searchTerm = useDebounced(search.trim(), 350);
   const locationTerm = useDebounced(location.trim(), 350);
@@ -40,7 +43,7 @@ const Browse = () => {
     queryKey: [
       "ads",
       "browse",
-      { searchTerm, category, condition, locationTerm, minTerm, maxTerm, sort, featuredOnly },
+      { searchTerm, category, condition, locationTerm, minTerm, maxTerm, sort, featuredOnly, page },
     ],
     queryFn: async () => {
       let q = supabase.from("ads").select(AD_CARD_COLUMNS).eq("status", "active");
@@ -61,7 +64,7 @@ const Browse = () => {
       if (maxTerm && !Number.isNaN(max)) q = q.lte("price_usdc", max);
       if (featuredOnly || sort === "featured") q = q.eq("featured", true);
 
-      const { data } = await q.limit(60);
+      const { data } = await q.range(0, page * PAGE_SIZE - 1);
       return (data as unknown as DbAd[]) || [];
     },
     placeholderData: (prev) => prev,
@@ -84,11 +87,29 @@ const Browse = () => {
 
   const clearAll = () => {
     setSearch(""); setCategory(""); setCondition("");
-    setLocation(""); setMinPrice(""); setMaxPrice(""); setFeaturedOnly(false); setSort("newest");
+    setLocation(""); setMinPrice(""); setMaxPrice(""); setFeaturedOnly(false); setSort("newest"); setPage(1);
   };
+
+  // Reset to page 1 when any filter changes
+  useEffect(() => { setPage(1); }, [searchTerm, category, condition, locationTerm, minTerm, maxTerm, sort, featuredOnly]);
+
+  const jsonLdHtml = !loading && ads.length > 0 ? serializeJsonLdSafe({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Monast Marketplace Listings",
+    url: "https://monast.io/browse",
+    numberOfItems: ads.length,
+    itemListElement: ads.slice(0, 10).map((ad, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `https://monast.io/ad/${ad.id}`,
+      name: ad.title,
+    })),
+  }) : null;
 
   return (
     <Layout>
+      {jsonLdHtml && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdHtml }} />}
       <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
         <div className="mb-8"><p className="text-xs text-primary mb-2">Global marketplace</p><h1 className="font-display text-4xl md:text-5xl text-foreground mb-2">The market</h1><p className="text-sm text-muted-foreground">Apps, coins, NFTs, domains, websites and more, transferred fast and paid in USDC escrow.</p></div>
         <div className="flex items-center gap-3 mb-5 lg:hidden">
@@ -224,6 +245,13 @@ const Browse = () => {
             <p className="font-display text-2xl text-foreground mb-2">No listings at this desk.</p>
             <p className="text-sm text-muted-foreground mb-4">Try a broader search or clear your filters.</p>
             <Button variant="outline" onClick={clearAll}>Clear filters</Button>
+          </div>
+        )}
+        {!loading && ads.length > 0 && ads.length === page * PAGE_SIZE && (
+          <div className="flex justify-center mt-8">
+            <Button variant="outline" onClick={() => setPage((p) => p + 1)} className="px-8">
+              Load more
+            </Button>
           </div>
         )}
         </div>

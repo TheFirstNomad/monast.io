@@ -49,6 +49,7 @@ const Buy = () => {
   const [creating, setCreating] = useState(false);
   const [autoFund, setAutoFund] = useState(false);
   const { ready: walletReady, checking: walletChecking } = useCircleWallet();
+  const [protectionFee, setProtectionFee] = useState(0);
 
   useSeo({
     title: ad ? `Buy ${ad.title} with USDC escrow | monast.io` : "Secure checkout | monast.io",
@@ -140,7 +141,6 @@ const Buy = () => {
   const ownListing = user?.id === ad.seller_id;
   const unavailable = ad.status !== "active" && ad.status !== "reserved";
   const baseAmount = Number(escrow?.amount_usdc ?? ad.price_usdc);
-  const [protectionFee, setProtectionFee] = useState(0);
   const amount = baseAmount + protectionFee;
 
   return (

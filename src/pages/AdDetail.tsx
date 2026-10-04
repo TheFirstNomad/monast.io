@@ -9,7 +9,6 @@ import { DbAd } from "@/lib/types";
 import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil, Trash2, LockKeyhole, PackageCheck, Banknote } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
-import { Shield as ShieldIcon } from "lucide-react";
 import { ReviewSection } from "@/components/ReviewSection";
 import { toast } from "sonner";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
@@ -18,6 +17,10 @@ import { ReportDialog } from "@/components/ReportDialog";
 import { useSeo } from "@/hooks/useSeo";
 import { EscrowTrustBadge } from "@/components/EscrowTrustBadge";
 import { ShareButtons } from "@/components/ShareButtons";
+import { AdCard } from "@/components/AdCard";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { ProSellerBadge } from "@/components/ProSellerBadge";
+import { AD_CARD_COLUMNS } from "@/lib/types";
 
 
 const AdDetail = () => {
@@ -33,6 +36,7 @@ const AdDetail = () => {
   // must not be able to close the listing out from under them.
   const OPEN_ESCROW_STATUSES = ["created", "funded", "disputed"];
   const [openEscrowId, setOpenEscrowId] = useState<string | null>(null);
+  const [relatedAds, setRelatedAds] = useState<import("@/lib/types").DbAd[]>([]);
 
   // Listings are the most shared pages on the site, so each one gets its own
   // title, description, canonical URL and preview image.
@@ -110,12 +114,25 @@ const AdDetail = () => {
     if (!id) return;
     supabase
       .from("ads")
-      .select("*, seller:profiles!ads_seller_id_fkey(display_name, avatar_url, rating, total_ads, created_at)")
+      .select("*, seller:profiles!ads_seller_id_fkey(display_name, avatar_url, rating, total_ads, created_at, verified, pro_until)")
       .eq("id", id)
       .maybeSingle()
       .then(({ data }) => {
-        setAd(data as unknown as DbAd);
+        const loaded = data as unknown as DbAd;
+        setAd(loaded);
         setLoading(false);
+        // Fetch related listings in same category
+        if (loaded?.category) {
+          supabase
+            .from("ads")
+            .select(AD_CARD_COLUMNS)
+            .eq("status", "active")
+            .eq("category", loaded.category)
+            .neq("id", id)
+            .order("featured", { ascending: false })
+            .limit(4)
+            .then(({ data: rel }) => setRelatedAds((rel as unknown as DbAd[]) || []));
+        }
       });
   }, [id]);
 
@@ -351,7 +368,7 @@ const AdDetail = () => {
                 <>
                   <Link to={`/buy/${ad.id}`} className="block">
                     <Button className="w-full gap-2 font-semibold py-5">
-                      <ShieldIcon className="w-4 h-4" />
+                      <Shield className="w-4 h-4" />
                       Buy with escrow
                     </Button>
                   </Link>
@@ -380,8 +397,10 @@ const AdDetail = () => {
                     </span>
                   </div>
                   <div>
-                    <div className="font-medium text-foreground text-sm">
+                    <div className="flex items-center gap-1.5 font-medium text-foreground text-sm">
                       {ad.seller.display_name || "Anonymous"}
+                      {(ad.seller as any).verified && <VerifiedBadge />}
+                      {(ad.seller as any).pro_until && new Date((ad.seller as any).pro_until) > new Date() && <ProSellerBadge />}
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Star className="w-3 h-3 fill-primary text-primary" />
@@ -411,6 +430,22 @@ const AdDetail = () => {
           </div>
         </div>
       </div>
+      {relatedAds.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 pb-14">
+          <div className="flex items-end justify-between mb-5">
+            <div>
+              <p className="text-xs text-primary mb-1">More to explore</p>
+              <h2 className="font-display text-2xl text-foreground">More in {ad.category}</h2>
+            </div>
+            <Link to={`/browse?category=${encodeURIComponent(ad.category)}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              See all →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
+            {relatedAds.map((r) => <AdCard key={r.id} ad={r} />)}
+          </div>
+        </section>
+      )}
       <ChatDialog open={chatOpen} onOpenChange={setChatOpen} adId={ad.id} sellerId={ad.seller_id} adTitle={ad.title} />
       <OfferDialog open={offerOpen} onOpenChange={setOfferOpen} adId={ad.id} listPrice={Number(ad.price_usdc)} />
     </Layout>

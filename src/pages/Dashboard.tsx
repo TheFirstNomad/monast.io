@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Package, LogOut, Sparkles, Banknote, Pencil, Wallet as WalletIcon } from "lucide-react";
+import { Plus, Package, LogOut, Sparkles, Banknote, Pencil, Wallet as WalletIcon, TrendingUp, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
@@ -21,6 +21,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [myAds, setMyAds] = useState<DbAd[]>([]);
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
+  const [revenue, setRevenue] = useState<number | null>(null);
+  const [activeEscrows, setActiveEscrows] = useState<number>(0);
 
 
   useEffect(() => {
@@ -37,6 +39,23 @@ const Dashboard = () => {
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setProfile(data));
+    // Revenue: sum of released escrows (seller net after 2.5% fee)
+    supabase
+      .from("escrows")
+      .select("amount_usdc, status")
+      .eq("seller_id", user.id)
+      .in("status", ["released"])
+      .then(({ data }) => {
+        const total = (data ?? []).reduce((s, e) => s + Number(e.amount_usdc) * 0.975, 0);
+        setRevenue(total);
+      });
+    // Active escrows count
+    supabase
+      .from("escrows")
+      .select("id", { count: "exact", head: true })
+      .eq("seller_id", user.id)
+      .in("status", ["created", "funded", "disputed"])
+      .then(({ count }) => setActiveEscrows(count ?? 0));
   }, [user]);
 
   if (resolving) return <AuthResolving />;
@@ -88,12 +107,28 @@ const Dashboard = () => {
         )}
 
 
-        <div className="grid sm:grid-cols-2 gap-3 mb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
           <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
             <Package className="w-5 h-5 text-primary" />
             <div>
               <div className="text-xs text-muted-foreground">Listings</div>
               <div className="text-xl price-nums font-semibold text-foreground">{myAds.length}</div>
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+            <TrendingUp className="w-5 h-5 text-green-500" />
+            <div>
+              <div className="text-xs text-muted-foreground">Revenue earned</div>
+              <div className="text-xl price-nums font-semibold text-foreground">
+                {revenue === null ? "—" : `${revenue.toFixed(2)} USDC`}
+              </div>
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+            <Shield className="w-5 h-5 text-yellow-500" />
+            <div>
+              <div className="text-xs text-muted-foreground">Active escrows</div>
+              <div className="text-xl price-nums font-semibold text-foreground">{activeEscrows}</div>
             </div>
           </div>
           <Link
