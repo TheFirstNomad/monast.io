@@ -29,7 +29,7 @@ const BulkImport = lazy(() => import("./pages/BulkImport"));
 const ForFreelancers = lazy(() => import("./pages/ForFreelancers"));
 const ForCryptoTraders = lazy(() => import("./pages/ForCryptoTraders"));
 const ForDomainSellers = lazy(() => import("./pages/ForDomainSellers"));
-const Refer = lazy(() => import("./pages/Refer"));
+// Refer page intentionally hidden — route removed
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Messages = lazy(() => import("./pages/Messages"));
@@ -100,7 +100,7 @@ const App = () => (
               <Route path="/escrow-api" element={<EscrowApi />} />
               <Route path="/reputation" element={<Reputation />} />
               <Route path="/agent-billing" element={<AgentBilling />} />
-              <Route path="/refer" element={<Refer />} />
+              {/* /refer route intentionally removed */}
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/disputes" element={<DisputeHistory />} />
               <Route path="/bulk-import" element={<BulkImport />} />
