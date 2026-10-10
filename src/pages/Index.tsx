@@ -12,6 +12,7 @@ import { ArrowRight, Plus, Search } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 import marketHero from "@/assets/monast-market-hero.jpg";
+import { SITE_TITLE, SITE_DESCRIPTION } from "@/lib/siteMetadata";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -24,11 +25,9 @@ const Index = () => {
   };
 
   useSeo({
-    title: "monast.io | Buy & Sell Anything Worldwide with USDC",
-    description:
-      "Global peer-to-peer marketplace. Post free ads and trade anything worldwide with USDC escrow on Arc.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     canonicalPath: "/",
-    image: "https://monast.io/og-cover.jpg",
   });
 
   // Cached briefly so returning to the home page is instant.
