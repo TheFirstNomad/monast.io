@@ -8,6 +8,7 @@ import { WalletProvider } from "@/hooks/useWallet";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { BrandLogo } from "@/components/BrandLogo";
+import { GlobalSeo } from "@/components/GlobalSeo";
 
 // The landing page is the first thing most visitors see, so it ships in the
 // initial bundle. Every other screen is fetched only when its route opens,
@@ -67,6 +68,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <GlobalSeo />
         <AuthProvider>
           <WalletProvider>
             <FavoritesProvider>
