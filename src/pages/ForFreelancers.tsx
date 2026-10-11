@@ -35,7 +35,7 @@ const ForFreelancers = () => {
 
   return (
     <Layout>
-      <div dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />}
       <div className="max-w-4xl mx-auto px-4 py-14 md:py-20 space-y-16">
         {/* Hero */}
         <div className="text-center space-y-5">
