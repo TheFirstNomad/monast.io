@@ -20,7 +20,7 @@ const HOW = [
 
 const ForFreelancers = () => {
   useSeo({
-    title: "Freelance Services Marketplace | Get Paid in USDC | monast.io",
+    title: "Freelance Services Marketplace | Get Paid in USDC | Monast",
     description: "Sell your skills globally and get paid in USDC with escrow protection. No chargebacks, instant settlement. Join monast.io — the freelance marketplace built on Arc.",
     canonicalPath: "/for-freelancers",
   });

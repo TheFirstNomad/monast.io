@@ -14,7 +14,7 @@ const WHY = [
 
 const ForDomainSellers = () => {
   useSeo({
-    title: "Sell Domains for USDC | Domain Escrow Marketplace | monast.io",
+    title: "Sell Domains for USDC | Domain Escrow Marketplace | Monast",
     description: "Buy and sell domain names with USDC escrow on Arc. Instant settlement, global buyers, no broker fees. monast.io — the safest place to trade domains.",
     canonicalPath: "/for-domain-sellers",
   });

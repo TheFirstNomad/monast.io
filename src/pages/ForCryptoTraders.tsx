@@ -14,7 +14,7 @@ const WHY = [
 
 const ForCryptoTraders = () => {
   useSeo({
-    title: "OTC Crypto Trading Marketplace | Trade in USDC | monast.io",
+    title: "OTC Crypto Trading Marketplace | Trade in USDC | Monast",
     description: "Buy and sell crypto assets, tokens, and wallets peer-to-peer with USDC escrow on Arc. No CEX, no KYC, instant settlement. monast.io — the OTC desk built onchain.",
     canonicalPath: "/for-crypto-traders",
   });
