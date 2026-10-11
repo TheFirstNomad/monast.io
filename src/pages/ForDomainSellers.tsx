@@ -14,7 +14,7 @@ const WHY = [
 
 const ForDomainSellers = () => {
   useSeo({
-    title: "Sell Domains for USDC | Domain Escrow Marketplace | monast.io",
+    title: "Sell Domains for USDC | Domain Escrow Marketplace | Monast",
     description: "Buy and sell domain names with USDC escrow on Arc. Instant settlement, global buyers, no broker fees. monast.io — the safest place to trade domains.",
     canonicalPath: "/for-domain-sellers",
   });
@@ -29,7 +29,7 @@ const ForDomainSellers = () => {
 
   return (
     <Layout>
-      <div dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />}
       <div className="max-w-4xl mx-auto px-4 py-14 md:py-20 space-y-16">
         <div className="text-center space-y-5">
           <div className="inline-flex items-center gap-2 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">

@@ -14,7 +14,7 @@ const WHY = [
 
 const ForCryptoTraders = () => {
   useSeo({
-    title: "OTC Crypto Trading Marketplace | Trade in USDC | monast.io",
+    title: "OTC Crypto Trading Marketplace | Trade in USDC | Monast",
     description: "Buy and sell crypto assets, tokens, and wallets peer-to-peer with USDC escrow on Arc. No CEX, no KYC, instant settlement. monast.io — the OTC desk built onchain.",
     canonicalPath: "/for-crypto-traders",
   });
@@ -29,7 +29,7 @@ const ForCryptoTraders = () => {
 
   return (
     <Layout>
-      <div dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />}
       <div className="max-w-4xl mx-auto px-4 py-14 md:py-20 space-y-16">
         <div className="text-center space-y-5">
           <div className="inline-flex items-center gap-2 text-xs bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">
