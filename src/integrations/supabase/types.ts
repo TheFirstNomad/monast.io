@@ -1150,6 +1150,7 @@ export type Database = {
         Returns: boolean
       }
       my_circle_user_id: { Args: never; Returns: string }
+      profile_is_visible: { Args: { _profile_id: string }; Returns: boolean }
       run_escrow_maintenance: { Args: never; Returns: undefined }
     }
     Enums: {
