@@ -1,3 +1,4 @@
+import { useNavigate as useNav } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { attributeLabel } from "@/lib/categoryFields";
@@ -99,6 +100,7 @@ const AdDetail = () => {
   };
 
   const [removing, setRemoving] = useState(false);
+  const navRef = useNav();
 
   const removeListing = async (isPendingFee = false) => {
     if (!ad) return;
@@ -141,6 +143,7 @@ const AdDetail = () => {
   // Bring a removed listing back. If its fee was already paid it goes live
   // again for free; otherwise it returns to the unpaid step.
   const relistListing = async () => {
+    const go = navRef;
     if (!ad) return;
     setRemoving(true);
     const next = (ad as any).listing_fee_paid_at ? "active" : "pending_fee";
@@ -152,7 +155,7 @@ const AdDetail = () => {
       setAd({ ...ad, status: "active" });
     } else {
       toast.success("Listing restored. Pay the listing fee to publish it.");
-      navigate(`/publish/${ad.id}`);
+      go(`/publish/${ad.id}`);
     }
   };
 
