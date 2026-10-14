@@ -3,6 +3,7 @@
 // already has a `profiles.circle_user_id`, we short-circuit and return an
 // initialization challenge for PIN setup instead of creating a new user.
 import { statusFromError } from "../_shared/http-error.ts";
+import { circleBlockchainId, defaultArcChainId } from "../_shared/arc-chains.ts";
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
@@ -20,10 +21,18 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // Chains we provision for User-Controlled Wallets. monast.io is Arc-native, so
 // only Arc is provisioned. CIRCLE_UCW_BLOCKCHAINS can override the identifier
 // if Circle renames it, without a redeploy.
-const BLOCKCHAINS = (Deno.env.get("CIRCLE_UCW_BLOCKCHAINS") ?? "ARC-TESTNET")
-  .split(",")
-  .map((s) => s.trim().toUpperCase())
-  .filter(Boolean);
+// Wallets are created on the active settlement network. A live Circle key
+// cannot create test-network wallets, so a stale testnet override is ignored.
+const ACTIVE_BLOCKCHAIN = circleBlockchainId(defaultArcChainId());
+const BLOCKCHAINS = (() => {
+  const override = (Deno.env.get("CIRCLE_UCW_BLOCKCHAINS") ?? "")
+    .split(",")
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+  return override.length && override.every((b) => b === ACTIVE_BLOCKCHAIN)
+    ? override
+    : [ACTIVE_BLOCKCHAIN];
+})();
 
 async function circle(path: string, init: RequestInit = {}) {
   const res = await fetch(`${CIRCLE_BASE}${path}`, {
