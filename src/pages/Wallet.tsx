@@ -234,6 +234,17 @@ const Wallet = () => {
             {isCircleWallet && (
               <ActivityList items={activity} loading={circleActivity.isLoading} />
             )}
+            {previousWallets.length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <p className="text-sm font-semibold text-foreground mb-1">Previous wallet (test network)</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Kept for your records. It only held test USDC and is not used for payments.
+                </p>
+                {previousWallets.map((a) => (
+                  <p key={a} className="font-mono text-xs text-muted-foreground break-all">{a}</p>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
