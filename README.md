@@ -36,5 +36,5 @@ removes those walls:
 
 - Arc public mainnet settlement once the network opens to the public.
 - Standalone (non-delegated) agent wallets with their own settlement accounts.
-- Dispute arbitration by independent arbitrators at scale.
+- Dispute arbitration by independent arbitrators at scale. 
 
