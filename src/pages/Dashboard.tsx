@@ -13,6 +13,25 @@ import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 import { OffersInbox } from "@/components/OffersInbox";
 import { EscrowsList } from "@/components/EscrowsList";
 
+/* Colour-hashed avatar for dashboard header */
+const avatarHue = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+  return h;
+};
+const DashAvatar = ({ name }: { name: string }) => {
+  const hue = avatarHue(name);
+  return (
+    <div
+      className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0 select-none"
+      style={{ background: `hsl(${hue} 55% 90%)`, color: `hsl(${hue} 55% 30%)` }}
+      aria-hidden="true"
+    >
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+};
+
 const Dashboard = () => {
   const { signOut } = useAuth();
   const { user, resolving } = useRequireAuth();
@@ -66,11 +85,7 @@ const Dashboard = () => {
       <div className="max-w-5xl mx-auto px-4 py-10 md:py-14">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-bold text-lg">
-                {(profile?.display_name || user.email || "U").charAt(0).toUpperCase()}
-              </span>
-            </div>
+            <DashAvatar name={profile?.display_name || user.email || "U"} />
             <div>
               <div className="font-display text-3xl text-foreground">{profile?.display_name || "Your desk"}</div>
               <div className="text-sm text-muted-foreground truncate max-w-[220px]">{user.email}</div>
@@ -120,7 +135,7 @@ const Dashboard = () => {
             <div>
               <div className="text-xs text-muted-foreground">Revenue earned</div>
               <div className="text-xl price-nums font-semibold text-foreground">
-                {revenue === null ? "—" : `${revenue.toFixed(2)} USDC`}
+                {revenue === null ? "..." : `${revenue.toFixed(2)} USDC`}
               </div>
             </div>
           </div>

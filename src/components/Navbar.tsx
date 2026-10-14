@@ -45,6 +45,35 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRoles } from "@/hooks/useRoles";
 import { isOwnerWallet } from "@/lib/owner";
 
+/* Active-aware nav link with bottom indicator */
+const NavLink = ({
+  to,
+  current,
+  children,
+}: {
+  to: string;
+  current: string;
+  children: React.ReactNode;
+}) => {
+  const active = current === to || current.startsWith(to + "/");
+  return (
+    <Link
+      to={to}
+      className={[
+        "relative text-sm font-medium px-3 py-2 rounded-md transition-colors",
+        active
+          ? "text-foreground"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+      ].join(" ")}
+    >
+      {children}
+      {active && (
+        <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-primary" />
+      )}
+    </Link>
+  );
+};
+
 export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -121,9 +150,9 @@ export const Navbar = () => {
           </form>
 
           <div className="hidden md:flex items-center gap-1">
-            <Link to="/browse" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Browse</Link>
-            <Link to="/post-ad" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Sell</Link>
-            <Link to="/messages" className="text-sm font-medium text-muted-foreground hover:text-foreground px-3 py-2">Messages</Link>
+            <NavLink to="/browse" current={location.pathname}>Browse</NavLink>
+            <NavLink to="/post-ad" current={location.pathname}>Sell</NavLink>
+            <NavLink to="/messages" current={location.pathname}>Messages</NavLink>
             {user && <NotificationsBell />}
             <ThemeToggle />
 

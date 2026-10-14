@@ -78,11 +78,12 @@ const CategoryCard = ({ cat, large }: CategoryCardProps) => {
       <div className="flex flex-wrap gap-2 mb-3">
         {assets.map((asset) => (
           <div key={asset.name} className="flex flex-col items-center gap-1">
-            {/* White circle with subtle shadow */}
+            {/* White circle — no border in light mode (card already has one), subtle border in dark */}
             <div
               className={[
-                "flex items-center justify-center rounded-full bg-white dark:bg-muted",
-                "border border-border shadow-sm overflow-hidden",
+                "flex items-center justify-center rounded-full overflow-hidden",
+                "bg-secondary dark:bg-muted",
+                "dark:border dark:border-border",
                 "transition-transform duration-200 group-hover:scale-105",
                 large ? "w-12 h-12" : "w-9 h-9",
               ].join(" ")}

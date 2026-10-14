@@ -23,6 +23,25 @@ import { ProSellerBadge } from "@/components/ProSellerBadge";
 import { AD_CARD_COLUMNS } from "@/lib/types";
 
 
+/* Colour-hashed inline avatar for seller card */
+const sellerAvatarHue = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 360;
+  return h;
+};
+const SellerAvatarInline = ({ name }: { name: string }) => {
+  const hue = sellerAvatarHue(name);
+  return (
+    <div
+      className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 select-none"
+      style={{ background: `hsl(${hue} 55% 90%)`, color: `hsl(${hue} 55% 30%)` }}
+      aria-hidden="true"
+    >
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
+};
+
 const AdDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -391,11 +410,7 @@ const AdDetail = () => {
               >
                  <h3 className="text-xs font-semibold text-muted-foreground mb-3">Seller</h3>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-primary font-bold text-sm">
-                      {(ad.seller.display_name || "U").charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  <SellerAvatarInline name={ad.seller.display_name || "U"} />
                   <div>
                     <div className="flex items-center gap-1.5 font-medium text-foreground text-sm">
                       {ad.seller.display_name || "Anonymous"}
@@ -404,7 +419,7 @@ const AdDetail = () => {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Star className="w-3 h-3 fill-primary text-primary" />
-                       {ad.seller.rating ?? "-"} rating · {ad.seller.total_ads ?? 0} completed trades
+                      {ad.seller.rating ?? "No rating"} · {ad.seller.total_ads ?? 0} completed trades
                     </div>
                   </div>
                 </div>

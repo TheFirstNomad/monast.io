@@ -90,9 +90,8 @@ const Index = () => {
 
           {/* Subtext */}
           <p className="text-base md:text-lg text-muted-foreground mb-8 max-w-xl mx-auto leading-relaxed">
-            Crypto, NFTs, social accounts, domains, software, services
-            — every trade settles in USDC escrow on Arc. No banks,
-            no borders.
+            Crypto, NFTs, social accounts, domains, software, services.
+            Every trade settles in USDC escrow on Arc. No banks, no borders.
           </p>
 
           {/* CTAs */}
