@@ -11,6 +11,7 @@ import { ArrowRight, Globe, Plus, Shield, Zap } from "lucide-react";
 import { useSeo } from "@/hooks/useSeo";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
 import { SITE_TITLE, SITE_DESCRIPTION } from "@/lib/siteMetadata";
+import { ACTIVE_CHAIN } from "@/lib/chains";
 
 const Index = () => {
   useSeo({
@@ -79,7 +80,7 @@ const Index = () => {
           {/* Live status pill */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/10 border border-success/20 text-success text-xs font-medium mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-            Live on Arc Testnet
+            Live on {ACTIVE_CHAIN.label}
           </div>
 
           {/* Headline */}

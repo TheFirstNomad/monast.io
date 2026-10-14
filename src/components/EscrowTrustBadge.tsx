@@ -50,7 +50,7 @@ export const EscrowTrustBadge = () => (
         <span>Full refund if seller fails to deliver and you raise a dispute</span>
       </div>
       <a
-        href="/agent-docs"
+        href="/escrow-api"
         className="flex items-center gap-1 text-[11px] text-primary hover:underline mt-1"
       >
         <ExternalLink className="w-3 h-3" />

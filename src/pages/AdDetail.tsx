@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { DbAd } from "@/lib/types";
-import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil, Trash2, LockKeyhole, PackageCheck, Banknote } from "lucide-react";
+import { MapPin, MessageCircle, Shield, ChevronLeft, ChevronRight, Star, CheckCircle2, Sparkles, Pencil, Trash2, LockKeyhole, PackageCheck, Banknote, ArrowRight } from "lucide-react";
 import { ChatDialog } from "@/components/ChatDialog";
 import { OfferDialog } from "@/components/OfferDialog";
 import { ReviewSection } from "@/components/ReviewSection";
@@ -452,8 +452,8 @@ const AdDetail = () => {
               <p className="text-xs text-primary mb-1">More to explore</p>
               <h2 className="font-display text-2xl text-foreground">More in {ad.category}</h2>
             </div>
-            <Link to={`/browse?category=${encodeURIComponent(ad.category)}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              See all →
+            <Link to={`/browse?category=${encodeURIComponent(ad.category)}`} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors">
+              See all <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">

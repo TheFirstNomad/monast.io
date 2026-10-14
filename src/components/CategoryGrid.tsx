@@ -20,7 +20,7 @@ const CATEGORY_SUBTITLES: Record<string, string> = {
   "Websites":               "WordPress, Webflow, Shopify and more",
   "Digital Products":       "Templates, eBooks, courses and more",
   "Services":               "Design, dev, writing, marketing",
-  "Others":                 "Anything that doesn't fit above",
+  "Others":                 "Everything else worth trading",
 };
 
 export const CategoryGrid = () => {

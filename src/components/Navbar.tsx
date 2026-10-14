@@ -185,7 +185,14 @@ export const Navbar = () => {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">Account</DropdownMenuLabel>
-                    {accountLinks.map(({ to, label, Icon }) => (
+                    {accountLinks.slice(0, 2).map(({ to, label, Icon }) => (
+                      <DropdownMenuItem key={to} onClick={() => navigate(to)}>
+                        <Icon className="w-4 h-4 mr-2" /> {label}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">Activity</DropdownMenuLabel>
+                    {accountLinks.slice(2).map(({ to, label, Icon }) => (
                       <DropdownMenuItem key={to} onClick={() => navigate(to)}>
                         <Icon className="w-4 h-4 mr-2" /> {label}
                         {to === "/favorites" && favCount > 0 && (

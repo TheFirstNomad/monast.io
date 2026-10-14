@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounced } from "@/hooks/useDebounced";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { AdCard } from "@/components/AdCard";
 import { supabase } from "@/integrations/supabase/client";
 import { AD_CARD_COLUMNS, DbAd, categories, conditions, categoryQueryValues, isPhysicalCategory } from "@/lib/types";
-import { Search, SlidersHorizontal, X, MapPin, PackageOpen } from "lucide-react";
+import { Search, SlidersHorizontal, X, MapPin, PackageOpen, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSeo } from "@/hooks/useSeo";
 import { serializeJsonLdSafe } from "@/lib/jsonLdSafe";
@@ -252,9 +252,27 @@ const Browse = () => {
         {!loading && ads.length === 0 && (
           <div className="text-center py-20 border border-border rounded-xl bg-card mt-4">
             <PackageOpen className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
-            <p className="font-display text-2xl text-foreground mb-2">No listings at this desk.</p>
-            <p className="text-sm text-muted-foreground mb-4">Try a broader search or clear your filters.</p>
-            <Button variant="outline" onClick={clearAll}>Clear filters</Button>
+            <p className="font-display text-2xl text-foreground mb-2">
+              {category ? `No ${category} listings yet.` : "No listings at this desk."}
+            </p>
+            <p className="text-sm text-muted-foreground mb-6">
+              {category
+                ? "Be the first to list in this category and reach buyers worldwide."
+                : "Try a broader search or clear your filters."}
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              {category && (
+                <Button asChild>
+                  <Link to={`/post-ad?category=${encodeURIComponent(category)}`}>
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    List in {category}
+                  </Link>
+                </Button>
+              )}
+              {activeFilterCount > 0 && (
+                <Button variant="outline" onClick={clearAll}>Clear filters</Button>
+              )}
+            </div>
           </div>
         )}
         {!loading && ads.length > 0 && ads.length === page * PAGE_SIZE && (
