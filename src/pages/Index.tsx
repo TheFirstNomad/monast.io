@@ -99,7 +99,7 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
             <Button asChild size="lg" className="h-12 px-7 text-base font-semibold">
               <Link to="/post-ad">
-                List something <ArrowRight className="ml-1.5 w-4 h-4" />
+                List to sell <ArrowRight className="ml-1.5 w-4 h-4" />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-12 px-7 text-base">
