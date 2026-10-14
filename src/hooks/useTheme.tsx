@@ -18,7 +18,8 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem("monast-theme") as Theme | null;
     if (saved === "light" || saved === "dark") return saved;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    // Default to light — matches the Monast brand direction
+    return "light";
   });
 
   useEffect(() => {
