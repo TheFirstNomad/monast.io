@@ -41,6 +41,31 @@ const BLOCKCHAINS = (() => {
     : [ACTIVE_BLOCKCHAIN];
 })();
 
+// Before a sign-in points the profile at a different Circle wallet, keep the
+// previous address on record so no wallet a user once held is ever lost.
+// deno-lint-ignore no-explicit-any
+async function archivePreviousWallet(admin: any, userId: string, newAddress: string) {
+  const { data: prof } = await admin
+    .from("profiles")
+    .select("circle_wallet_address, circle_wallet_id")
+    .eq("id", userId)
+    .maybeSingle();
+  const old = prof?.circle_wallet_address ? String(prof.circle_wallet_address).toLowerCase() : "";
+  if (!old || old === String(newAddress).toLowerCase()) return;
+  await admin.from("user_wallets").upsert(
+    {
+      user_id: userId,
+      address: old,
+      circle_wallet_id: prof?.circle_wallet_id ?? null,
+      kind: "email_circle",
+      chain_id: 5042002,
+      label: "Previous wallet (test network)",
+      is_primary: false,
+    },
+    { onConflict: "user_id,address" },
+  );
+}
+
 async function circle(path: string, init: RequestInit = {}) {
   const res = await fetch(`${CIRCLE_BASE}${path}`, {
     ...init,
@@ -137,6 +162,7 @@ Deno.serve(async (req) => {
           { onConflict: "user_id,address" },
         );
       }
+      await archivePreviousWallet(admin, authData.user.id, wallets[0].address);
       await admin
         .from("profiles")
         .update({ circle_wallet_address: wallets[0].address, circle_wallet_id: wallets[0].id })
@@ -261,6 +287,7 @@ Deno.serve(async (req) => {
             { onConflict: "user_id,address" },
           );
         }
+        await archivePreviousWallet(admin, authUserId, wallets[0].address);
         await admin
           .from("profiles")
           .update({ circle_wallet_address: wallets[0].address, circle_wallet_id: wallets[0].id })
@@ -309,6 +336,7 @@ Deno.serve(async (req) => {
               { onConflict: "user_id,address" },
             );
           }
+          await archivePreviousWallet(admin, authUserId, existing[0].address);
           await admin
             .from("profiles")
             .update({ circle_wallet_address: existing[0].address, circle_wallet_id: existing[0].id })

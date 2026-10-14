@@ -31,6 +31,7 @@ const Wallet = () => {
   const [address, setAddress] = useState<string | null>(null);
   const [isCircleWallet, setIsCircleWallet] = useState(false);
   const [loadingWallet, setLoadingWallet] = useState(true);
+  const [previousWallets, setPreviousWallets] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -52,6 +53,21 @@ const Wallet = () => {
         setAddress(null);
       }
       setLoadingWallet(false);
+
+      // Older test-network Circle wallets, shown for reference only.
+      const current = (data?.circle_wallet_address ?? "").toLowerCase();
+      const { data: rows } = await supabase
+        .from("user_wallets")
+        .select("address, chain_id, label")
+        .eq("user_id", user.id)
+        .eq("kind", "email_circle");
+      if (!active) return;
+      setPreviousWallets(
+        (rows ?? [])
+          .filter((r) => r.chain_id === 5042002 || r.label === "ARC-TESTNET" || r.label?.startsWith("Previous"))
+          .map((r) => r.address)
+          .filter((a) => a.toLowerCase() !== current),
+      );
     })();
     return () => {
       active = false;
@@ -217,6 +233,17 @@ const Wallet = () => {
             <SendUsdcCard isCircleWallet={isCircleWallet} balance={balance} onSent={refresh} />
             {isCircleWallet && (
               <ActivityList items={activity} loading={circleActivity.isLoading} />
+            )}
+            {previousWallets.length > 0 && (
+              <div className="rounded-xl border border-border bg-card p-4">
+                <p className="text-sm font-semibold text-foreground mb-1">Previous wallet (test network)</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Kept for your records. It only held test USDC and is not used for payments.
+                </p>
+                {previousWallets.map((a) => (
+                  <p key={a} className="font-mono text-xs text-muted-foreground break-all">{a}</p>
+                ))}
+              </div>
             )}
           </>
         )}
