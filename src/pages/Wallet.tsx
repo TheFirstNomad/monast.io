@@ -31,6 +31,7 @@ const Wallet = () => {
   const [address, setAddress] = useState<string | null>(null);
   const [isCircleWallet, setIsCircleWallet] = useState(false);
   const [loadingWallet, setLoadingWallet] = useState(true);
+  const [previousWallets, setPreviousWallets] = useState<string[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -52,6 +53,21 @@ const Wallet = () => {
         setAddress(null);
       }
       setLoadingWallet(false);
+
+      // Older test-network Circle wallets, shown for reference only.
+      const current = (data?.circle_wallet_address ?? "").toLowerCase();
+      const { data: rows } = await supabase
+        .from("user_wallets")
+        .select("address, chain_id, label")
+        .eq("user_id", user.id)
+        .eq("kind", "email_circle");
+      if (!active) return;
+      setPreviousWallets(
+        (rows ?? [])
+          .filter((r) => r.chain_id === 5042002 || r.label === "ARC-TESTNET" || r.label?.startsWith("Previous"))
+          .map((r) => r.address)
+          .filter((a) => a.toLowerCase() !== current),
+      );
     })();
     return () => {
       active = false;

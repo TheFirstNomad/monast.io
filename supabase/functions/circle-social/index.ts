@@ -57,7 +57,7 @@ async function archivePreviousWallet(admin: any, userId: string, newAddress: str
       user_id: userId,
       address: old,
       circle_wallet_id: prof?.circle_wallet_id ?? null,
-      kind: "email_circle_previous",
+      kind: "email_circle",
       chain_id: 5042002,
       label: "Previous wallet (test network)",
       is_primary: false,
