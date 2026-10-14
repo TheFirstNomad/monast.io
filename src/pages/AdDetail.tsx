@@ -138,6 +138,24 @@ const AdDetail = () => {
     }
   };
 
+  // Bring a removed listing back. If its fee was already paid it goes live
+  // again for free; otherwise it returns to the unpaid step.
+  const relistListing = async () => {
+    if (!ad) return;
+    setRemoving(true);
+    const next = (ad as any).listing_fee_paid_at ? "active" : "pending_fee";
+    const { error } = await supabase.from("ads").update({ status: next }).eq("id", ad.id);
+    setRemoving(false);
+    if (error) return toast.error(error.message);
+    if (next === "active") {
+      toast.success("Listing is live again");
+      setAd({ ...ad, status: "active" });
+    } else {
+      toast.success("Listing restored. Pay the listing fee to publish it.");
+      navigate(`/publish/${ad.id}`);
+    }
+  };
+
   useEffect(() => {
     if (!id) return;
     supabase
@@ -343,16 +361,19 @@ const AdDetail = () => {
                     <Trash2 className="w-4 h-4" />
                     This listing has been removed
                   </div>
-                  {user && user.id === ad.seller_id && (
-                    <Link
-                      to={`/post-ad?prefill=${encodeURIComponent(JSON.stringify({ title: ad.title, category: ad.category, price_usdc: ad.price_usdc, description: ad.description }))}`}
-                      className="block"
+                  {user && user.id === ad.seller_id && !(ad as any).removed_by_moderator && (
+                    <Button
+                      onClick={relistListing}
+                      disabled={removing}
+                      className="w-full gap-2 py-5"
                     >
-                      <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
-                        <Sparkles className="w-4 h-4" />
-                        List a similar item
-                      </Button>
-                    </Link>
+                      <Sparkles className="w-4 h-4" />
+                      {removing
+                        ? "Relisting..."
+                        : (ad as any).listing_fee_paid_at
+                          ? "Relist (no new fee)"
+                          : "Relist"}
+                    </Button>
                   )}
                 </>
               ) : ad.status === "sold" ? (
