@@ -100,31 +100,40 @@ const AdDetail = () => {
 
   const [removing, setRemoving] = useState(false);
 
-  const removeListing = async () => {
+  const removeListing = async (isPendingFee = false) => {
     if (!ad) return;
     setRemoving(true);
-    // Re-check at click time so a stale page can't slip through.
-    const { data: live } = await supabase
-      .from("escrows")
-      .select("id")
-      .eq("ad_id", ad.id)
-      .in("status", OPEN_ESCROW_STATUSES)
-      .limit(1)
-      .maybeSingle();
-    if (live) {
-      setOpenEscrowId(live.id);
-      setRemoving(false);
-      toast.error("Cannot remove this listing while an active escrow exists");
-      return;
+
+    // Listings that never went live (pending_fee) have no escrow to check.
+    if (!isPendingFee) {
+      const { data: live } = await supabase
+        .from("escrows")
+        .select("id")
+        .eq("ad_id", ad.id)
+        .in("status", OPEN_ESCROW_STATUSES)
+        .limit(1)
+        .maybeSingle();
+      if (live) {
+        setOpenEscrowId(live.id);
+        setRemoving(false);
+        toast.error("Cannot remove this listing while an active escrow exists");
+        return;
+      }
     }
+
     const { error } = await supabase
       .from("ads")
       .update({ status: "removed" })
       .eq("id", ad.id);
     setRemoving(false);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Listing removed");
+    if (error) {
+      toast.error(
+        error.message.includes("row-level") || error.code === "42501"
+          ? "Permission denied. Please ask Monast support to cancel this listing."
+          : error.message
+      );
+    } else {
+      toast.success(isPendingFee ? "Listing cancelled. No fee was charged." : "Listing removed");
       setAd({ ...ad, status: "removed" });
     }
   };
@@ -329,15 +338,52 @@ const AdDetail = () => {
 
             <div className="bg-card rounded-xl border border-border p-5 space-y-3">
               {ad.status === "removed" ? (
-                <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-muted-foreground">
-                  <Trash2 className="w-4 h-4" />
-                  This listing has been removed
-                </div>
+                <>
+                  <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-muted-foreground">
+                    <Trash2 className="w-4 h-4" />
+                    This listing has been removed
+                  </div>
+                  {user && user.id === ad.seller_id && (
+                    <Link
+                      to={`/post-ad?prefill=${encodeURIComponent(JSON.stringify({ title: ad.title, category: ad.category, price_usdc: ad.price_usdc, description: ad.description }))}`}
+                      className="block"
+                    >
+                      <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
+                        <Sparkles className="w-4 h-4" />
+                        List a similar item
+                      </Button>
+                    </Link>
+                  )}
+                </>
               ) : ad.status === "sold" ? (
                 <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-foreground">
                   <CheckCircle2 className="w-4 h-4 text-primary" />
                   This item has been sold
                 </div>
+              ) : ad.status === "pending_fee" && user && user.id === ad.seller_id ? (
+                <>
+                  <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-4 py-3">
+                    <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-0.5">Awaiting listing fee</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                      This listing is not live yet. Pay the 0.15 USDC listing fee to publish it, or cancel below at no charge.
+                    </p>
+                  </div>
+                  <Link to={`/edit-ad/${ad.id}`} className="block">
+                    <Button variant="outline" className="w-full gap-2 py-5">
+                      <Pencil className="w-4 h-4" />
+                      Edit listing
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={() => removeListing(true)}
+                    disabled={removing}
+                    variant="outline"
+                    className="w-full gap-2 py-5 border-destructive/40 text-destructive hover:bg-destructive/5"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {removing ? "Cancelling..." : "Cancel listing (no fee charged)"}
+                  </Button>
+                </>
               ) : user && user.id === ad.seller_id ? (
                 <>
                   <Link to={`/edit-ad/${ad.id}`} className="block">
@@ -368,7 +414,7 @@ const AdDetail = () => {
                     </p>
                   )}
                   <Button
-                    onClick={removeListing}
+                    onClick={() => removeListing(false)}
                     disabled={removing || !!openEscrowId}
                     variant="outline"
                     className="w-full gap-2 py-5 border-destructive/40 text-destructive hover:bg-destructive/5"

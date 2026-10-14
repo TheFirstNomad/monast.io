@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,14 +19,23 @@ const PostAd = () => {
   const { toast } = useToast();
   const { user, resolving } = useRequireAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Pre-fill from a removed listing's data (via "List a similar item" button)
+  const prefillRaw = searchParams.get("prefill");
+  const prefill = (() => {
+    try { return prefillRaw ? JSON.parse(decodeURIComponent(prefillRaw)) : null; }
+    catch { return null; }
+  })();
+
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    price: "",
-    category: "",
+    title: prefill?.title ?? "",
+    description: prefill?.description ?? "",
+    price: prefill?.price_usdc ? String(prefill.price_usdc) : "",
+    category: prefill?.category ?? "",
     condition: "Used" as string,
     location: "",
   });
