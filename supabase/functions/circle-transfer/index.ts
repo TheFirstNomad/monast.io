@@ -61,7 +61,18 @@ async function circle(path: string, init: RequestInit = {}) {
     },
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(`Circle ${path} ${res.status}: ${JSON.stringify(data)}`);
+  if (!res.ok) {
+    // 155509: the Circle Gas Station policy for this network is not set up yet.
+    if ((data as { code?: number })?.code === 155509) {
+      console.error(`Circle ${path} 155509: gas station policy missing`);
+      const err = new Error(
+        "Payments from Monast wallets are paused for a moment while the site owner finishes setup. Please try again later.",
+      ) as Error & { upstreamStatus?: number };
+      err.upstreamStatus = 503;
+      throw err;
+    }
+    throw new Error(`Circle ${path} ${res.status}: ${JSON.stringify(data)}`);
+  }
   return data;
 }
 
