@@ -36,6 +36,13 @@
       "when": 1791787712251,
       "tag": "0004_tighten_promotions_and_ad_photos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792022320701,
+      "tag": "0005_allow_free_cancel_and_relist",
+      "breakpoints": true
     }
   ]
 }

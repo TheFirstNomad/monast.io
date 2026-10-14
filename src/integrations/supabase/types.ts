@@ -49,6 +49,7 @@ export type Database = {
           listing_fee_usdc: number
           location: string | null
           price_usdc: number
+          removed_by_moderator: boolean
           seller_id: string
           sold_at: string | null
           status: string
@@ -71,6 +72,7 @@ export type Database = {
           listing_fee_usdc?: number
           location?: string | null
           price_usdc: number
+          removed_by_moderator?: boolean
           seller_id: string
           sold_at?: string | null
           status?: string
@@ -93,6 +95,7 @@ export type Database = {
           listing_fee_usdc?: number
           location?: string | null
           price_usdc?: number
+          removed_by_moderator?: boolean
           seller_id?: string
           sold_at?: string | null
           status?: string
