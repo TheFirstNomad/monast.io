@@ -22,6 +22,7 @@ import { AdCard } from "@/components/AdCard";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { ProSellerBadge } from "@/components/ProSellerBadge";
 import { AD_CARD_COLUMNS } from "@/lib/types";
+import { DeleteListingButton } from "@/components/DeleteListingButton";
 
 
 /* Colour-hashed inline avatar for seller card */
@@ -378,12 +379,30 @@ const AdDetail = () => {
                           : "Relist"}
                     </Button>
                   )}
+                  {user && user.id === ad.seller_id && (
+                    <DeleteListingButton
+                      adId={ad.id}
+                      images={ad.images}
+                      openEscrowId={openEscrowId}
+                      onDeleted={() => navRef("/dashboard")}
+                    />
+                  )}
                 </>
               ) : ad.status === "sold" ? (
+                <>
                 <div className="flex items-center justify-center gap-2 py-3 bg-secondary rounded-lg text-sm font-semibold text-foreground">
                   <CheckCircle2 className="w-4 h-4 text-primary" />
                   This item has been sold
                 </div>
+                  {user && user.id === ad.seller_id && (
+                    <DeleteListingButton
+                      adId={ad.id}
+                      images={ad.images}
+                      openEscrowId={openEscrowId}
+                      onDeleted={() => navRef("/dashboard")}
+                    />
+                  )}
+                </>
               ) : ad.status === "pending_fee" && user && user.id === ad.seller_id ? (
                 <>
                   <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 px-4 py-3">
@@ -407,6 +426,14 @@ const AdDetail = () => {
                     <Trash2 className="w-4 h-4" />
                     {removing ? "Cancelling..." : "Cancel listing (no fee charged)"}
                   </Button>
+                  {user && user.id === ad.seller_id && (
+                    <DeleteListingButton
+                      adId={ad.id}
+                      images={ad.images}
+                      openEscrowId={openEscrowId}
+                      onDeleted={() => navRef("/dashboard")}
+                    />
+                  )}
                 </>
               ) : user && user.id === ad.seller_id ? (
                 <>
@@ -446,6 +473,14 @@ const AdDetail = () => {
                     <Trash2 className="w-4 h-4" />
                     {removing ? "Removing..." : "Remove listing"}
                   </Button>
+                  {user && user.id === ad.seller_id && (
+                    <DeleteListingButton
+                      adId={ad.id}
+                      images={ad.images}
+                      openEscrowId={openEscrowId}
+                      onDeleted={() => navRef("/dashboard")}
+                    />
+                  )}
                   <Link to={`/promote/${ad.id}`} className="block">
                     <Button variant="outline" className="w-full gap-2 py-5 border-primary/40 text-primary hover:bg-primary/5">
                       <Sparkles className="w-4 h-4" />
