@@ -53,7 +53,13 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!ad) return json({ error: "Ad not found" }, 404);
     if (ad.seller_id !== userId) return json({ error: "Not your ad" }, 403);
-    if (ad.listing_fee_paid_at) return json({ ad, already_paid: true });
+    if (ad.listing_fee_paid_at) {
+      // Fee already verified once: a relisted ad goes live without paying again.
+      if (ad.status === "pending_fee") {
+        await admin.from("ads").update({ status: "active" }).eq("id", adId).eq("status", "pending_fee");
+      }
+      return json({ ad: { ...ad, status: ad.status === "pending_fee" ? "active" : ad.status }, already_paid: true });
+    }
     if (ad.status !== "pending_fee") {
       return json({ error: "This listing is not awaiting its publication fee" }, 409);
     }
