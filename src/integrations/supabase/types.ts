@@ -38,6 +38,7 @@ export type Database = {
           category: string
           condition: string | null
           created_at: string
+          deleted_by_owner: boolean
           description: string
           featured: boolean
           featured_until: string | null
@@ -61,6 +62,7 @@ export type Database = {
           category: string
           condition?: string | null
           created_at?: string
+          deleted_by_owner?: boolean
           description: string
           featured?: boolean
           featured_until?: string | null
@@ -84,6 +86,7 @@ export type Database = {
           category?: string
           condition?: string | null
           created_at?: string
+          deleted_by_owner?: boolean
           description?: string
           featured?: boolean
           featured_until?: string | null
@@ -1104,6 +1107,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ad_has_open_escrow: { Args: { _ad_id: string }; Returns: boolean }
       agent_rate_limit_hit: {
         Args: { _bucket: string; _endpoint: string; _limit: number }
         Returns: {
@@ -1153,6 +1157,7 @@ export type Database = {
         Returns: boolean
       }
       my_circle_user_id: { Args: never; Returns: string }
+      owner_delete_ad: { Args: { _ad_id: string }; Returns: string }
       profile_is_visible: { Args: { _profile_id: string }; Returns: boolean }
       run_escrow_maintenance: { Args: never; Returns: undefined }
     }
