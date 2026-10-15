@@ -301,11 +301,36 @@ async function findTransfer(input: {
   walletId: string;
   destinationAddress: string;
   amountUsdc: number;
+  excludeTxHashes?: string[];
+  notBefore?: string | null;
 }): Promise<CircleTx | null> {
   const txs = (await listTransfers(input.userToken, input.walletId)).filter(
     (t: any) => String(t.transactionType ?? "OUTBOUND").toUpperCase() === "OUTBOUND",
   );
-  return pickTransfer(txs, input.destinationAddress, input.amountUsdc);
+  return pickTransfer(txs, input.destinationAddress, input.amountUsdc, {
+    excludeTxHashes: input.excludeTxHashes,
+    notBefore: input.notBefore,
+  });
+}
+
+/**
+ * Every on-chain hash this user's payments were already credited with. Fees and
+ * deposits share amounts and destinations (every listing fee is 0.15 USDC to the
+ * revenue wallet), so recovery must never hand an old payment to a new listing.
+ */
+async function usedTxHashes(admin: any, userId: string): Promise<string[]> {
+  const [ads, escrows, promos, ledger] = await Promise.all([
+    admin.from("ads").select("listing_fee_tx_hash").eq("seller_id", userId).not("listing_fee_tx_hash", "is", null),
+    admin.from("escrows").select("deposit_tx_hash").eq("buyer_id", userId).not("deposit_tx_hash", "is", null),
+    admin.from("promotions").select("tx_hash").eq("owner_user_id", userId).not("tx_hash", "is", null),
+    admin.from("ledger_entries").select("tx_hash").eq("from_user_id", userId).not("tx_hash", "is", null),
+  ]);
+  const out: string[] = [];
+  for (const r of ads.data ?? []) out.push(r.listing_fee_tx_hash);
+  for (const r of escrows.data ?? []) out.push(r.deposit_tx_hash);
+  for (const r of promos.data ?? []) out.push(r.tx_hash);
+  for (const r of ledger.data ?? []) out.push(r.tx_hash);
+  return out.filter(Boolean);
 }
 
 /** USDC balance of a user-controlled wallet, as an exact decimal number. */
@@ -385,30 +410,33 @@ Deno.serve(async (req) => {
       let destinationAddress: string;
       let amountUsdc: number;
       let chainId = ARC_CHAIN_ID;
+      let referenceCreatedAt: string | null = null;
 
       try {
         if (purpose === "escrow_fund") {
           const { data: esc } = await admin
             .from("escrows")
-            .select("amount_usdc, buyer_id, status, chain_id")
+            .select("amount_usdc, buyer_id, status, chain_id, created_at")
             .eq("id", referenceId)
             .maybeSingle();
           if (!esc || esc.buyer_id !== userId || esc.status !== "created") {
             return json({ error: "Escrow not found or not payable" }, 404);
           }
           chainId = Number(esc.chain_id) || ARC_CHAIN_ID;
+          referenceCreatedAt = esc.created_at ?? null;
           destinationAddress = (await getTreasury(admin, "escrow", chainId)).address;
           amountUsdc = Number(esc.amount_usdc);
         } else if (purpose === "listing_fee") {
           const { data: ad } = await admin
             .from("ads")
-            .select("id, seller_id, status, listing_fee_usdc")
+            .select("id, seller_id, status, listing_fee_usdc, created_at")
             .eq("id", referenceId)
             .maybeSingle();
           if (!ad || ad.seller_id !== userId) return json({ error: "Ad not found" }, 404);
           if (ad.status !== "pending_fee") {
             return json({ error: "This listing is not awaiting its publication fee" }, 409);
           }
+          referenceCreatedAt = ad.created_at ?? null;
           const fees = await loadFeeSettings(admin);
           destinationAddress = (await getTreasury(admin, "revenue", chainId)).address;
           // Pin the quoted fee to this listing so a later settings change cannot
@@ -462,6 +490,8 @@ Deno.serve(async (req) => {
 
           destinationAddress,
           amountUsdc,
+          excludeTxHashes: await usedTxHashes(admin, userId),
+          notBefore: referenceCreatedAt,
         });
         return json({
           chainId,

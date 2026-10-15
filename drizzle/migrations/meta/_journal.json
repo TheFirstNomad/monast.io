@@ -43,6 +43,13 @@
       "when": 1792022320701,
       "tag": "0005_allow_free_cancel_and_relist",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792023607299,
+      "tag": "0006_owner_delete_ads_and_escrow_lock",
+      "breakpoints": true
     }
   ]
 }

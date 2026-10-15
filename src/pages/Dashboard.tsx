@@ -12,6 +12,8 @@ import { isOwnerWallet } from "@/lib/owner";
 import { AD_CARD_COLUMNS, DbAd } from "@/lib/types";
 import { OffersInbox } from "@/components/OffersInbox";
 import { EscrowsList } from "@/components/EscrowsList";
+import { DeleteListingButton } from "@/components/DeleteListingButton";
+import { toast } from "sonner";
 
 /* Colour-hashed avatar for dashboard header */
 const avatarHue = (s: string) => {
@@ -42,14 +44,29 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<{ display_name: string | null } | null>(null);
   const [revenue, setRevenue] = useState<number | null>(null);
   const [activeEscrows, setActiveEscrows] = useState<number>(0);
+  // Listing id -> escrow id for listings with an escrow in progress.
+  const [lockedAds, setLockedAds] = useState<Record<string, string>>({});
+  const [relistingId, setRelistingId] = useState<string | null>(null);
+
+  const relist = async (ad: DbAd & { listing_fee_paid_at?: string | null }) => {
+    setRelistingId(ad.id);
+    const next = ad.listing_fee_paid_at ? "active" : "pending_fee";
+    const { error } = await supabase.from("ads").update({ status: next }).eq("id", ad.id);
+    setRelistingId(null);
+    if (error) return toast.error(error.message);
+    setMyAds((list) => list.map((a) => (a.id === ad.id ? { ...a, status: next } : a)));
+    if (next === "active") toast.success("Listing is live again");
+    else navigate(`/publish/${ad.id}`);
+  };
 
 
   useEffect(() => {
     if (!user) return;
     supabase
       .from("ads")
-      .select(AD_CARD_COLUMNS)
+      .select(`${AD_CARD_COLUMNS},listing_fee_paid_at,removed_by_moderator`)
       .eq("seller_id", user.id)
+      .eq("deleted_by_owner", false)
       .order("created_at", { ascending: false })
       .then(({ data }) => setMyAds((data as unknown as DbAd[]) || []));
     supabase
@@ -75,6 +92,16 @@ const Dashboard = () => {
       .eq("seller_id", user.id)
       .in("status", ["created", "funded", "disputed"])
       .then(({ count }) => setActiveEscrows(count ?? 0));
+    supabase
+      .from("escrows")
+      .select("id, ad_id")
+      .eq("seller_id", user.id)
+      .in("status", ["created", "funded", "disputed"])
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        for (const e of data ?? []) map[e.ad_id] = e.id;
+        setLockedAds(map);
+      });
   }, [user]);
 
   if (resolving) return <AuthResolving />;
@@ -198,7 +225,7 @@ const Dashboard = () => {
                   </div>
                 </Link>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                   <Link to={`/edit-ad/${ad.id}`}>
                     <Button size="sm" variant="outline" className="gap-1">
                       <Pencil className="w-3.5 h-3.5" /> Edit
@@ -211,11 +238,28 @@ const Dashboard = () => {
                         <Sparkles className="w-3.5 h-3.5" /> Publish
                       </Button>
                     </Link>
+                  ) : ad.status === "removed" && !(ad as any).removed_by_moderator ? (
+                    <Button
+                      size="sm"
+                      className="gap-1"
+                      disabled={relistingId === ad.id}
+                      onClick={() => relist(ad as any)}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      {relistingId === ad.id ? "Relisting..." : "Relist"}
+                    </Button>
                   ) : (
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded capitalize">
                       {ad.status}
                     </span>
                   )}
+                  <DeleteListingButton
+                    size="sm"
+                    adId={ad.id}
+                    images={ad.images}
+                    openEscrowId={lockedAds[ad.id]}
+                    onDeleted={() => setMyAds((list) => list.filter((a) => a.id !== ad.id))}
+                  />
                 </div>
               </div>
             ))}

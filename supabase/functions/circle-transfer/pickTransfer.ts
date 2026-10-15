@@ -10,6 +10,14 @@ export interface CircleTx {
   destinationAddress?: string;
   errorReason?: string | null;
   errorDetails?: string | null;
+  createDate?: string | null;
+}
+
+export interface PickOptions {
+  /** On-chain hashes already credited to another payment; never reuse them. */
+  excludeTxHashes?: Iterable<string>;
+  /** Ignore transfers created before this moment (e.g. before the listing existed). */
+  notBefore?: string | null;
 }
 
 /**
@@ -21,7 +29,10 @@ export function pickTransfer(
   txs: CircleTx[],
   destinationAddress: string,
   amountUsdc: number,
+  opts: PickOptions = {},
 ): CircleTx | null {
+  const used = new Set([...(opts.excludeTxHashes ?? [])].map((h) => h.toLowerCase()));
+  const notBefore = opts.notBefore ? Date.parse(opts.notBefore) : NaN;
   const wanted = toBaseUnits(formatUsdc(toBaseUnits(amountUsdc)));
   const dest = destinationAddress.toLowerCase();
   const matches = txs.filter((t) => {
@@ -33,7 +44,14 @@ export function pickTransfer(
     } catch {
       same = false;
     }
-    return same && (t.destinationAddress ?? "").toLowerCase() === dest;
+    if (!same || (t.destinationAddress ?? "").toLowerCase() !== dest) return false;
+    if (t.txHash && used.has(t.txHash.toLowerCase())) return false;
+    if (!Number.isNaN(notBefore) && t.createDate) {
+      const created = Date.parse(t.createDate);
+      // Small allowance for clock skew between Circle and our database.
+      if (!Number.isNaN(created) && created < notBefore - 60_000) return false;
+    }
+    return true;
   });
   const rank = (t: CircleTx) => {
     const s = String(t.state ?? "").toUpperCase();

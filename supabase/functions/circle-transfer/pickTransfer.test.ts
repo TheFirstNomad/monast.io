@@ -62,3 +62,18 @@ Deno.test("does not recover a withdrawal of a different amount", () => {
   assertEquals(pickTransfer(txs, DEST, 10.000001), null);
 });
 
+
+Deno.test("never reuses a fee payment already credited to another listing", () => {
+  const txs: CircleTx[] = [
+    { id: "old", state: "COMPLETE", txHash: "0xOLD", amounts: ["0.15"], destinationAddress: DEST },
+  ];
+  assertEquals(pickTransfer(txs, DEST, 0.15, { excludeTxHashes: ["0xold"] }), null);
+});
+
+Deno.test("ignores transfers made before the listing existed", () => {
+  const txs: CircleTx[] = [
+    { id: "old", state: "COMPLETE", txHash: "0x1", amounts: ["0.15"], destinationAddress: DEST, createDate: "2026-10-14T22:00:00Z" },
+    { id: "new", state: "COMPLETE", txHash: "0x2", amounts: ["0.15"], destinationAddress: DEST, createDate: "2026-10-15T01:00:00Z" },
+  ];
+  assertEquals(pickTransfer(txs, DEST, 0.15, { notBefore: "2026-10-15T00:13:00Z" })?.id, "new");
+});
