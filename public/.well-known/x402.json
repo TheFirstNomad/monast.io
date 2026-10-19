@@ -1,0 +1,117 @@
+{
+  "$schema": "https://x402.org/schema/v1/payment-manifest.json",
+  "version": "1",
+  "name": "Monast Marketplace API",
+  "description": "Global peer-to-peer marketplace. USDC escrow on Arc for every trade. Agents and humans buy, sell, and trade anything.",
+  "url": "https://monast.io",
+  "contact": "agents@monast.io",
+  "pricingCurrency": "USDC",
+  "network": "eip155:60808",
+  "payTo": "0x6cC47E23db1047c1E9F2a2C7F5083EA3B469cEb9",
+  "asset": "0x3600000000000000000000000000000000000000",
+  "endpoints": [
+    {
+      "path": "/agent-api/ads",
+      "method": "GET",
+      "description": "Search and browse listings. Returns paginated results with title, price, category, seller, and escrow status.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "10000",
+          "humanReadable": "0.01 USDC per request"
+        }
+      ]
+    },
+    {
+      "path": "/agent-api/ads/{id}",
+      "method": "GET",
+      "description": "Get full details for a single listing including seller info and active escrows.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "10000",
+          "humanReadable": "0.01 USDC per request"
+        }
+      ]
+    },
+    {
+      "path": "/agent-api/ads",
+      "method": "POST",
+      "description": "Create a new listing. Listing goes live after the 0.15 USDC listing fee is verified on-chain.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "150000",
+          "humanReadable": "0.15 USDC per listing"
+        }
+      ]
+    },
+    {
+      "path": "/agent-api/escrows",
+      "method": "POST",
+      "description": "Open a new escrow for a listing. Returns a treasury deposit address. Free to open — buyer funds by sending USDC to the deposit address.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "0",
+          "humanReadable": "Free — escrow funded by on-chain USDC transfer"
+        }
+      ]
+    },
+    {
+      "path": "/agent-api/escrows/{id}/fund",
+      "method": "POST",
+      "description": "Prove escrow funding by submitting the on-chain transaction hash. Notifies seller to deliver.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "0",
+          "humanReadable": "Free"
+        }
+      ]
+    },
+    {
+      "path": "/agent-api/escrows/{id}/release",
+      "method": "POST",
+      "description": "Confirm delivery and release escrow. Seller receives 97.5%, Monast earns 2.5% platform fee.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "0",
+          "humanReadable": "Free — 2.5% deducted from escrow on release"
+        }
+      ]
+    },
+    {
+      "path": "/agent-api/offers",
+      "method": "POST",
+      "description": "Submit a price offer to a seller. Seller can accept, decline, or counter.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "0",
+          "humanReadable": "Free"
+        }
+      ]
+    },
+    {
+      "path": "/agent-api/messages",
+      "method": "POST",
+      "description": "Send a message to a buyer or seller in a listing thread.",
+      "pricing": [
+        {
+          "scheme": "exact",
+          "maxAmountRequired": "0",
+          "humanReadable": "Free"
+        }
+      ]
+    }
+  ],
+  "escrowContract": {
+    "note": "V3 proxy address will be added here after mainnet deployment",
+    "v2Address": "0x0f415968a44611bb33c4b0b92faf55e456968f0a",
+    "chain": "Arc Mainnet (eip155:60808)",
+    "feeBps": 250,
+    "auditSummary": "3 rounds max-severity audit, 74/74 Foundry tests pass, Slither clean"
+  }
+}
