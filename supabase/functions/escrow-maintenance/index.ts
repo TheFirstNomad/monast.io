@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     const { data: dueRelease } = await admin
       .from("escrows")
       .select("*")
-      .eq("status", "funded")
+      .eq("status", "funded").eq("settlement", "treasury")
       .in("payout_status", ["none", "failed"])
       .is("cancel_requested_at", null)
       .not("auto_release_at", "is", null)
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     const { data: dueRefund } = await admin
       .from("escrows")
       .select("*")
-      .eq("status", "funded")
+      .eq("status", "funded").eq("settlement", "treasury")
       .in("payout_status", ["none", "failed"])
       .is("delivery_marked_at", null)
       .not("cancel_requested_at", "is", null)

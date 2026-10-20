@@ -16,6 +16,7 @@ import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionRece
 import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { getFunctionErrorMessage } from "@/lib/functionErrors";
 import { ListingProgressSteps } from "@/components/ListingProgressSteps";
+import { useContractAction, STEP_LABEL } from "@/hooks/useContractAction";
 
 /**
  * Listing-fee checkout. An ad stays in `pending_fee` - invisible to buyers  - 
@@ -43,7 +44,8 @@ const PublishAd = () => {
   const [circleWallet, setCircleWallet] = useState(false);
   const [circlePaying, setCirclePaying] = useState(false);
   const fee = treasury?.listingFeeUsdc ?? 0.15;
-  const busy = isPending || mining || verifying || circlePaying;
+  const contract = useContractAction();
+  const busy = isPending || mining || verifying || circlePaying || contract.busy;
 
   useEffect(() => {
     if (!user) return;
@@ -141,26 +143,19 @@ const PublishAd = () => {
       toast.error(treasuryError ?? "Publishing is unavailable right now");
       return;
     }
+    // Self-custody wallets list on MonastEscrowV3: the contract collects the
+    // listing fee into the Monast treasury and registers the listing on-chain.
     try {
-      if (chainId !== ARC_CHAIN_ID) {
-        try {
-          await switchChainAsync({ chainId: ARC_CHAIN_ID });
-        } catch {
-          toast.error(`Please switch your wallet to ${ACTIVE_CHAIN.label} and try again`);
-          return;
-        }
-      }
-      const hash = await writeContractAsync({
-        address: USDC_ADDRESS,
-        abi: ERC20_TRANSFER_ABI,
-        functionName: "transfer",
-        args: [treasury.address, toUsdcUnits(fee)],
-        chainId: ARC_CHAIN_ID,
-      } as any);
-      setPendingHash(hash);
-      toast.success("Fee sent. Verifying on-chain…");
+      await contract.run({
+        functionName: "createListing",
+        args: [toUsdcUnits(Number(ad.price_usdc)), 1n],
+        approveMicros: toUsdcUnits(fee),
+        sync: { ad_id: ad.id },
+      });
+      toast.success("Listing published");
+      navigate(`/ad/${ad.id}`);
     } catch (e: any) {
-      toast.error(e?.shortMessage || e?.message || "Payment failed");
+      toast.error(e?.message || "Publishing failed");
     }
   };
 
@@ -255,7 +250,9 @@ const PublishAd = () => {
               {busy || treasuryLoading
                 ? <Loader2 className="w-4 h-4 animate-spin" />
                 : <ShieldCheck className="w-4 h-4" />}
-              {verifying
+              {contract.busy
+                ? STEP_LABEL[contract.step]
+                : verifying
                 ? "Verifying payment…"
                 : mining
                   ? "Confirming…"

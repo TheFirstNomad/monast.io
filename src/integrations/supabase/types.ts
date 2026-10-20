@@ -49,6 +49,7 @@ export type Database = {
           listing_fee_tx_hash: string | null
           listing_fee_usdc: number
           location: string | null
+          onchain_listing_id: string | null
           price_usdc: number
           removed_by_moderator: boolean
           seller_id: string
@@ -73,6 +74,7 @@ export type Database = {
           listing_fee_tx_hash?: string | null
           listing_fee_usdc?: number
           location?: string | null
+          onchain_listing_id?: string | null
           price_usdc: number
           removed_by_moderator?: boolean
           seller_id: string
@@ -97,6 +99,7 @@ export type Database = {
           listing_fee_tx_hash?: string | null
           listing_fee_usdc?: number
           location?: string | null
+          onchain_listing_id?: string | null
           price_usdc?: number
           removed_by_moderator?: boolean
           seller_id?: string
@@ -264,6 +267,7 @@ export type Database = {
           id: string
           metadata: Json
           offer_id: string | null
+          onchain_escrow_id: string | null
           payout_circle_tx_id: string | null
           payout_started_at: string | null
           payout_status: string
@@ -274,6 +278,7 @@ export type Database = {
           released_at: string | null
           seller_id: string
           seller_net_usdc: number | null
+          settlement: string
           status: string
           tx_hashes: Json
           updated_at: string
@@ -295,6 +300,7 @@ export type Database = {
           id?: string
           metadata?: Json
           offer_id?: string | null
+          onchain_escrow_id?: string | null
           payout_circle_tx_id?: string | null
           payout_started_at?: string | null
           payout_status?: string
@@ -305,6 +311,7 @@ export type Database = {
           released_at?: string | null
           seller_id: string
           seller_net_usdc?: number | null
+          settlement?: string
           status?: string
           tx_hashes?: Json
           updated_at?: string
@@ -326,6 +333,7 @@ export type Database = {
           id?: string
           metadata?: Json
           offer_id?: string | null
+          onchain_escrow_id?: string | null
           payout_circle_tx_id?: string | null
           payout_started_at?: string | null
           payout_status?: string
@@ -336,6 +344,7 @@ export type Database = {
           released_at?: string | null
           seller_id?: string
           seller_net_usdc?: number | null
+          settlement?: string
           status?: string
           tx_hashes?: Json
           updated_at?: string
