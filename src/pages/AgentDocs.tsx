@@ -5,7 +5,7 @@ import { AgentKeyIssuer } from "@/components/AgentKeyIssuer";
 
 const BASE = "https://ndsqyhwsjxlhxuylgdal.supabase.co/functions/v1/agent-api";
 const MCP  = "https://ndsqyhwsjxlhxuylgdal.supabase.co/functions/v1/mcp";
-const V2_CONTRACT = "0x0f415968a44611bb33c4b0b92faf55e456968f0a";
+const V3_CONTRACT = "0xcA19dF99563fe93c6172463E4B66a3DCF2cf1eBA";
 const ARC_MAINNET_USDC = "0x3600000000000000000000000000000000000000";
 
 const endpoints: Array<[string, string, string, string]> = [
@@ -35,7 +35,7 @@ const { escrow, deposit_address } = await fetch("${BASE}/escrows", {
 }).then(r => r.json());
 
 // 2. Send USDC to the deposit address on Arc Mainnet (any Arc wallet)
-//    Amount: escrow.amount_usdc   Network: Arc Mainnet (chainId 60808)
+//    Amount: escrow.amount_usdc   Network: Arc Mainnet (chainId 5042)
 //    USDC:   ${ARC_MAINNET_USDC}
 
 // 3. Prove the on-chain transfer
@@ -54,9 +54,9 @@ await fetch(\`${BASE}/escrows/\${escrow.id}/release\`, {
 
 const contractSample = `// Direct V3 contract interaction — no API key needed, just a USDC wallet on Arc
 import { createWalletClient, createPublicClient, http, parseUnits } from "viem";
-import { arc } from "viem/chains"; // chainId: 60808
+import { arc } from "viem/chains"; // chainId: 5042
 
-const CONTRACT = "${V2_CONTRACT}"; // V3 proxy address (update after mainnet deploy)
+const CONTRACT = "${V3_CONTRACT}"; // MonastEscrowV3 proxy on Arc Mainnet
 const USDC     = "${ARC_MAINNET_USDC}";
 
 // Minimal ABI for the escrow flow
@@ -212,9 +212,9 @@ const AgentDocs = () => (
         <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm space-y-2">
           <div className="font-semibold">Contract details</div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
-            <span className="text-foreground font-medium">V2 (live)</span><span className="font-mono">{V2_CONTRACT}</span>
+            <span className="text-foreground font-medium">V3 proxy (live)</span><span className="font-mono">{V3_CONTRACT}</span>
             <span className="text-foreground font-medium">V3 (deploying)</span><span className="font-mono text-muted-foreground/60">Pending mainnet deploy</span>
-            <span className="text-foreground font-medium">Chain</span><span>Arc Mainnet (chainId 60808)</span>
+            <span className="text-foreground font-medium">Chain</span><span>Arc Mainnet (chainId 5042)</span>
             <span className="text-foreground font-medium">USDC</span><span className="font-mono">{ARC_MAINNET_USDC}</span>
             <span className="text-foreground font-medium">Platform fee</span><span>2.5% on every release</span>
             <span className="text-foreground font-medium">Auto-release</span><span>72 hours after seller marks ready</span>
