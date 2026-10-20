@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { authorizeContractAction, exactApproval, ESCROW_CONTRACT, ARC_USDC, CONTRACT_CHAIN_ID } from "../_shared/contract-policy";
+import { authorizeContractAction, exactApproval, ESCROW_CONTRACT, ARC_USDC, CONTRACT_CHAIN_ID } from "../../supabase/functions/_shared/contract-policy";
 
 const funded = { buyer_id: "buyer", seller_id: "seller", settlement: "contract", status: "funded" };
 describe("Circle contract signing safeguards", () => {
