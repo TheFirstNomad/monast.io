@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { useAuth } from "@/hooks/useAuth";
+import { useContractAction, STEP_LABEL } from "@/hooks/useContractAction";
 
 interface Props {
   escrowId: string;
@@ -41,7 +42,24 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
     "escrow",
     ARC_CHAIN_ID,
   );
-  const busy = isPending || mining || verifying || circlePaying;
+  const contract = useContractAction();
+  const [onchainListing, setOnchainListing] = useState<string | null>(null);
+  const busy = isPending || mining || verifying || circlePaying || contract.busy;
+
+  // Listings registered on MonastEscrowV3 are funded straight into the contract
+  // when the buyer pays the listed price from a self-custody wallet.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: esc } = await supabase.from("escrows").select("ad_id, amount_usdc").eq("id", escrowId).maybeSingle();
+      if (!esc) return;
+      const { data: ad } = await supabase.from("ads").select("onchain_listing_id, price_usdc").eq("id", esc.ad_id).maybeSingle();
+      if (cancelled) return;
+      const samePrice = ad && toUsdcUnits(Number(ad.price_usdc)) === toUsdcUnits(Number(esc.amount_usdc));
+      setOnchainListing(ad?.onchain_listing_id && samePrice ? ad.onchain_listing_id : null);
+    })();
+    return () => { cancelled = true; };
+  }, [escrowId]);
 
   useEffect(() => {
     if (!user) return;
@@ -80,6 +98,17 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
     try {
       if (circleWallet) { await fundWithCircleWallet(); return; }
       if (!address) { await connect(); return; }
+      if (onchainListing) {
+        await contract.run({
+          functionName: "fundEscrow",
+          args: [onchainListing],
+          approveMicros: toUsdcUnits(amount),
+          sync: { escrow_id: escrowId },
+        });
+        toast.success("Funds locked in the Monast escrow contract");
+        onFunded?.();
+        return;
+      }
       if (!treasury) {
         toast.error(treasuryError ?? "Escrow payments are unavailable right now");
         return;
@@ -179,7 +208,9 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
   return (
     <Button onClick={fund} disabled={busy || treasuryLoading} className="w-full gap-2 font-semibold py-5">
       {busy || treasuryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
-      {verifying
+      {contract.busy
+        ? STEP_LABEL[contract.step]
+        : verifying
         ? "Verifying deposit…"
         : mining
           ? "Confirming payment…"
