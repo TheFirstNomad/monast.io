@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { EscrowFundButton } from "@/components/EscrowFundButton";
 import { ChatDialog } from "@/components/ChatDialog";
+import { ContractEscrowActions } from "@/components/ContractEscrowActions";
 import { MessageCircle } from "lucide-react";
 
 interface EscrowRow {
@@ -46,6 +47,8 @@ interface EscrowRow {
   released_at: string | null;
   refunded_at: string | null;
   created_at: string;
+  settlement?: string | null;
+  onchain_escrow_id?: string | null;
 }
 
 const EscrowDetail = () => {
@@ -221,6 +224,18 @@ const EscrowDetail = () => {
         )}
 
 
+        {escrow.settlement === "contract" && escrow.onchain_escrow_id ? (
+          <ContractEscrowActions
+            escrowId={escrow.id}
+            onchainEscrowId={escrow.onchain_escrow_id}
+            status={escrow.status}
+            isBuyer={isBuyer}
+            isSeller={isSeller}
+            deliveryMarkedAt={escrow.delivery_marked_at}
+            autoReleaseAt={escrow.auto_release_at}
+            onChanged={load}
+          />
+        ) : (
         <div className="space-y-2">
           {isBuyer && escrow.status === "created" && (
             <>
@@ -325,6 +340,7 @@ const EscrowDetail = () => {
             </Button>
           )}
         </div>
+        )}
       </div>
 
       {(isBuyer || isSeller) && (
