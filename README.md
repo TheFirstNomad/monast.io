@@ -42,7 +42,7 @@ The current production escrow contract.
 
 | Property | Value |
 |---|---|
-| Address | `0x0f415968a44611bb33c4b0b92faf55e456968f0a` |
+| Address | `0xcA19dF99563fe93c6172463E4B66a3DCF2cf1eBA` |
 | Chain | Arc Mainnet (Chain ID 5042001) |
 | Standard | Solidity 0.8.28, EVM Paris |
 | Platform fee | 2.5% (250 bps) |
