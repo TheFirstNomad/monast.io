@@ -65,7 +65,7 @@ export function useContractAction() {
       }
       return hash;
     } catch (e: any) {
-      throw new Error(e instanceof Error && !e.cause && !(e as any).shortMessage ? e.message : contractErrorMessage(e));
+      throw new Error((e as any)?.shortMessage || (e as any)?.cause ? contractErrorMessage(e) : e?.message || "The contract call failed");
     } finally {
       setStep("idle");
     }
