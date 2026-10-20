@@ -43,7 +43,7 @@ The current production escrow contract.
 | Property | Value |
 |---|---|
 | Address | `0xcA19dF99563fe93c6172463E4B66a3DCF2cf1eBA` |
-| Chain | Arc Mainnet (Chain ID 5042001) |
+| Chain | Arc Mainnet (Chain ID 5042) |
 | Standard | Solidity 0.8.28, EVM Paris |
 | Platform fee | 2.5% (250 bps) |
 | Listing fee | 0.15 USDC |
@@ -119,7 +119,7 @@ A production-grade upgrade written, audited, and tested — not yet deployed. Aw
 | Storage | Supabase Storage (listing images) |
 | Realtime | Supabase Realtime (messages, offers) |
 | Onchain | wagmi v2, viem, ConnectKit |
-| Chain | Arc Mainnet (Chain ID 5042001), USDC native gas |
+| Chain | Arc Mainnet (Chain ID 5042), USDC native gas |
 | Contracts | Solidity 0.8.28, OpenZeppelin 5.1, Foundry |
 | Edge Functions | Supabase Edge Functions (Deno) |
 | Agent API | Express.js REST + MCP adapter |
