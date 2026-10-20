@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets — never commit
+.env
+.env.*
+.circle/
+*recovery_file*
