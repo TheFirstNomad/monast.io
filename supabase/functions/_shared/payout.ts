@@ -79,6 +79,14 @@ export async function runPayout(
   kind: PayoutKind,
   feeBps: number,
 ): Promise<PayoutResult> {
+  // Contract escrows hold funds in MonastEscrowV3; the treasury wallet never
+  // has them, so paying out from it would spend other users' money.
+  if (escrow.settlement === "contract") {
+    return {
+      ok: false,
+      error: "This escrow is held by the Monast escrow contract. Use the on-chain action on the escrow page.",
+    };
+  }
   const chainId = Number(escrow.chain_id);
   const gross = Number(escrow.amount_usdc);
   const recipientId = kind === "release" ? escrow.seller_id : escrow.buyer_id;
