@@ -94,14 +94,17 @@ const CategoryCard = ({ cat, large }: CategoryCardProps) => {
                 loading="lazy"
                 className={large ? "w-7 h-7 object-contain" : "w-5 h-5 object-contain"}
                 onError={(e) => {
-                  const el = e.currentTarget;
+                  // Never remove React-owned nodes: hide the image and reveal the sibling fallback.
+                  const el = e.currentTarget as HTMLImageElement | null;
+                  if (!el) return;
                   el.style.display = "none";
-                  if (el.parentElement) {
-                    el.parentElement.textContent = asset.fallbackEmoji;
-                    el.parentElement.classList.add("text-lg");
-                  }
+                  const fb = el.nextElementSibling as HTMLElement | null;
+                  if (fb) fb.style.display = "inline";
                 }}
               />
+              <span aria-hidden="true" className="text-lg" style={{ display: "none" }}>
+                {asset.fallbackEmoji}
+              </span>
             </div>
             {/* Name label — truncated */}
             {large && (

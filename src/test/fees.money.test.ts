@@ -23,9 +23,15 @@ describe("integer USDC math", () => {
   });
 
   it("never rounds the fee up against the seller", () => {
-    const s = splitSale("0.000199"); // 1% = 0.00000199 -> truncates to 0.000001
-    expect(s.feeMicros).toBe(1n);
-    expect(s.sellerNetMicros).toBe(198n);
+    const s = splitSale("0.000199"); // 2.5% = 4.975 micros -> truncates to 4
+    expect(s.feeMicros).toBe(4n);
+    expect(s.sellerNetMicros).toBe(195n);
+  });
+
+  it("charges a 2.5% sale fee", () => {
+    const s = splitSale("100");
+    expect(s.feeMicros).toBe(2_500_000n);
+    expect(s.sellerNetMicros).toBe(97_500_000n);
   });
 
   it("round-trips through numbers", () => {
