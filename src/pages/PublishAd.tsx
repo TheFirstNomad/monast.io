@@ -159,32 +159,6 @@ const PublishAd = () => {
     }
   };
 
-  // Previous direct-transfer path, kept for reference by the fee verifier.
-  const payLegacy = async () => {
-    if (!treasury) return;
-    try {
-      if (chainId !== ARC_CHAIN_ID) {
-        try {
-          await switchChainAsync({ chainId: ARC_CHAIN_ID });
-        } catch {
-          toast.error(`Please switch your wallet to ${ACTIVE_CHAIN.label} and try again`);
-          return;
-        }
-      }
-      const hash = await writeContractAsync({
-        address: USDC_ADDRESS,
-        abi: ERC20_TRANSFER_ABI,
-        functionName: "transfer",
-        args: [treasury.address, toUsdcUnits(fee)],
-        chainId: ARC_CHAIN_ID,
-      } as any);
-      setPendingHash(hash);
-      toast.success("Fee sent. Verifying on-chain…");
-    } catch (e: any) {
-      toast.error(e?.shortMessage || e?.message || "Payment failed");
-    }
-  };
-
   if (loading) {
     return (
       <Layout>
