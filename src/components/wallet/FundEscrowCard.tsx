@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EscrowFundButton } from "@/components/EscrowFundButton";
+import { ContractEscrowActions } from "@/components/ContractEscrowActions";
 import { supabase } from "@/integrations/supabase/client";
 import { splitSale, SALE_FEE_LABEL } from "@/lib/fees";
 import { toast } from "sonner";
@@ -34,6 +35,9 @@ interface EscrowRow {
   payout_status: string | null;
   auto_release_at: string | null;
   title: string | null;
+  settlement: string;
+  onchain_escrow_id: string | null;
+  delivery_marked_at: string | null;
 }
 
 /**
@@ -53,7 +57,7 @@ export const FundEscrowCard = ({ userId, balance, onFunded }: Props) => {
       const { data } = await supabase
         .from("escrows")
         .select(
-          "id, amount_usdc, ad_id, status, buyer_id, seller_id, payout_status, auto_release_at",
+          "id, amount_usdc, ad_id, status, buyer_id, seller_id, payout_status, auto_release_at, settlement, onchain_escrow_id, delivery_marked_at",
         )
         .in("status", ["created", "funded", "disputed"])
         .order("created_at", { ascending: false });
@@ -198,7 +202,9 @@ export const FundEscrowCard = ({ userId, balance, onFunded }: Props) => {
                     Auto-releases {new Date(e.auto_release_at).toLocaleDateString()}
                   </p>
                 )}
-                {payoutBusy ? (
+                {e.settlement === "contract" && e.onchain_escrow_id ? (
+                  <ContractEscrowActions escrowId={e.id} onchainEscrowId={e.onchain_escrow_id} status={e.status} isBuyer={isBuyer} isSeller={e.seller_id === userId} deliveryMarkedAt={e.delivery_marked_at} autoReleaseAt={e.auto_release_at} onChanged={() => { void escrowsQuery.refetch(); onFunded(); }} />
+                ) : payoutBusy ? (
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                     <Loader2 className="w-3 h-3 animate-spin" /> Payout in progress…
                   </p>

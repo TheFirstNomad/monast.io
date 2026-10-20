@@ -11,6 +11,7 @@ import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionRece
 import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { useAuth } from "@/hooks/useAuth";
 import { useContractAction, STEP_LABEL } from "@/hooks/useContractAction";
+import { isSelfCustodyEmail } from "@/lib/session";
 
 interface Props {
   escrowId: string;
@@ -44,6 +45,8 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
   );
   const contract = useContractAction();
   const [onchainListing, setOnchainListing] = useState<string | null>(null);
+  const [settlementResolved, setSettlementResolved] = useState(false);
+  const [settlementError, setSettlementError] = useState<string | null>(null);
   const busy = isPending || mining || verifying || circlePaying || contract.busy;
 
   // Listings registered on MonastEscrowV3 are funded straight into the contract
@@ -51,12 +54,18 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: esc } = await supabase.from("escrows").select("ad_id, amount_usdc").eq("id", escrowId).maybeSingle();
-      if (!esc) return;
-      const { data: ad } = await supabase.from("ads").select("onchain_listing_id, price_usdc").eq("id", esc.ad_id).maybeSingle();
+      const { data: esc, error: escrowError } = await supabase.from("escrows").select("ad_id, amount_usdc").eq("id", escrowId).maybeSingle();
+      if (!esc || escrowError) {
+        if (!cancelled) { setSettlementError("Could not load this escrow. Reload before paying."); setSettlementResolved(true); }
+        return;
+      }
+      const { data: ad, error: adError } = await supabase.from("ads").select("onchain_listing_id, price_usdc").eq("id", esc.ad_id).maybeSingle();
       if (cancelled) return;
       const samePrice = ad && toUsdcUnits(Number(ad.price_usdc)) === toUsdcUnits(Number(esc.amount_usdc));
-      setOnchainListing(ad?.onchain_listing_id && samePrice ? ad.onchain_listing_id : null);
+      if (!ad || adError) setSettlementError("Could not load the listing. Reload before paying.");
+      else if (ad.onchain_listing_id && !samePrice) setSettlementError("Contract escrow requires the listed price. Ask the seller to publish the agreed price first.");
+      setOnchainListing(ad?.onchain_listing_id ?? null);
+      setSettlementResolved(true);
     })();
     return () => { cancelled = true; };
   }, [escrowId]);
@@ -66,7 +75,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
     let cancelled = false;
     resolvePayingWallet(user.id).then((w) => {
       if (cancelled) return;
-      setCircleWallet(w.isCircleWallet);
+      setCircleWallet(!isSelfCustodyEmail(user.email) && Boolean(w.address));
       setWalletResolved(true);
     });
     return () => { cancelled = true; };
@@ -96,8 +105,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
 
   const fund = async () => {
     try {
-      if (circleWallet) { await fundWithCircleWallet(); return; }
-      if (!address) { await connect(); return; }
+      if (!settlementResolved || settlementError) throw new Error(settlementError ?? "Loading escrow payment details…");
       if (onchainListing) {
         await contract.run({
           functionName: "fundEscrow",
@@ -109,6 +117,8 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
         onFunded?.();
         return;
       }
+      if (circleWallet) { await fundWithCircleWallet(); return; }
+      if (!address) { await connect(); return; }
       if (!treasury) {
         toast.error(treasuryError ?? "Escrow payments are unavailable right now");
         return;
@@ -162,7 +172,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
   // Self-heal: a Circle transfer that already moved the money (challenge closed
   // before we captured the id) is settled into escrow instead of being lost.
   useEffect(() => {
-    if (!circleWallet || !walletResolved || busy) return;
+    if (!circleWallet || !walletResolved || !settlementResolved || onchainListing || settlementError || busy) return;
     let cancelled = false;
     (async () => {
       try {
@@ -176,16 +186,16 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [circleWallet, walletResolved, escrowId]);
+  }, [circleWallet, walletResolved, escrowId, settlementResolved, onchainListing, settlementError]);
 
   // Checkout hands off straight into payment so buyers never land on a pending row.
   useEffect(() => {
-    if (!autoStart || autoStarted || !walletResolved || treasuryLoading || busy) return;
+    if (!autoStart || autoStarted || !walletResolved || !settlementResolved || settlementError || treasuryLoading || busy) return;
     if (!circleWallet && !address) return;
     setAutoStarted(true);
     void fund();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoStart, autoStarted, walletResolved, treasuryLoading, circleWallet, address]);
+  }, [autoStart, autoStarted, walletResolved, settlementResolved, settlementError, treasuryLoading, circleWallet, address]);
 
 
   useEffect(() => {
@@ -194,19 +204,19 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSuccess, pendingHash, escrowId]);
 
-  if (treasuryError) {
+  if (settlementError || (treasuryError && !onchainListing)) {
     return (
       <div className="space-y-2">
         <Button disabled className="w-full gap-2 font-semibold py-5">
           <Wallet className="w-4 h-4" /> Escrow unavailable
         </Button>
-        <p className="text-xs text-muted-foreground text-center">{treasuryError}</p>
+        <p className="text-xs text-muted-foreground text-center">{settlementError ?? treasuryError}</p>
       </div>
     );
   }
 
   return (
-    <Button onClick={fund} disabled={busy || treasuryLoading} className="w-full gap-2 font-semibold py-5">
+    <Button onClick={fund} disabled={busy || treasuryLoading || !walletResolved || !settlementResolved} className="w-full gap-2 font-semibold py-5">
       {busy || treasuryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
       {contract.busy
         ? STEP_LABEL[contract.step]

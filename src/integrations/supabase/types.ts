@@ -222,6 +222,51 @@ export type Database = {
         }
         Relationships: []
       }
+      circle_contract_requests: {
+        Row: {
+          call_data: string
+          challenge_id: string | null
+          contract_address: string
+          created_at: string
+          id: string
+          operation: string
+          phase: string
+          reference_id: string
+          transaction_id: string | null
+          tx_hash: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Insert: {
+          call_data: string
+          challenge_id?: string | null
+          contract_address: string
+          created_at?: string
+          id?: string
+          operation: string
+          phase: string
+          reference_id: string
+          transaction_id?: string | null
+          tx_hash?: string | null
+          user_id: string
+          wallet_id: string
+        }
+        Update: {
+          call_data?: string
+          challenge_id?: string | null
+          contract_address?: string
+          created_at?: string
+          id?: string
+          operation?: string
+          phase?: string
+          reference_id?: string
+          transaction_id?: string | null
+          tx_hash?: string | null
+          user_id?: string
+          wallet_id?: string
+        }
+        Relationships: []
+      }
       circle_sessions: {
         Row: {
           device_id: string | null

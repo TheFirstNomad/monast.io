@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, RotateCcw, AlertTriangle, Truck, Download, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useWallet } from "@/hooks/useWallet";
+import { useCircleWallet } from "@/hooks/useCircleWallet";
 import { useContractAction, STEP_LABEL } from "@/hooks/useContractAction";
 import { MONAST_ESCROW_ABI, MONAST_ESCROW_ADDRESS, MONAST_ESCROW_CHAIN_ID } from "@/lib/monastEscrow";
 
@@ -20,7 +21,9 @@ interface Props {
 
 /** Buyer/seller actions for escrows held by MonastEscrowV3, signed from the user's wallet. */
 export const ContractEscrowActions = (p: Props) => {
-  const { address, connect } = useWallet();
+  const { address: browserAddress, connect } = useWallet();
+  const circle = useCircleWallet();
+  const address = circle.selfCustody ? browserAddress : circle.address;
   const { run, step, busy } = useContractAction();
   const [label, setLabel] = useState<string | null>(null);
 
@@ -39,7 +42,7 @@ export const ContractEscrowActions = (p: Props) => {
     if (!address) { await connect(); return; }
     setLabel(name);
     try {
-      await run({ functionName, args: functionName === "withdraw" ? [] : [p.onchainEscrowId], sync: functionName === "withdraw" ? undefined : { escrow_id: p.escrowId } });
+      await run({ functionName, args: functionName === "withdraw" ? [] : [p.onchainEscrowId], sync: { escrow_id: p.escrowId } });
       toast.success(done);
       await pending.refetch();
       p.onChanged();
