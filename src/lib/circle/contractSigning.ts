@@ -15,12 +15,14 @@ export async function signCircleContract(input: {
 }, onConfirming: () => void): Promise<`0x${string}`> {
   const request = await invoke({ action: "create", ...input });
   if (request.txHash) return request.txHash;
+  let transactionId: string | undefined;
   if (!request.submitted) {
-    await runCircleChallenge(request);
+    const result = await runCircleChallenge(request);
+    transactionId = result.data?.id;
   }
   onConfirming();
   for (let attempt = 0; attempt < 40; attempt++) {
-    const state = await invoke({ action: "status", requestId: request.requestId });
+    const state = await invoke({ action: "status", requestId: request.requestId, ...(transactionId ? { transactionId } : {}) });
     if (state.txHash) return state.txHash;
     if (["FAILED", "CANCELLED", "DENIED", "EXPIRED"].includes(state.status)) {
       throw new Error("The wallet transaction did not complete. No new payment was started.");

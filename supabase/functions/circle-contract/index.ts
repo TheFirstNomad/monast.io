@@ -11,16 +11,16 @@ import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("create"), operation: z.enum(["createListing", "fundEscrow", "confirmDelivery", "refundBuyer", "markReadyForRelease", "claimAutoRelease", "openDispute", "withdraw"]), referenceId: z.string().uuid(), phase: z.enum(["approve", "execute"]) }).strict(),
-  z.object({ action: z.literal("status"), requestId: z.string().uuid() }).strict(),
+  z.object({ action: z.literal("status"), requestId: z.string().uuid(), transactionId: z.string().uuid().optional() }).strict(),
 ]);
 const erc20 = parseAbi(["function approve(address spender, uint256 amount) returns (bool)"]);
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 const lower = (s: unknown) => String(s ?? "").toLowerCase();
 
-async function stateOf(admin: any, request: any, session: any) {
+async function stateOf(admin: any, request: any, session: any, callbackId?: string) {
   if (!request.challenge_id) return { status: "CREATING", txHash: null, submitted: false };
   const challenge = (await circle(`/user/challenges/${request.challenge_id}`, { headers: { "X-User-Token": session.userToken } }))?.data?.challenge;
-  const id = request.transaction_id ?? challenge?.correlationIds?.[0];
+  const id = request.transaction_id ?? challenge?.correlationIds?.[0] ?? callbackId;
   const complete = String(challenge?.status ?? "").toUpperCase() === "COMPLETE";
   if (!id || !complete) return { status: challenge?.status ?? "PENDING", txHash: request.tx_hash, submitted: complete };
   const payload = await circle(`/transactions/${id}`, { headers: { "X-User-Token": session.userToken } });
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     if (body.action === "status") {
       const { data: request } = await admin.from("circle_contract_requests").select("*").eq("id", body.requestId).eq("user_id", userId).maybeSingle();
       if (!request) return json({ error: "Request not found" }, 404);
-      return json(await stateOf(admin, request, await getFreshUserSession(admin, userId)));
+      return json(await stateOf(admin, request, await getFreshUserSession(admin, userId), body.transactionId));
     }
     const { data: profile } = await admin.from("profiles").select("circle_wallet_id, circle_wallet_address").eq("id", userId).maybeSingle();
     if (!profile?.circle_wallet_id || !profile.circle_wallet_address) return json({ error: "Sign in with Google again to unlock your existing wallet." }, 409);
