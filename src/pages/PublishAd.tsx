@@ -17,6 +17,7 @@ import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/li
 import { getFunctionErrorMessage } from "@/lib/functionErrors";
 import { ListingProgressSteps } from "@/components/ListingProgressSteps";
 import { useContractAction, STEP_LABEL } from "@/hooks/useContractAction";
+import { isSelfCustodyEmail } from "@/lib/session";
 
 /**
  * Listing-fee checkout. An ad stays in `pending_fee` - invisible to buyers  - 
@@ -120,25 +121,9 @@ const PublishAd = () => {
 
   const pay = async () => {
     if (!user || !ad) return;
-    // Circle wallets sign through Circle's SDK; the fee verifier is unchanged.
-    if (circleWallet) {
-      setCirclePaying(true);
-      try {
-        const { txHash } = await sendUsdcPayment({
-          purpose: "listing_fee",
-          referenceId: ad.id,
-          isCircleWallet: true,
-        });
-        toast.success("Fee sent. Verifying on-chain…");
-        await verifyFee(txHash);
-      } catch (e: any) {
-        toast.error(e?.message || "Payment failed");
-      } finally {
-        setCirclePaying(false);
-      }
-      return;
-    }
-    if (!address) { await connect(); return; }
+    // Both wallet types create new listings on V3. Hosted users authorize
+    // through Circle; never ask them to connect an unrelated browser wallet.
+    if (isSelfCustodyEmail(user.email) && !address) { await connect(); return; }
     if (!treasury) {
       toast.error(treasuryError ?? "Publishing is unavailable right now");
       return;

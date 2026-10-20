@@ -314,12 +314,14 @@ Deno.serve(async (req) => {
         if (purpose === "escrow_fund") {
           const { data: esc } = await admin
             .from("escrows")
-            .select("amount_usdc, buyer_id, status, chain_id, created_at")
+            .select("amount_usdc, buyer_id, status, chain_id, created_at, settlement, ad_id")
             .eq("id", referenceId)
             .maybeSingle();
           if (!esc || esc.buyer_id !== userId || esc.status !== "created") {
             return json({ error: "Escrow not found or not payable" }, 404);
           }
+          const { data: listing } = await admin.from("ads").select("onchain_listing_id").eq("id", esc.ad_id).maybeSingle();
+          if (esc.settlement === "contract" || listing?.onchain_listing_id) return json({ error: "This escrow must be funded directly through the Monast contract, not the treasury." }, 409);
           chainId = Number(esc.chain_id) || ARC_CHAIN_ID;
           referenceCreatedAt = esc.created_at ?? null;
           destinationAddress = (await getTreasury(admin, "escrow", chainId)).address;
