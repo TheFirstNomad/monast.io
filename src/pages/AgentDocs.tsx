@@ -53,36 +53,56 @@ await fetch(\`${BASE}/escrows/\${escrow.id}/release\`, {
 // Seller receives 97.5%. Monast earns 2.5%.`;
 
 const contractSample = `// Direct V3 contract interaction — no API key needed, just a USDC wallet on Arc
-import { createWalletClient, createPublicClient, http, parseUnits } from "viem";
-import { arc } from "viem/chains"; // chainId: 5042
+import { createWalletClient, createPublicClient, http, parseUnits, encodeAbiParameters, keccak256, toBytes } from "viem";
 
-const CONTRACT = "${V3_CONTRACT}"; // MonastEscrowV3 proxy on Arc Mainnet
+// Arc Mainnet chain definition
+const arcMainnet = { id: 5042, name: "Arc", nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 }, rpcUrls: { default: { http: ["https://rpc.mainnet.arc.io"] } } };
+
+const CONTRACT = "${V3_CONTRACT}"; // MonastEscrowV3 proxy — live on Arc Mainnet
 const USDC     = "${ARC_MAINNET_USDC}";
+const LISTING_FEE = parseUnits("0.15", 6); // 0.15 USDC
 
-// Minimal ABI for the escrow flow
+// Minimal ABI for the full escrow flow
 const ABI = [
-  { name: "createListing",    type: "function", inputs: [{ name: "priceUsdc", type: "uint256" }, { name: "quantity", type: "uint256" }], outputs: [{ name: "listingId", type: "bytes32" }] },
-  { name: "fundEscrow",       type: "function", inputs: [{ name: "listingId", type: "bytes32" }], outputs: [{ name: "escrowId", type: "bytes32" }] },
-  { name: "confirmDelivery",  type: "function", inputs: [{ name: "escrowId", type: "bytes32" }], outputs: [] },
-  { name: "withdraw",         type: "function", inputs: [], outputs: [] },
+  { name: "createListing",       type: "function", inputs: [{ name: "priceUsdc", type: "uint256" }, { name: "quantity", type: "uint256" }, { name: "metadataHash", type: "bytes32" }], outputs: [{ name: "listingId", type: "bytes32" }] },
+  { name: "getOffer",            type: "function", inputs: [{ name: "listingId", type: "bytes32" }, { name: "buyer", type: "address" }, { name: "priceUsdc", type: "uint256" }, { name: "nonce", type: "uint256" }, { name: "deadline", type: "uint256" }], outputs: [{ name: "digest", type: "bytes32" }] },
+  { name: "fundEscrowWithOffer", type: "function", inputs: [{ name: "listingId", type: "bytes32" }, { name: "priceUsdc", type: "uint256" }, { name: "deadline", type: "uint256" }, { name: "sellerSig", type: "bytes" }, { name: "buyerSig", type: "bytes" }], outputs: [{ name: "escrowId", type: "bytes32" }] },
+  { name: "confirmDelivery",     type: "function", inputs: [{ name: "escrowId", type: "bytes32" }], outputs: [] },
+  { name: "withdraw",            type: "function", inputs: [], outputs: [] },
 ] as const;
 
-// Step 1: Approve USDC spend
-await walletClient.writeContract({
-  address: USDC, abi: erc20Abi, functionName: "approve",
-  args: [CONTRACT, parseUnits("100", 6)], // 100 USDC
+// ── Seller: create listing ──────────────────────────────────────────────────
+// Step 1: Approve listing fee
+await walletClient.writeContract({ address: USDC, abi: erc20Abi, functionName: "approve", args: [CONTRACT, LISTING_FEE] });
+
+// Step 2: Create listing — metadataHash is keccak256 of your off-chain listing JSON
+const listingId = await walletClient.writeContract({
+  address: CONTRACT, abi: ABI, functionName: "createListing",
+  args: [parseUnits("100", 6), 1n, keccak256(toBytes(JSON.stringify({ title: "My item" })))],
 });
 
-// Step 2: Fund escrow (USDC transfers from your wallet into the contract)
-const escrowId = await walletClient.writeContract({
-  address: CONTRACT, abi: ABI, functionName: "fundEscrow",
-  args: [listingId],
+// ── Buyer: fund escrow ──────────────────────────────────────────────────────
+// Step 3: Get the EIP-712 offer digest from the contract
+const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour
+const digest = await publicClient.readContract({ address: CONTRACT, abi: ABI, functionName: "getOffer", args: [listingId, buyerAddress, parseUnits("100", 6), 0n, deadline] });
+
+// Step 4: Both seller and buyer sign the digest
+const sellerSig = await sellerWalletClient.signMessage({ message: { raw: digest } });
+const buyerSig  = await buyerWalletClient.signMessage({ message: { raw: digest } });
+
+// Step 5: Approve USDC spend and fund escrow
+await buyerWalletClient.writeContract({ address: USDC, abi: erc20Abi, functionName: "approve", args: [CONTRACT, parseUnits("100", 6)] });
+const escrowId = await buyerWalletClient.writeContract({
+  address: CONTRACT, abi: ABI, functionName: "fundEscrowWithOffer",
+  args: [listingId, parseUnits("100", 6), deadline, sellerSig, buyerSig],
 });
 
-// Step 3: After delivery, confirm and claim funds via withdraw()
-await walletClient.writeContract({ address: CONTRACT, abi: ABI, functionName: "confirmDelivery", args: [escrowId] });
-await walletClient.writeContract({ address: CONTRACT, abi: ABI, functionName: "withdraw" });
-// Your wallet receives the proceeds (97.5% if seller, 2.5% stays with treasury)`;
+// ── Buyer: confirm delivery ─────────────────────────────────────────────────
+await buyerWalletClient.writeContract({ address: CONTRACT, abi: ABI, functionName: "confirmDelivery", args: [escrowId] });
+
+// ── Seller: withdraw proceeds (pull-payment — must call explicitly) ──────────
+await sellerWalletClient.writeContract({ address: CONTRACT, abi: ABI, functionName: "withdraw" });
+// Seller receives 97.5 USDC. 2.5 USDC fee goes to Monast treasury automatically.`;
 
 const mcpConfig = `{
   "mcpServers": {
@@ -213,12 +233,12 @@ const AgentDocs = () => (
           <div className="font-semibold">Contract details</div>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
             <span className="text-foreground font-medium">V3 proxy (live)</span><span className="font-mono">{V3_CONTRACT}</span>
-            <span className="text-foreground font-medium">V3 (deploying)</span><span className="font-mono text-muted-foreground/60">Pending mainnet deploy</span>
             <span className="text-foreground font-medium">Chain</span><span>Arc Mainnet (chainId 5042)</span>
             <span className="text-foreground font-medium">USDC</span><span className="font-mono">{ARC_MAINNET_USDC}</span>
             <span className="text-foreground font-medium">Platform fee</span><span>2.5% on every release</span>
+            <span className="text-foreground font-medium">Listing fee</span><span>0.15 USDC per listing</span>
             <span className="text-foreground font-medium">Auto-release</span><span>72 hours after seller marks ready</span>
-            <span className="text-foreground font-medium">Audit</span><span>3 rounds max-severity, 74/74 tests pass</span>
+            <span className="text-foreground font-medium">Audit</span><span>3 rounds max-severity, 79/79 tests pass</span>
           </div>
         </div>
         <pre className="bg-secondary rounded-xl p-4 text-xs overflow-x-auto leading-relaxed">{contractSample}</pre>
