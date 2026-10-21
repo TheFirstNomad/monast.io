@@ -9,11 +9,18 @@ async function invoke(body: Record<string, unknown>) {
   return data;
 }
 
+function checkFailure(state: { status?: string }) {
+  if (["FAILED", "CANCELLED", "DENIED", "EXPIRED"].includes(String(state.status).toUpperCase())) {
+    throw new Error("The wallet transaction did not complete. No new payment was started.");
+  }
+}
+
 /** Each persisted request is recovered by its own challenge, never by amount. */
 export async function signCircleContract(input: {
   operation: string; referenceId: string; phase: "approve" | "execute";
 }, onConfirming: () => void): Promise<`0x${string}`> {
   const request = await invoke({ action: "create", ...input });
+  checkFailure(request);
   if (request.txHash) return request.txHash;
   let transactionId: string | undefined;
   if (!request.submitted) {
@@ -23,10 +30,8 @@ export async function signCircleContract(input: {
   onConfirming();
   for (let attempt = 0; attempt < 40; attempt++) {
     const state = await invoke({ action: "status", requestId: request.requestId, ...(transactionId ? { transactionId } : {}) });
+    checkFailure(state);
     if (state.txHash) return state.txHash;
-    if (["FAILED", "CANCELLED", "DENIED", "EXPIRED"].includes(state.status)) {
-      throw new Error("The wallet transaction did not complete. No new payment was started.");
-    }
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
   throw new Error("Your approval is still processing. Retry this action to check the same transaction; do not start another payment.");

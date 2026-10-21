@@ -8,6 +8,7 @@ import { ESCROW_CONTRACT, ARC_USDC, authorizeContractAction, exactApproval } fro
 import { arcMainnetRpc } from "../_shared/arc-chains.ts";
 import { toBaseUnits, loadFeeSettings } from "../_shared/fees.ts";
 import { checkUserRateLimit, rateLimitBody } from "../_shared/user-rate-limit.ts";
+import { contractExecutionBody, correlatedTransactionId } from "../_shared/circle-contract-request.ts";
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("create"), operation: z.enum(["createListing", "fundEscrow", "confirmDelivery", "refundBuyer", "markReadyForRelease", "claimAutoRelease", "openDispute", "withdraw"]), referenceId: z.string().uuid(), phase: z.enum(["approve", "execute"]) }).strict(),
@@ -17,15 +18,15 @@ const erc20 = parseAbi(["function approve(address spender, uint256 amount) retur
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 const lower = (s: unknown) => String(s ?? "").toLowerCase();
 
-async function stateOf(admin: any, request: any, session: any, callbackId?: string) {
+async function stateOf(admin: any, request: any, session: any) {
   if (!request.challenge_id) return { status: "CREATING", txHash: null, submitted: false };
   const challenge = (await circle(`/user/challenges/${request.challenge_id}`, { headers: { "X-User-Token": session.userToken } }))?.data?.challenge;
-  const id = request.transaction_id ?? challenge?.correlationIds?.[0] ?? callbackId;
+  const id = correlatedTransactionId(request, challenge ?? {});
   const complete = String(challenge?.status ?? "").toUpperCase() === "COMPLETE";
   if (!id || !complete) return { status: challenge?.status ?? "PENDING", txHash: request.tx_hash, submitted: complete };
   const payload = await circle(`/transactions/${id}`, { headers: { "X-User-Token": session.userToken } });
   const tx = payload?.data?.transaction ?? payload?.data;
-  if (tx?.walletId !== request.wallet_id || lower(tx?.contractAddress) !== lower(request.contract_address) || lower(tx?.callData) !== lower(request.call_data)) {
+  if (tx?.walletId !== request.wallet_id || tx?.blockchain !== "ARC" || lower(tx?.contractAddress) !== lower(request.contract_address) || lower(tx?.callData) !== lower(request.call_data)) {
     throw new Error("The wallet transaction did not match the approved request.");
   }
   const { error } = await admin.from("circle_contract_requests").update({ transaction_id: id, tx_hash: tx?.txHash ?? null }).eq("id", request.id);
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
     if (body.action === "status") {
       const { data: request } = await admin.from("circle_contract_requests").select("*").eq("id", body.requestId).eq("user_id", userId).maybeSingle();
       if (!request) return json({ error: "Request not found" }, 404);
-      return json(await stateOf(admin, request, await getFreshUserSession(admin, userId), body.transactionId));
+      return json(await stateOf(admin, request, await getFreshUserSession(admin, userId)));
     }
     const { data: profile } = await admin.from("profiles").select("circle_wallet_id, circle_wallet_address").eq("id", userId).maybeSingle();
     if (!profile?.circle_wallet_id || !profile.circle_wallet_address) return json({ error: "Sign in with Google again to unlock your existing wallet." }, 409);
@@ -117,9 +118,7 @@ Deno.serve(async (req) => {
     const reserved = request ?? old ?? (await admin.from("circle_contract_requests").select("*").eq("user_id", userId).eq("operation", body.operation).eq("reference_id", body.referenceId).eq("phase", body.phase).single()).data;
     if (!reserved || reserved.call_data !== callData || reserved.wallet_id !== profile.circle_wallet_id) return json({ error: "A different request is already awaiting approval. Finish that request first." }, 409);
     const response = await circle("/user/transactions/contractExecution", {
-      method: "POST", headers: { "X-User-Token": session.userToken }, body: JSON.stringify({
-        idempotencyKey: reserved.id, walletId: reserved.wallet_id, blockchain: "ARC", contractAddress: target, callData, feeLevel: "MEDIUM", refId: reserved.id,
-      }),
+      method: "POST", headers: { "X-User-Token": session.userToken }, body: JSON.stringify(contractExecutionBody(reserved)),
     });
     const challengeId = response?.data?.challengeId;
     if (!challengeId) return json({ error: "Circle did not return an authorization challenge." }, 502);

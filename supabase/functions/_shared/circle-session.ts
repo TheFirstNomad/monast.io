@@ -21,6 +21,8 @@ export async function circle(path: string, init: RequestInit = {}) {
       err.upstreamStatus = 503;
       throw err;
     }
+    // Only provider codes and endpoint paths are safe to log, never payloads.
+    console.error(`Circle ${path} ${res.status} code ${data?.code ?? "unknown"}`);
     throw new Error(`Circle ${path} ${res.status} code ${data?.code ?? "unknown"}`);
   }
   return data;
