@@ -22,6 +22,11 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const micros = (v: bigint) => Number(v) / 1e6;
 const lc = (s: unknown) => String(s ?? "").toLowerCase();
 
+async function persist(query: PromiseLike<{ error: any }>) {
+  const { error } = await query;
+  if (error) throw error;
+}
+
 async function walletsOf(admin: any, userId: string): Promise<Set<string>> {
   const out = new Set<string>();
   const { data: p } = await admin.from("profiles").select("wallet_address, circle_wallet_address").eq("id", userId).maybeSingle();
@@ -89,12 +94,17 @@ Deno.serve(async (req) => {
         if (!esc || esc.buyer_id !== userId) return json({ error: "Not your escrow" }, 403);
         if (esc.status !== "created" && lc(esc.onchain_escrow_id) !== lc(a.escrowId))
           return json({ error: `Escrow is already ${esc.status}` }, 400);
+        // Recover a mined payment without rewinding a released/refunded escrow.
+        if (lc(esc.onchain_escrow_id) === lc(a.escrowId) && esc.status !== "created") {
+          applied.push("funded");
+          continue;
+        }
         const { data: ad } = await admin.from("ads").select("onchain_listing_id").eq("id", esc.ad_id).maybeSingle();
         if (lc(ad?.onchain_listing_id) !== lc(a.listingId)) return json({ error: "Funded a different listing" }, 400);
         if (!mine.has(lc(a.buyer))) return json({ error: "Funded from a wallet that is not on your account" }, 403);
         if (BigInt(a.amount) < BigInt(Math.round(Number(esc.amount_usdc) * 1e6)))
           return json({ error: "Funded amount is below the escrow amount" }, 400);
-        await admin.from("escrows").update({
+        await persist(admin.from("escrows").update({
           settlement: "contract",
           onchain_escrow_id: lc(a.escrowId),
           deposit_tx_hash: lc(txHash),
@@ -103,8 +113,8 @@ Deno.serve(async (req) => {
           funded_at: new Date().toISOString(),
           auto_release_at: null,
           chain_id: ARC_MAINNET_CHAIN_ID,
-        }).eq("id", esc.id);
-        await admin.from("ads").update({ status: "reserved" }).eq("id", esc.ad_id).eq("status", "active");
+        }).eq("id", esc.id));
+        await persist(admin.from("ads").update({ status: "reserved" }).eq("id", esc.ad_id).eq("status", "active"));
         await notify({ userId: esc.seller_id, kind: "escrow_funded", title: "Buyer funded the escrow", body: "USDC is locked in the Monast escrow contract. Deliver the item, then mark it delivered.", link: `/escrow/${esc.id}` });
         applied.push("funded");
       } else {
@@ -117,27 +127,33 @@ Deno.serve(async (req) => {
         const released = ev.eventName === "EscrowReleased" || ev.eventName === "EscrowAutoReleased" ||
           (ev.eventName === "EscrowArbitrated" && !a.releaseToBuyer);
         const refunded = ev.eventName === "EscrowRefunded" || (ev.eventName === "EscrowArbitrated" && a.releaseToBuyer);
-        if (released && esc.status !== "released") {
-          await admin.from("escrows").update({
+        if (released) {
+          await persist(admin.from("escrows").update({
             status: "released", released_at: now, release_tx_hash: lc(txHash), payout_status: "confirmed",
             seller_net_usdc: micros(BigInt(a.sellerNet ?? 0)), platform_fee_usdc: micros(BigInt(a.fee ?? 0)),
-          }).eq("id", esc.id);
-          await admin.from("ads").update({ status: "sold", sold_at: now }).eq("id", esc.ad_id);
+          }).eq("id", esc.id));
+          await persist(admin.from("ads").update({ status: "sold", sold_at: now }).eq("id", esc.ad_id));
           if (esc.deposit_tx_hash) {
-            await admin.from("payments").insert({ ad_id: esc.ad_id, buyer_id: esc.buyer_id, seller_id: esc.seller_id, amount_usdc: esc.amount_usdc, tx_hash: esc.deposit_tx_hash, chain_id: esc.chain_id });
+            const { data: payment, error: paymentError } = await admin.from("payments").select("id").eq("tx_hash", esc.deposit_tx_hash).maybeSingle();
+            if (paymentError) throw paymentError;
+            if (!payment) await persist(admin.from("payments").insert({ ad_id: esc.ad_id, buyer_id: esc.buyer_id, seller_id: esc.seller_id, amount_usdc: esc.amount_usdc, tx_hash: esc.deposit_tx_hash, chain_id: esc.chain_id }));
           }
-          await notify({ userId: esc.seller_id, kind: "escrow_released", title: "Escrow released to you", body: "Open the escrow page and tap Withdraw to move the USDC to your wallet.", link: `/escrow/${esc.id}` });
+          if (esc.status !== "released") await notify({ userId: esc.seller_id, kind: "escrow_released", title: "Escrow released to you", body: "Open the escrow page and tap Withdraw to move the USDC to your wallet.", link: `/escrow/${esc.id}` });
           applied.push("released");
-        } else if (refunded && esc.status !== "refunded") {
-          await admin.from("escrows").update({ status: "refunded", refunded_at: now, refund_tx_hash: lc(txHash), payout_status: "confirmed" }).eq("id", esc.id);
-          await admin.from("ads").update({ status: "active" }).eq("id", esc.ad_id).eq("status", "reserved");
-          await notify({ userId: esc.buyer_id, kind: "escrow_refunded", title: "Escrow refunded in full", body: "Open the escrow page and tap Withdraw to move the USDC to your wallet.", link: `/escrow/${esc.id}` });
+        } else if (refunded) {
+          await persist(admin.from("escrows").update({ status: "refunded", refunded_at: now, refund_tx_hash: lc(txHash), payout_status: "confirmed" }).eq("id", esc.id));
+          await persist(admin.from("ads").update({ status: "active" }).eq("id", esc.ad_id).eq("status", "reserved"));
+          if (esc.status !== "refunded") await notify({ userId: esc.buyer_id, kind: "escrow_refunded", title: "Escrow refunded in full", body: "Open the escrow page and tap Withdraw to move the USDC to your wallet.", link: `/escrow/${esc.id}` });
           applied.push("refunded");
         } else if (ev.eventName === "DisputeOpened" && esc.status === "funded") {
-          await admin.from("escrows").update({ status: "disputed" }).eq("id", esc.id);
+          await persist(admin.from("escrows").update({ status: "disputed" }).eq("id", esc.id));
           applied.push("disputed");
         } else if (ev.eventName === "ReadyForRelease" && !esc.delivery_marked_at) {
-          await admin.from("escrows").update({ delivery_marked_at: now, auto_release_at: new Date(Number(a.readyAt) * 1000).toISOString() }).eq("id", esc.id);
+          await persist(admin.from("escrows").update({ delivery_marked_at: now, auto_release_at: new Date(Number(a.readyAt) * 1000).toISOString() }).eq("id", esc.id));
+          applied.push("delivered");
+        } else if (ev.eventName === "DisputeOpened" && esc.status === "disputed") {
+          applied.push("disputed");
+        } else if (ev.eventName === "ReadyForRelease" && esc.delivery_marked_at) {
           applied.push("delivered");
         }
       }
