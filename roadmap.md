@@ -5,5 +5,7 @@
 - [x] Add wallet-scoped Circle contract challenges with exact USDC approvals and recovery.
 - [x] Connect Google-wallet publishing, funding, and participant contract actions without changing legacy escrows.
 - [x] Test signing safeguards and signed-in wallet rendering (90 tests pass; unknown request returns 404).
-- [ ] Reproduce and fix Google-wallet listing authorization, then test funding, release, and withdrawal.
+- [x] Reproduce and fix Google-wallet listing authorization (Circle now returns a challenge).
+- [x] Add simulated Google-wallet publish/fund/release/withdraw coverage and failure safeguards; 96 tests pass.
+- [x] Make contract event updates report persistence failures and recognize repeated release/refund/delivery/dispute syncs.
 - [ ] Verify a real Google-wallet approval → publish → fund → release → withdraw; requires live Circle approvals and a second buyer account.
