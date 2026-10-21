@@ -107,7 +107,10 @@ export function runCircleChallenge(
   return new Promise((resolve, reject) => {
     s.execute(input.challengeId, (error, result) => {
       if (error) {
-        reject(new Error(error.message || "Circle challenge failed"));
+        const message = error.message || "Circle challenge failed";
+        reject(new Error(/device id/i.test(message)
+          ? "Sign in with Google again in this browser to authorize your wallet. Your existing wallet and funds stay unchanged."
+          : message));
         return;
       }
       if (result?.type) {
