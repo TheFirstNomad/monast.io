@@ -43,3 +43,13 @@ export function contractErrorMessage(e: any): string {
   if (/rejected|denied/i.test(msg)) return "You cancelled the request in your wallet.";
   return msg || "The contract call failed";
 }
+
+/** Why a contract listing cannot be funded at the escrow amount, or null when it can. */
+export function contractFundingBlocker(listing: { priceUsdc: bigint; status: number; remaining: bigint } | null | undefined, escrowMicros: bigint): string | null {
+  if (!listing) return "Could not read this listing from the escrow contract. Reload before paying.";
+  if (listing.status !== 0 || listing.remaining === 0n) return "This listing is no longer open in the escrow contract.";
+  if (listing.priceUsdc !== escrowMicros) {
+    return `The escrow contract holds this listing at ${(Number(listing.priceUsdc) / 1e6).toLocaleString()} USDC, not the price shown. Ask the seller to delete and relist it at the correct price.`;
+  }
+  return null;
+}
