@@ -64,6 +64,13 @@
       "when": 1792538771720,
       "tag": "0008_circle_contract_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792671208055,
+      "tag": "0009_lock_contract_listing_price",
+      "breakpoints": true
     }
   ]
 }

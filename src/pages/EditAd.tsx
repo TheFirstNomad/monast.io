@@ -42,6 +42,8 @@ const EditAd = () => {
   // Digital categories carry no condition or location.
   const physical = isPhysicalCategory(form.category);
   const locked = !!lockedEscrowId;
+  // The escrow contract stores the price at publish time and cannot change it.
+  const [onchain, setOnchain] = useState(false);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -63,6 +65,7 @@ const EditAd = () => {
         location: ad.location ?? "",
       });
       setImages(ad.images || []);
+      setOnchain(Boolean((ad as any).onchain_listing_id));
       setExtras(((ad as any).attributes as Record<string, string>) || {});
 
       const { data: escrow } = await supabase
@@ -145,7 +148,7 @@ const EditAd = () => {
       };
       if (!live) {
         patch.title = form.title;
-        patch.price_usdc = Number(form.price);
+        if (!onchain) patch.price_usdc = Number(form.price);
       }
 
       const { error } = await supabase.from("ads").update(patch as never).eq("id", id);
@@ -320,7 +323,7 @@ const EditAd = () => {
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
-              Price (USDC) {locked && <span className="text-xs text-muted-foreground">(locked by escrow)</span>}
+              Price (USDC) {locked ? <span className="text-xs text-muted-foreground">(locked by escrow)</span> : onchain && <span className="text-xs text-muted-foreground">(set in the escrow contract - delete and relist to change it)</span>}
             </label>
             <div className="relative">
               <Input
@@ -329,7 +332,7 @@ const EditAd = () => {
                 value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
                 required
-                disabled={locked}
+                disabled={locked || onchain}
                 className="pl-16"
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-primary">USDC</span>

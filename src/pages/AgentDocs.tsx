@@ -65,8 +65,7 @@ const LISTING_FEE = parseUnits("0.15", 6); // 0.15 USDC
 // Minimal ABI for the full escrow flow
 const ABI = [
   { name: "createListing",       type: "function", inputs: [{ name: "priceUsdc", type: "uint256" }, { name: "quantity", type: "uint256" }, { name: "metadataHash", type: "bytes32" }], outputs: [{ name: "listingId", type: "bytes32" }] },
-  { name: "getOffer",            type: "function", inputs: [{ name: "listingId", type: "bytes32" }, { name: "buyer", type: "address" }, { name: "priceUsdc", type: "uint256" }, { name: "nonce", type: "uint256" }, { name: "deadline", type: "uint256" }], outputs: [{ name: "digest", type: "bytes32" }] },
-  { name: "fundEscrowWithOffer", type: "function", inputs: [{ name: "listingId", type: "bytes32" }, { name: "priceUsdc", type: "uint256" }, { name: "deadline", type: "uint256" }, { name: "sellerSig", type: "bytes" }, { name: "buyerSig", type: "bytes" }], outputs: [{ name: "escrowId", type: "bytes32" }] },
+  { name: "fundEscrow",          type: "function", inputs: [{ name: "listingId", type: "bytes32" }], outputs: [{ name: "escrowId", type: "bytes32" }] },
   { name: "confirmDelivery",     type: "function", inputs: [{ name: "escrowId", type: "bytes32" }], outputs: [] },
   { name: "withdraw",            type: "function", inputs: [], outputs: [] },
 ] as const;
@@ -82,19 +81,12 @@ const listingId = await walletClient.writeContract({
 });
 
 // ── Buyer: fund escrow ──────────────────────────────────────────────────────
-// Step 3: Get the EIP-712 offer digest from the contract
-const deadline = BigInt(Math.floor(Date.now() / 1000) + 3600); // 1 hour
-const digest = await publicClient.readContract({ address: CONTRACT, abi: ABI, functionName: "getOffer", args: [listingId, buyerAddress, parseUnits("100", 6), 0n, deadline] });
-
-// Step 4: Both seller and buyer sign the digest
-const sellerSig = await sellerWalletClient.signMessage({ message: { raw: digest } });
-const buyerSig  = await buyerWalletClient.signMessage({ message: { raw: digest } });
-
-// Step 5: Approve USDC spend and fund escrow
-await buyerWalletClient.writeContract({ address: USDC, abi: erc20Abi, functionName: "approve", args: [CONTRACT, parseUnits("100", 6)] });
+// Approve exactly the listing price, wait for it to confirm, then fund.
+// The contract pulls the price stored at createListing, so approve that amount.
+const approveHash = await buyerWalletClient.writeContract({ address: USDC, abi: erc20Abi, functionName: "approve", args: [CONTRACT, parseUnits("100", 6)] });
+await publicClient.waitForTransactionReceipt({ hash: approveHash });
 const escrowId = await buyerWalletClient.writeContract({
-  address: CONTRACT, abi: ABI, functionName: "fundEscrowWithOffer",
-  args: [listingId, parseUnits("100", 6), deadline, sellerSig, buyerSig],
+  address: CONTRACT, abi: ABI, functionName: "fundEscrow", args: [listingId],
 });
 
 // ── Buyer: confirm delivery ─────────────────────────────────────────────────

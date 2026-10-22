@@ -7,7 +7,8 @@ import { USDC_ADDRESS, ERC20_TRANSFER_ABI, toUsdcUnits, ARC_CHAIN_ID } from "@/l
 import { ACTIVE_CHAIN } from "@/lib/chains";
 import { useTreasuryAddress } from "@/hooks/useTreasuryAddress";
 import { toast } from "sonner";
-import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useChainId, useSwitchChain, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from "wagmi";
+import { MONAST_ESCROW_ABI, MONAST_ESCROW_ADDRESS, MONAST_ESCROW_CHAIN_ID, contractFundingBlocker } from "@/lib/monastEscrow";
 import { sendUsdcPayment, resolvePayingWallet, resolveCirclePayment } from "@/lib/payments/sendUsdc";
 import { useAuth } from "@/hooks/useAuth";
 import { useContractAction, STEP_LABEL } from "@/hooks/useContractAction";
@@ -44,6 +45,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
     ARC_CHAIN_ID,
   );
   const contract = useContractAction();
+  const publicClient = usePublicClient({ chainId: MONAST_ESCROW_CHAIN_ID });
   const [onchainListing, setOnchainListing] = useState<string | null>(null);
   const [settlementResolved, setSettlementResolved] = useState(false);
   const [settlementError, setSettlementError] = useState<string | null>(null);
@@ -64,11 +66,23 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
       const samePrice = ad && toUsdcUnits(Number(ad.price_usdc)) === toUsdcUnits(Number(esc.amount_usdc));
       if (!ad || adError) setSettlementError("Could not load the listing. Reload before paying.");
       else if (ad.onchain_listing_id && !samePrice) setSettlementError("Contract escrow requires the listed price. Ask the seller to publish the agreed price first.");
+      else if (ad.onchain_listing_id) {
+        // The contract pulls its own stored price, so never approve a different amount.
+        let listing: any = null;
+        try {
+          listing = await publicClient?.readContract({
+            address: MONAST_ESCROW_ADDRESS, abi: MONAST_ESCROW_ABI, functionName: "getListing", args: [ad.onchain_listing_id as `0x${string}`],
+          } as any);
+        } catch { /* reported below */ }
+        if (cancelled) return;
+        const blocker = contractFundingBlocker(listing, toUsdcUnits(Number(esc.amount_usdc)));
+        if (blocker) setSettlementError(blocker);
+      }
       setOnchainListing(ad?.onchain_listing_id ?? null);
       setSettlementResolved(true);
     })();
     return () => { cancelled = true; };
-  }, [escrowId]);
+  }, [escrowId, publicClient]);
 
   useEffect(() => {
     if (!user) return;
