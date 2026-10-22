@@ -82,7 +82,7 @@ export const EscrowFundButton = ({ escrowId, amount, onFunded, autoStart }: Prop
       setSettlementResolved(true);
     })();
     return () => { cancelled = true; };
-  }, [escrowId]);
+  }, [escrowId, publicClient]);
 
   useEffect(() => {
     if (!user) return;
