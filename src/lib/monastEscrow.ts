@@ -36,6 +36,10 @@ export function contractErrorMessage(e: any): string {
     AutoReleaseNotReady: "The automatic release window has not passed yet.",
     NothingToWithdraw: "There is nothing to withdraw yet.",
     InvalidPrice: "The price is not valid.",
+    UnauthorizedEscrowParty: "You are not a party to this escrow.",
+    ListingNotCancellable: "This listing cannot be cancelled — it has active escrows.",
+    ReadyAlreadySet: "Delivery was already marked for this escrow.",
+    AutoReleaseNotSet: "No automatic release has been scheduled yet.",
   };
   if (name && map[name]) return map[name];
   const msg = String(e?.shortMessage || e?.message || "");
